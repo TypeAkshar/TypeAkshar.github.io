@@ -335,6 +335,39 @@ td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .arena-msg .box p { margin: 0 0 14px; color: var(--muted); }
 .buffer { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); font: 600 20px var(--mono); padding: 6px 16px; border-radius: 8px; background: var(--surface); border: 1px solid var(--accent); min-width: 120px; text-align: center; z-index: 1; }
 .buffer.err { border-color: var(--bad); color: var(--bad); }
+/* Game levels */
+.arena-msg .box { max-height: 100%; overflow-y: auto; }
+.lv-box { max-width: 380px !important; }
+.lv-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin: 12px 0 10px; }
+.lv { border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 6px 2px 5px; cursor: pointer; display: grid; gap: 1px; font: inherit; min-width: 0; justify-items: center; }
+.lv:hover:not(:disabled) { border-color: var(--accent); }
+.arena-msg .lv b { font: 700 18px var(--mono); margin: 0; }
+.lv span { font-size: 11px; color: var(--accent); letter-spacing: 1px; white-space: nowrap; }
+.lv i { font-style: normal; font-size: 10px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
+.lv.boss { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.lv.cur { box-shadow: 0 0 0 2px var(--accent); }
+.lv:disabled { opacity: .5; cursor: not-allowed; }
+.lv:disabled span { color: var(--muted); letter-spacing: 0; }
+.arena-msg .box p.lv-note { font-size: 13px; margin: 0 0 4px; }
+.lv-tag { display: inline-block; font-size: 12px; font-weight: 600; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 1px 10px; margin-bottom: 8px; }
+.arena-msg .box p.lv-new { background: var(--accent-soft); color: var(--ink); border-radius: 8px; padding: 8px 10px; font-size: 14px; text-align: left; }
+.arena-msg .box p.lv-how { font-size: 13px; }
+.lv-stars { font-size: 34px; line-height: 1; color: #E8A317; letter-spacing: 6px; margin: 0 0 8px; }
+.bubble.heart { background: radial-gradient(circle at 32% 30%, rgba(255,255,255,.7), transparent 38%), #F7A8C0; border-color: #D6336C; }
+.bubble.heart::after { content: "\2665"; position: absolute; right: -2px; top: -6px; font-size: 14px; color: #D6336C; }
+.bubble.ice { background: radial-gradient(circle at 32% 30%, rgba(255,255,255,.9), transparent 45%), #BFE6FA; border: 2px solid #5AB0DE; color: #0B3B55; }
+.bubble.ice.cracked { border-style: dashed; opacity: .8; }
+.bubble.giant { width: auto; min-width: 130px; height: 90px; border-radius: 45px; padding: 0 22px; font: 600 24px var(--mono); background: radial-gradient(circle at 30% 28%, rgba(255,255,255,.75), transparent 40%), var(--f-rr); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; white-space: pre; }
+.bubble.giant .done { color: var(--good); }
+.bubble.giant .next { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 4px; }
+.drop.heart::before { content: "\2665  "; color: #D6336C; }
+.drop.heart { border-color: #D6336C; }
+.drop.boss { font-size: 20px; padding: 7px 14px; background: #2A3240; color: #fff; border-color: #F5C518; box-shadow: 0 0 0 3px rgba(245,197,24,.3); white-space: pre; }
+.drop.boss .hit { color: #F5C518; }
+.brick.steel { background: #8A94A3; border-color: #4B5563; }
+.brick.steel.cracked { background: #B8C0CC; border-style: dashed; }
+.brick.bossb { height: 30px; background: #7F1D1D; border: 2px solid #F5C518; color: #fff; font: 600 13px var(--sans); display: grid; place-items: center; }
+.brick.bossb.hit { transform: translateY(-3px); }
 
 /* Header extras */
 button.brand { border: 0; background: none; padding: 0; cursor: pointer; }
@@ -750,13 +783,13 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     <section id="view-games" hidden>
       <div id="games-menu">
         <h1>Typing games</h1>
-        <p class="lede">Short games that train reaction speed and accuracy. Your best scores are kept in Statistics.</p>
+        <p class="lede">Every game has 10 levels, from home row keys up to capitals, numbers and symbols, with a boss at levels 5 and 10. Clear a level with at least 1 star to open the next one.</p>
         <div class="games" id="games-grid"></div>
       </div>
       <div id="game-play" hidden>
         <div class="p-head">
           <div><button class="back" id="game-back">&larr; All games</button><h2 id="g-title"></h2></div>
-          <div class="stats">
+          <div class="stats" id="g-stats">
             <div class="stat"><b id="g-score">0</b><span>Score</span></div>
             <div class="stat"><b id="g-level">1</b><span id="g-level-l">Level</span></div>
             <div class="stat"><b id="g-lives">10</b><span id="g-lives-l">Escapes left</span></div>
@@ -1591,6 +1624,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
 
   document.addEventListener("keydown", function (e) {
     if (view === "games" && G) { gameKey(e); return; }
+    if (view === "games" && LP) { levelKey(e); return; }
     if (view === "tools") { testerKey(e); return; }
     if (view === "guide" && GD) { guideKey(e); return; }
     if (view !== "practice" || !S) return;
@@ -1840,10 +1874,10 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     $("heatmap").innerHTML = hm + "</div>";
 
     // games
-    $("game-scores").innerHTML = "<table><thead><tr><th>Game</th><th>Best score</th><th>Highest level</th><th>Games played</th></tr></thead><tbody>" +
+    $("game-scores").innerHTML = "<table><thead><tr><th>Game</th><th>Best score</th><th>Levels cleared</th><th>Games played</th></tr></thead><tbody>" +
       Object.keys(GAMES).map(function (g) {
         var s = P.games[g] || {};
-        return "<tr><td>" + GAMES[g].title + '</td><td class="num">' + (s.best || 0) + '</td><td class="num">' + (s.level || 0) + '</td><td class="num">' + (s.plays || 0) + "</td></tr>";
+        return "<tr><td>" + GAMES[g].title + '</td><td class="num">' + (s.best || 0) + '</td><td class="num">' + lvCleared(g) + " of 10" + (lvStarSum(g) ? " · ★" + lvStarSum(g) : "") + '</td><td class="num">' + (s.plays || 0) + "</td></tr>";
       }).join("") + "</tbody></table>";
 
     // recent
@@ -2118,64 +2152,240 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
   function stopDemo() { if (demoTimer) { clearInterval(demoTimer); demoTimer = null; } }
 
   // ---------- games ----------
+  // Every game has 10 levels. A level opens once the level before it is cleared with at least 1 star.
+  // Levels 5 and 10 are boss levels, and every few levels something new turns up.
+  var GAME_LEVELS = 10;
   var GAMES = {
-    bubbles: { title: "Bubble Pop", lives: 6, livesLabel: "Escapes left", intro: "Press the letter on a bubble to pop it. It starts on the home row and adds keys as you level up.",
-      blurb: "Letters float up in bubbles. Press a letter to pop it before it escapes. Six escapes and the game ends.",
-      art: '<div class="game-art bubbles-art"><span>f</span><span>j</span><span>k</span><span>d</span></div>' },
-    rain: { title: "Word Rain", lives: 5, livesLabel: "Lives", intro: "Type a falling word and it disappears. Backspace fixes a typo.",
-      blurb: "Words fall toward the ground. Type a word to clear it. Five words on the ground and the game ends.",
-      art: '<div class="game-art rain-art"><span>river</span><span>stone</span><span>map</span></div>' },
-    breaker: { title: "Key Breaker", lives: 3, livesLabel: "Balls left", intro: "The ball drops toward the lit key. Press that key to send it back up and break a brick.",
-      blurb: "Press the lit key to bounce the ball into the bricks. Clear every brick to reach the next level.",
-      art: '<div class="game-art breaker-art"><div class="brick" style="left:8%;top:14%;width:18%"></div><div class="brick r1" style="left:30%;top:14%;width:18%"></div><div class="brick r2" style="left:52%;top:14%;width:18%"></div><div class="brick" style="left:74%;top:14%;width:18%"></div><div class="ball" style="left:58%;top:48%"></div><div class="paddle" style="left:8%;bottom:8px;width:18%;height:26px;font-size:13px">A</div><div class="paddle target" style="left:52%;bottom:8px;width:18%;height:26px;font-size:13px">K</div><div class="paddle" style="left:74%;bottom:8px;width:18%;height:26px;font-size:13px">L</div></div>' }
+    bubbles: { title: "Bubble Pop", lives: 6, livesLabel: "Escapes left", levelLabel: "Popped",
+      intro: "Press the letter on a bubble to pop it before it floats away.",
+      blurb: "Letters float up in bubbles. Press a letter to pop it before it escapes.",
+      art: '<div class="game-art bubbles-art"><span>f</span><span>j</span><span>k</span><span>d</span></div>',
+      levels: [
+        { name: "Home keys", pops: 15, keys: 1, v: 48, gap: 1.35 },
+        { name: "G and H", pops: 20, keys: 2, v: 56, gap: 1.25 },
+        { name: "Top row", pops: 20, keys: 3, v: 62, gap: 1.2, heart: true, news: "Heart bubbles: pop one to win back an escape." },
+        { name: "Every letter", pops: 25, keys: 4, v: 68, gap: 1.1, heart: true },
+        { name: "Giant bubble", boss: true, pops: 20, keys: 4, v: 68, gap: 1.15, heart: true, giants: 1, giantK: 4,
+          news: "Boss: a giant bubble carries a word. Type its letters in order to burst it. If it gets away you lose 3 escapes and it comes back." },
+        { name: "Capital letters", pops: 25, keys: 6, v: 66, gap: 1.1, heart: true, news: "Capital letters: hold Shift to pop them." },
+        { name: "Drifting bubbles", pops: 30, keys: 6, v: 72, gap: 1.05, heart: true, drift: true, news: "Bubbles drift from side to side as they rise." },
+        { name: "Numbers", pops: 30, keys: 8, v: 72, gap: 1.0, heart: true, drift: true, news: "Number bubbles: use the number keys along the top." },
+        { name: "Ice bubbles", pops: 30, keys: 9, v: 76, gap: 0.95, heart: true, ice: true, news: "Symbols join in, and ice bubbles need their key pressed twice." },
+        { name: "Bubble storm", boss: true, pops: 35, keys: 10, v: 80, gap: 0.9, heart: true, ice: true, drift: true, giants: 2, giantK: 6,
+          news: "Final boss: two giant bubbles, one after the other, in a storm of every kind of bubble." }
+      ] },
+    rain: { title: "Word Rain", lives: 5, livesLabel: "Lives", levelLabel: "Cleared",
+      intro: "Type a falling word to clear it before it lands. Backspace fixes a typo.",
+      blurb: "Words fall toward the ground. Type a word to clear it before it lands.",
+      art: '<div class="game-art rain-art"><span>river</span><span>stone</span><span>map</span></div>',
+      levels: [
+        { name: "Home row words", clear: 10, k: 1, lens: [2, 4], v: 22, gap: 3.3 },
+        { name: "Longer words", clear: 12, k: 2, lens: [3, 5], v: 25, gap: 3.1 },
+        { name: "Top row", clear: 14, k: 3, lens: [3, 5], v: 28, gap: 2.9, heart: true, news: "Heart words: clear one to win back a life." },
+        { name: "Everyday words", clear: 15, k: 4, lens: [3, 5], v: 31, gap: 2.7, heart: true },
+        { name: "Thunder cloud", boss: true, clear: 12, k: 4, lens: [3, 5], v: 30, gap: 2.8, heart: true, thunder: 1,
+          news: "Boss: a thunder cloud drops a whole phrase. Type it with the spaces. If it lands you lose 2 lives and it comes back." },
+        { name: "Capitals", clear: 15, k: 6, lens: [3, 6], v: 32, gap: 2.6, heart: true, news: "Capital letters: hold Shift for them." },
+        { name: "Fog", clear: 16, k: 7, lens: [3, 6], v: 33, gap: 2.6, heart: true, fog: true, news: "Fog: words fade out in the middle of the sky. Remember them." },
+        { name: "Numbers", clear: 16, k: 8, lens: [3, 6], v: 34, gap: 2.5, heart: true, news: "Numbers fall too. Use the number keys along the top." },
+        { name: "Windy symbols", clear: 16, k: 9, lens: [3, 6], v: 35, gap: 2.5, heart: true, wind: true, news: "Symbols join in, and the wind blows words sideways." },
+        { name: "Storm", boss: true, clear: 20, k: 10, lens: [3, 7], v: 37, gap: 2.4, heart: true, wind: true, thunder: 2,
+          news: "Final boss: a storm with two thunder phrases, wind and every kind of word." }
+      ] },
+    breaker: { title: "Key Breaker", lives: 3, livesLabel: "Balls left", levelLabel: "Bricks left",
+      intro: "The ball drops toward the lit key. Press that key to send it back up and break a brick.",
+      blurb: "Press the lit key to bounce the ball into the bricks. Break the whole wall to clear the level.",
+      art: '<div class="game-art breaker-art"><div class="brick" style="left:8%;top:14%;width:18%"></div><div class="brick r1" style="left:30%;top:14%;width:18%"></div><div class="brick r2" style="left:52%;top:14%;width:18%"></div><div class="brick" style="left:74%;top:14%;width:18%"></div><div class="ball" style="left:58%;top:48%"></div><div class="paddle" style="left:8%;bottom:8px;width:18%;height:26px;font-size:13px">A</div><div class="paddle target" style="left:52%;bottom:8px;width:18%;height:26px;font-size:13px">K</div><div class="paddle" style="left:74%;bottom:8px;width:18%;height:26px;font-size:13px">L</div></div>',
+      levels: [
+        { name: "Home keys", keys: "asdfjkl;", rows: 2, speed: 78 },
+        { name: "Three rows", keys: "asdfjkl;", rows: 3, speed: 90 },
+        { name: "Top row", keys: "qweruiop", rows: 2, speed: 96, steel: 1, news: "Steel bricks: the grey bricks take two hits." },
+        { name: "Bottom row", keys: "zxcvnm,.", rows: 3, speed: 104, steel: 1 },
+        { name: "Boss brick", boss: true, keys: "asdfghjk", rows: 1, speed: 100, bossHp: 10,
+          news: "Boss: a giant brick across the top. Break the row under it, then hit it 10 times." },
+        { name: "Curve balls", keys: "weruiokl", rows: 3, speed: 106, steel: 1, curve: true, news: "Curve balls: some balls switch to another key halfway down. Watch the lit key." },
+        { name: "Centre keys", keys: "rtgvyhbn", rows: 3, speed: 112, steel: 1, curve: true },
+        { name: "Numbers", keys: "12347890", rows: 2, speed: 100, steel: 1, news: "Number keys: the row along the top of the keyboard." },
+        { name: "Symbols", keys: ";'[],./-", rows: 3, speed: 106, curve: true, news: "Symbol keys on the right side of the keyboard." },
+        { name: "Final boss", boss: true, keys: "qa1zp;0/", rows: 2, speed: 116, steel: 1, curve: true, bossHp: 16,
+          news: "Final boss: a 16-hit boss brick, steel bricks and curve balls, on keys from every row." }
+      ] }
   };
-  var G = null;
+  var G = null, LP = null;
   var BUBBLE_TINTS = ["--f-lp", "--f-lr", "--f-lm", "--f-li", "--f-ri", "--f-rm", "--f-rr", "--f-rp"];
+
+  // ----- level content: home row at level 1, then top row, all letters, capitals (6-7), numbers (8), symbols (9), a mix (10) -----
+  var LV_ROWS = ["asdfjkl", "asdfghjkl", "asdfghjklqwertyuiop", "abcdefghijklmnopqrstuvwxyz"];
+  var LV_SYMS = ";,./!?@#$%&*()-+:'".split("");
+  var LV_LISTS = {};
+  function lvList(n) {
+    if (LV_LISTS[n]) return LV_LISTS[n];
+    var plain = function (w) { return /^[a-z]+$/.test(w); }, l;
+    if (n <= 2) l = HOME;
+    else if (n === 3) l = HOME.concat(EASY.concat(COMMON).filter(function (w) { return /^[asdfghjklqwertyuiop]+$/.test(w); }));
+    else if (n === 4) l = EASY;
+    else if (n === 5) l = EASY.concat(COMMON.slice(0, 60));
+    else if (n <= 9) l = EASY.concat(COMMON);
+    else l = COMMON.concat(HARD);
+    return (LV_LISTS[n] = l.filter(plain));
+  }
+  function lvKey(n) {
+    if (n >= 10) n = 6 + rand(4);
+    var r = Math.random();
+    if (n === 9 && r < 0.4) return pick(LV_SYMS);
+    if (n === 8 && r < 0.4) return String(rand(10));
+    var ch = pick(LV_ROWS[Math.min(n, 4) - 1].split(""));
+    if (n >= 6 && Math.random() < 0.35) ch = ch.toUpperCase();
+    return ch;
+  }
+  function capWord(w) { return w.charAt(0).toUpperCase() + w.slice(1); }
+  function lvToken(n, minL, maxL) {
+    if (n >= 10 && Math.random() < 0.6) n = 6 + rand(4);
+    var list = lvList(Math.min(n, 10)), ok = list.filter(function (w) { return w.length >= minL && w.length <= maxL; });
+    if (!ok.length) ok = list.filter(function (w) { return w.length <= Math.max(maxL, 4); });
+    if (!ok.length) ok = list;
+    var w = pick(ok), r = Math.random();
+    if (n === 8 && r < 0.45) {
+      var len = Math.max(2, Math.min(4, minL + rand(Math.max(1, maxL - minL + 1)))), d = String(1 + rand(9));
+      while (d.length < len) d += rand(10);
+      return d;
+    }
+    if (n === 9 && r < 0.45) {
+      var s = ok.filter(function (x) { return x.length <= Math.max(2, maxL - 1); }), b = s.length ? pick(s) : w;
+      return pick(["#" + b, "@" + b, b + "!", b + "?", b + ";", b + ":", b + ",", "(" + b + ")", "$" + (2 + rand(98)), (5 + rand(95)) + "%"]);
+    }
+    if ((n === 6 || n === 7 || n === 10) && r < 0.45) return capWord(w);
+    return w;
+  }
+  function lvWord(n, minL, maxL, avoid) {
+    var w, tries = 0;
+    do { w = lvToken(n, minL, maxL); tries++; } while (avoid && avoid(w) && tries < 40);
+    return w;
+  }
+  function lvText(n, minW, maxW) {
+    var k = minW + rand(maxW - minW + 1), out = [];
+    for (var i = 0; i < k; i++) out.push(lvToken(n, 2, n <= 2 ? 5 : 6));
+    var s = out.join(" ");
+    if (n >= 8) s = capWord(s) + ".";
+    return s;
+  }
+
+  // ----- level progress, saved per person in P.games[game].lv as stars for levels 1..10 -----
+  function lvRec(g) { var r = P.games[g] || (P.games[g] = { best: 0, level: 0, plays: 0 }); if (!r.lv) r.lv = []; return r; }
+  function lvStars(g, n) { var r = P.games[g]; return (r && r.lv && r.lv[n - 1]) || 0; }
+  function lvOpen(g, n) { return n <= 1 || lvStars(g, n - 1) > 0; }
+  function lvTop(g) { var n = 1; while (n < GAME_LEVELS && lvOpen(g, n + 1)) n++; return n; }
+  function lvCleared(g) { var c = 0; for (var n = 1; n <= GAME_LEVELS; n++) if (lvStars(g, n)) c++; return c; }
+  function lvStarSum(g) { var c = 0; for (var n = 1; n <= GAME_LEVELS; n++) c += lvStars(g, n); return c; }
+  function starText(k) { return "★★★".slice(0, k) + "☆☆☆".slice(0, 3 - k); }
+  function lvGoal(kind, L) {
+    switch (kind) {
+      case "bubbles": return "Pop " + L.pops + " bubbles" + (L.giants ? (L.giants > 1 ? " and burst both giant bubbles" : " and burst the giant bubble") : "") + ". Six escapes and the level is over.";
+      case "rain": return "Clear " + L.clear + " words" + (L.thunder ? (L.thunder > 1 ? " and both thunder phrases" : " and the thunder phrase") : "") + " before 5 land.";
+      case "breaker": return "Break every brick" + (L.bossHp ? " and the boss brick" : "") + ". You have 3 balls.";
+      case "house": return "Build " + L.what + ": " + L.rows.reduce(function (a, b) { return a + b; }, 0) + " bricks and " + L.roof + " roof tiles" + (L.spc ? ", before sunset" : "") + ".";
+      case "cricket": return "Score " + L.target + " runs from " + L.balls + " balls. You have " + (L.wkts || 3) + " wickets.";
+      case "tetris": return "Clear " + L.lines + (L.lines === 1 ? " line" : " lines") + " before the well fills up.";
+      case "ghost": return "Finish ahead of at least one car. First place earns 3 stars.";
+      case "space": return "Survive " + (L.waves.length === 1 ? "1 wave" : L.waves.length + " waves") + (L.mother ? " and destroy the mothership" : "") + ". Your shield takes 4 hits.";
+    }
+    return "";
+  }
+  function lvStarRule(kind) {
+    return { bubbles: "3 stars for no escapes, 2 for one or two.", rain: "3 stars if no word lands, 2 if one or two do.", breaker: "3 stars for no lost balls, 2 for one.",
+      house: "3 stars for 95% accuracy, 2 for 85%.", cricket: "3 stars without losing a wicket, 2 for losing one.", tetris: "3 stars for 95% accuracy, 2 for 85%.",
+      ghost: "1st place 3 stars, 2nd 2 stars, 3rd 1 star.", space: "3 stars if nothing gets through, 2 if one ship does." }[kind] || "";
+  }
+
   function renderGames() {
+    LP = null;
     $("games-menu").hidden = false;
     $("game-play").hidden = true;
     $("games-grid").innerHTML = gameCards();
   }
   function gameCards() {
     return Object.keys(GAMES).map(function (g) {
-      var d = GAMES[g], locked = d.unlock && !stageOpen(d.unlock);
+      var d = GAMES[g], locked = d.unlock && !stageOpen(d.unlock), done = lvCleared(g), stars = lvStarSum(g);
+      var chip = done >= GAME_LEVELS ? "All 10 levels · ★" + stars : "Level " + lvTop(g) + " of 10" + (stars ? " · ★" + stars : "");
       return '<article class="game-card' + (locked ? " locked" : "") + '">' + d.art.replace('class="game-art', 'aria-hidden="true" class="game-art') + "<h3>" + d.title + "</h3><p>" + d.blurb + "</p>" +
-        '<div class="game-foot"><span class="chip">' + "Best: " + ((P.games[g] && P.games[g].best) || 0) + "</span>" +
+        '<div class="game-foot"><span class="chip">' + chip + "</span>" +
         (locked ? '<button class="btn" disabled>Locked</button>' : '<button class="btn primary" data-game="' + g + '">Play</button>') + "</div>" +
         (locked ? '<p class="game-lock">Clear stage ' + d.unlock + " to play</p>" : "") + "</article>";
     }).join("");
   }
   document.addEventListener("click", function (e) {
+    var lv = e.target.closest("[data-level]");
+    if (lv && LP) { startGame(LP, +lv.dataset.level); return; }
+    var ll = e.target.closest("[data-levels]");
+    if (ll) { var k = G ? G.kind : LP; if (k) showLevels(k); return; }
     var gb = e.target.closest("[data-game]");
-    if (gb) { if (view !== "games") show("games"); startGame(gb.dataset.game); return; }
+    if (gb) { if (view !== "games") show("games"); showLevels(gb.dataset.game); return; }
     var go = e.target.closest("[data-go]");
     if (go) { e.preventDefault(); show(go.dataset.go); }
   });
   $("game-back").addEventListener("click", function () { endGame(true); renderGames(); });
 
-  function startGame(kind) {
+  function clearArena() {
+    $("arena").querySelectorAll(".bubble, .drop, .brick, .paddle, .ball, .game-canvas").forEach(function (n) { n.remove(); });
+    $("buffer").hidden = true; $("buffer").textContent = "";
+  }
+  function showLevels(kind) {
     endGame(true);
     var def = GAMES[kind];
+    if (def.unlock && !stageOpen(def.unlock)) { renderGames(); return; }
+    LP = kind;
     $("games-menu").hidden = true;
     $("game-play").hidden = false;
     $("g-title").textContent = def.title;
+    $("g-stats").hidden = true;
+    clearArena();
+    var top = lvTop(kind), h = "";
+    for (var n = 1; n <= GAME_LEVELS; n++) {
+      var open = lvOpen(kind, n), L = def.levels[n - 1];
+      h += '<button class="lv' + (L.boss ? " boss" : "") + (n === top ? " cur" : "") + '"' + (open ? ' data-level="' + n + '"' : " disabled") +
+        ' title="' + esc(open ? "Level " + n + ": " + L.name : "Clear level " + (n - 1) + " to open") + '" aria-label="' + esc("Level " + n + (open ? ", " + lvStars(kind, n) + " stars" : ", locked")) + '">' +
+        "<b>" + n + "</b><span>" + (open ? starText(lvStars(kind, n)) : "Locked") + "</span>" + (L.boss ? "<i>Boss</i>" : "") + "</button>";
+    }
+    $("arena-msg").innerHTML = '<div class="box lv-box"><b>Choose a level</b><div class="lv-grid">' + h + '</div><p class="lv-note">' +
+      (top < GAME_LEVELS ? "Level " + (top + 1) + " opens when you clear level " + top + " with at least 1 star." : "Every level is open. Go for 3 stars on each.") +
+      '</p><p class="lv-note">Press Enter to play level ' + top + ", or a number key to pick one.</p></div>";
+  }
+  function levelKey(e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); startGame(LP, lvTop(LP)); return; }
+    if (e.key === "Escape") { e.preventDefault(); renderGames(); return; }
+    if (/^[0-9]$/.test(e.key)) { var n = e.key === "0" ? 10 : +e.key; if (lvOpen(LP, n)) { e.preventDefault(); startGame(LP, n); } }
+  }
+
+  function startGame(kind, n) {
+    endGame(true);
+    var def = GAMES[kind];
+    n = n || lvTop(kind);
+    if (!lvOpen(kind, n)) n = lvTop(kind);
+    var L = def.levels[n - 1];
+    LP = null;
+    $("games-menu").hidden = true;
+    $("game-play").hidden = false;
+    $("g-stats").hidden = false;
+    $("g-title").textContent = def.title + " · Level " + n;
     $("g-lives-l").textContent = def.livesLabel;
     $("g-level-l").textContent = def.levelLabel || "Level";
-    var arena = $("arena");
-    arena.querySelectorAll(".bubble, .drop, .brick, .paddle, .ball").forEach(function (n) { n.remove(); });
-    G = { kind: kind, items: [], els: [], score: 0, level: 1, cleared: 0, lives: def.lives, spawnIn: 0, last: 0, buf: "", raf: 0, over: false, running: false };
+    clearArena();
+    G = { kind: kind, lvl: n, L: L, items: [], els: [], score: 0, level: 0, cleared: 0, lives: def.lives, spawnIn: 0, last: 0, buf: "", raf: 0, over: false, running: false };
+    if (kind === "bubbles") bubblesSetup();
+    if (kind === "rain") rainSetup();
     if (kind === "breaker") breakerSetup();
     if (def.mod) { G.mod = def.mod; G.keys = 0; G.errs = 0; modCanvas(); def.mod.setup(); def.mod.draw(G.cx, G.W, G.H); }
     $("buffer").hidden = kind !== "rain";
-    $("buffer").textContent = "";
     gameHud();
-    $("arena-msg").innerHTML = '<div class="box"><b>' + def.title + "</b><p>" +
-      def.intro +
-      '</p><button class="btn primary" id="g-start">Start</button><p style="margin:10px 0 0;font-size:13px">or press Space</p></div>';
+    $("arena-msg").innerHTML = '<div class="box lv-intro">' + (L.boss ? '<span class="lv-tag">Boss level</span>' : "") + "<b>Level " + n + ": " + esc(L.name) + "</b><p>" + esc(lvGoal(kind, L)) + "</p>" +
+      (L.news ? '<p class="lv-new"><strong>New:</strong> ' + esc(L.news) + "</p>" : "") +
+      '<p class="lv-how">' + esc(def.intro) + " " + esc(lvStarRule(kind)) + "</p>" +
+      '<div class="actions" style="justify-content:center"><button class="btn primary" id="g-start">Start</button><button class="btn" data-levels>Levels</button></div><p style="margin:10px 0 0;font-size:13px">or press Space</p></div>';
     $("g-start").addEventListener("click", runGame);
   }
   function runGame() {
-    if (!G || G.running) return;
+    if (!G || G.running || G.over) return;
     G.running = true;
     $("arena-msg").innerHTML = "";
     G.last = performance.now();
@@ -2188,134 +2398,251 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
   }
   function gameLoop(now) {
     if (!G || G.over) return;
-    var dt = Math.min(0.05, (now - G.last) / 1000);
+    var dt = Math.max(0, Math.min(0.05, (now - G.last) / 1000));
     G.last = now;
     var arena = $("arena"), W = arena.clientWidth, H = arena.clientHeight;
-    if (G.kind === "breaker") { breakerStep(dt, H); if (G && !G.over) G.raf = requestAnimationFrame(gameLoop); return; }
-    if (G.mod) { modFrame(dt); if (G && !G.over) G.raf = requestAnimationFrame(gameLoop); return; }
+    if (G.kind === "breaker") breakerStep(dt, H);
+    else if (G.mod) modFrame(dt);
+    else if (G.kind === "bubbles") bubblesStep(dt, W, H);
+    else rainStep(dt, W, H);
+    if (G && !G.over) G.raf = requestAnimationFrame(gameLoop);
+  }
+  function lvWin(stars, line, title) { G.stars = stars; gameFinish(title || "Level " + G.lvl + " cleared!", line, true); }
+  function lvLose(title, line) { gameFinish(title, line, false); }
+  function livesStars(lost) { return lost <= 0 ? 3 : lost <= 2 ? 2 : 1; }
+
+  // ----- Bubble Pop -----
+  function bubblesSetup() {
+    var L = G.L;
+    G.maxLives = G.lives; G.popped = 0; G.giantsLeft = L.giants || 0; G.giant = null; G.giantIn = 3;
+    G.level = "0/" + L.pops;
+  }
+  function bubbleEl(cls, html) {
+    var el = document.createElement("div");
+    el.className = cls; el.innerHTML = html;
+    el.style.position = "absolute"; el.style.left = "0"; el.style.top = "0";
+    $("arena").appendChild(el);
+    return el;
+  }
+  function bubblesStep(dt, W, H) {
+    var L = G.L;
     G.spawnIn -= dt;
     if (G.spawnIn <= 0) {
-      spawnItem(W, H);
-      G.spawnIn = G.kind === "bubbles" ? Math.max(0.42, 1.25 - G.level * 0.09) : Math.max(1.1, 3.0 - G.level * 0.22);
+      var ch = lvKey(L.keys), r = Math.random(), kind = "";
+      if (L.heart && G.lives < G.maxLives && r < 0.08) kind = "heart";
+      else if (L.ice && r < 0.24) kind = "ice";
+      var el = bubbleEl("bubble" + (kind ? " " + kind : ""), esc(ch));
+      if (!kind) el.style.backgroundColor = "var(" + pick(BUBBLE_TINTS) + ")";
+      var x = 10 + Math.random() * Math.max(10, W - 64);
+      G.items.push({ el: el, text: ch, kind: kind, hp: kind === "ice" ? 2 : 1, x: x, x0: x, y: H + 10, ph: Math.random() * 6,
+        v: (L.v + Math.random() * 18) * (1 + 0.15 * G.popped / L.pops) });
+      G.spawnIn = L.gap * (0.85 + Math.random() * 0.3);
+    }
+    if (G.giantsLeft && !G.giant) {
+      G.giantIn -= dt;
+      if (G.giantIn <= 0) {
+        var w = lvWord(L.giantK, 4, 6), gel = bubbleEl("bubble giant", "");
+        G.giant = { el: gel, word: w, pos: 0, x: Math.max(8, Math.random() * (W - 150)), y: H + 10, v: 20 + G.lvl };
+        giantPaint();
+      }
     }
     for (var i = G.items.length - 1; i >= 0; i--) {
       var it = G.items[i];
-      if (G.kind === "bubbles") {
-        it.y -= it.v * dt;
-        if (it.y < -50) { dropItem(i); loseLife(); continue; }
-      } else {
-        it.y += it.v * dt;
-        if (it.y > H - 30) { dropItem(i); G.buf = ""; showBuffer(); loseLife(); continue; }
+      it.y -= it.v * dt;
+      if (L.drift) { it.ph += dt * 1.7; it.x = Math.max(4, Math.min(W - 50, it.x0 + Math.sin(it.ph) * 34)); }
+      if (it.y < -50) { var hk = it.kind; dropItem(i); if (hk !== "heart") bubbleEscape(1); if (!G || G.over) return; continue; }
+      it.el.style.transform = "translate(" + it.x + "px," + it.y + "px)";
+    }
+    var g = G.giant;
+    if (g) {
+      g.y -= g.v * dt;
+      if (g.y < -130) { g.el.remove(); G.giant = null; G.giantIn = 2; bubbleEscape(3); if (!G || G.over) return; }
+      else g.el.style.transform = "translate(" + g.x + "px," + g.y + "px)";
+    }
+  }
+  function giantPaint() {
+    var g = G.giant;
+    g.el.innerHTML = '<span class="done">' + esc(g.word.slice(0, g.pos)) + '</span><span class="next">' + esc(g.word.charAt(g.pos)) + "</span>" + esc(g.word.slice(g.pos + 1));
+  }
+  function bubbleEscape(n) {
+    G.lives = Math.max(0, G.lives - n); sound.bad(); gameHud();
+    if (G.lives <= 0) lvLose("Too many escapes", "You popped " + G.popped + " of " + G.L.pops + " bubbles.");
+  }
+  function bubbleCheck() {
+    G.level = Math.min(G.popped, G.L.pops) + "/" + G.L.pops; gameHud();
+    if (G.popped >= G.L.pops && !G.giantsLeft && !G.giant) {
+      var lost = G.maxLives - G.lives;
+      lvWin(livesStars(lost), lost ? lost + (lost === 1 ? " escape" : " escapes") + " this time." : "Not one bubble got away.");
+    }
+  }
+  function bubblesKey(k) {
+    var g = G.giant;
+    if (g && keyMatches(k, g.word[g.pos])) {
+      g.pos++; sound.ok();
+      if (g.pos >= g.word.length) {
+        g.el.classList.add("pop"); var gel = g.el; setTimeout(function () { gel.remove(); }, 180);
+        G.giant = null; G.giantsLeft--; G.giantIn = 3; G.score += 100; sound.step();
+        bubbleCheck();
+      } else giantPaint();
+      return;
+    }
+    var best = -1;
+    G.items.forEach(function (it, i) { if (it.text === k && (best < 0 || it.y < G.items[best].y)) best = i; });
+    if (best < 0) G.items.forEach(function (it, i) { if (keyMatches(k, it.text) && (best < 0 || it.y < G.items[best].y)) best = i; });
+    if (best < 0) { G.score = Math.max(0, G.score - 2); gameHud(); sound.bad(); if (/^[a-z]$/i.test(k)) P.keyErr[k.toLowerCase()] = (P.keyErr[k.toLowerCase()] || 0) + 1; return; }
+    var it = G.items[best];
+    if (/^[a-z]$/i.test(it.text)) P.keyHit[it.text.toLowerCase()] = (P.keyHit[it.text.toLowerCase()] || 0) + 1;
+    if (it.kind === "ice" && it.hp > 1) { it.hp--; it.el.classList.add("cracked"); G.score += 2; sound.ok(); gameHud(); return; }
+    G.items.splice(best, 1);
+    it.el.classList.add("pop");
+    setTimeout(function () { it.el.remove(); }, 150);
+    if (it.kind === "heart") { G.lives = Math.min(G.maxLives, G.lives + 1); sound.step(); } else sound.ok();
+    G.popped++; G.score += 10 + G.lvl;
+    bubbleCheck();
+  }
+
+  // ----- Word Rain -----
+  function rainSetup() {
+    var L = G.L;
+    G.maxLives = G.lives; G.thunderLeft = L.thunder || 0; G.thunder = null;
+    G.thunderAt = L.thunder ? Math.max(2, Math.floor(L.clear * (L.thunder > 1 ? 0.25 : 0.4))) : 0;
+    G.level = "0/" + L.clear;
+  }
+  // Typed text matches a word letter by letter; capitals matter only where the word has them.
+  function rainPrefix(text, buf) {
+    if (buf.length > text.length) return false;
+    for (var i = 0; i < buf.length; i++) if (!keyMatches(buf[i], text[i])) return false;
+    return true;
+  }
+  function rainStep(dt, W, H) {
+    var L = G.L;
+    G.spawnIn -= dt;
+    if (G.spawnIn <= 0) {
+      if (G.thunderLeft && !G.thunder && G.cleared >= G.thunderAt) rainSpawn(W, true);
+      else rainSpawn(W, false);
+      G.spawnIn = L.gap * (0.85 + Math.random() * 0.3);
+    }
+    for (var i = G.items.length - 1; i >= 0; i--) {
+      var it = G.items[i];
+      it.y += it.v * dt;
+      if (L.wind) { it.ph += dt; it.x = Math.max(4, Math.min(W - it.w - 4, it.x + Math.sin(it.ph * 0.9) * 22 * dt)); }
+      if (L.fog && !it.boss) { var f = it.y / H; it.el.style.opacity = f > 0.26 && f < 0.64 ? 0.06 : 1; }
+      if (it.y > H - 30) {
+        var boss = it.boss;
+        dropItem(i); G.buf = ""; showBuffer();
+        if (boss) G.thunder = null;
+        G.lives = Math.max(0, G.lives - (boss ? 2 : 1)); sound.bad(); gameHud();
+        if (G.lives <= 0) { lvLose("The words landed", "You cleared " + G.cleared + " of " + L.clear + " words."); return; }
+        continue;
       }
       it.el.style.transform = "translate(" + it.x + "px," + it.y + "px)";
     }
-    if (G && !G.over) G.raf = requestAnimationFrame(gameLoop);
   }
-  function spawnItem(W, H) {
-    var el = document.createElement("div"), it;
-    if (G.kind === "bubbles") {
-      var ch = pick("asdfjkl;ghrueiwoqptyzxcvbnm".split("").slice(0, Math.min(26, 8 + (G.level - 1) * 3)));
-      el.className = "bubble";
-      el.textContent = ch;
-      el.style.backgroundColor = "var(" + pick(BUBBLE_TINTS) + ")";
-      it = { el: el, text: ch, x: 10 + Math.random() * Math.max(10, W - 64), y: H + 10, v: 55 + G.level * 12 + Math.random() * 20 };
+  function rainSpawn(W, boss) {
+    var L = G.L, used = G.items.map(function (x) { return x.text.charAt(0).toLowerCase(); });
+    var avoid = function (w) { return used.indexOf(w.charAt(0).toLowerCase()) > -1; }, w, heart = false;
+    if (boss) {
+      var first = lvWord(L.k, 2, 4, avoid), parts = [first];
+      while (parts.length < 3) parts.push(lvWord(L.k, 2, 4));
+      w = parts.join(" ");
     } else {
-      var list = G.level < 3 ? EASY : G.level < 6 ? COMMON : COMMON.concat(HARD);
-      var used = G.items.map(function (x) { return x.text.charAt(0); });
-      var w, tries = 0;
-      do { w = pick(list); tries++; } while (used.indexOf(w.charAt(0)) > -1 && tries < 20);
-      el.className = "drop";
-      el.innerHTML = '<span class="hit"></span><span class="rest">' + esc(w) + "</span>";
-      var estW = w.length * 10 + 24;
-      it = { el: el, text: w, x: 8 + Math.random() * Math.max(10, W - estW - 16), y: -30, v: 26 + G.level * 6 };
+      w = lvWord(L.k, L.lens[0], L.lens[1], avoid);
+      heart = L.heart && G.lives < G.maxLives && Math.random() < 0.12;
     }
-    el.style.position = "absolute";
-    el.style.left = "0"; el.style.top = "0";
+    var el = document.createElement("div");
+    el.className = "drop" + (heart ? " heart" : "") + (boss ? " boss" : "");
+    el.innerHTML = '<span class="hit"></span><span class="rest">' + esc(w) + "</span>";
+    var estW = w.length * (boss ? 12.5 : 10) + (boss ? 34 : 24) + (heart ? 18 : 0);
+    var it = { el: el, text: w, w: estW, heart: heart, boss: boss, ph: Math.random() * 6, x: 8 + Math.random() * Math.max(10, W - estW - 16), y: -30, v: (L.v + Math.random() * 4) * (boss ? 0.55 : 1) };
+    el.style.position = "absolute"; el.style.left = "0"; el.style.top = "0";
     el.style.transform = "translate(" + it.x + "px," + it.y + "px)";
     $("arena").appendChild(el);
     G.items.push(it);
+    if (boss) G.thunder = it;
   }
-  function dropItem(i) { G.items[i].el.remove(); G.items.splice(i, 1); }
-  function loseLife() {
-    G.lives--;
-    gameHud();
-    if (G.lives <= 0) gameOver();
-  }
-  function addScore(pts) {
-    G.score += pts; G.cleared++;
-    var per = G.kind === "bubbles" ? 15 : 8;
-    if (G.kind !== "breaker" && G.cleared % per === 0) G.level++;
-    gameHud();
+  function rainKey(k) {
+    var nb = G.buf + k;
+    var match = G.items.filter(function (it) { return rainPrefix(it.text, nb); });
+    if (!match.length) { showBuffer(true); sound.bad(); return; }
+    G.buf = nb;
+    var done = match.filter(function (it) { return it.text.length === nb.length; }).sort(function (a, b) { return b.y - a.y; })[0];
+    if (done) {
+      G.items.splice(G.items.indexOf(done), 1);
+      done.el.remove();
+      G.buf = "";
+      if (done.boss) { G.thunder = null; G.thunderLeft--; G.score += 60; G.thunderAt = G.cleared + Math.max(2, Math.floor(G.L.clear * 0.4)); }
+      else { G.cleared++; G.score += done.text.length * 5 + G.lvl * 2; }
+      if (done.heart) G.lives = Math.min(G.maxLives, G.lives + 1);
+      sound.step();
+      G.level = Math.min(G.cleared, G.L.clear) + "/" + G.L.clear; gameHud();
+      if (G.cleared >= G.L.clear && !G.thunderLeft) {
+        var lost = G.maxLives - G.lives;
+        showBuffer();
+        lvWin(livesStars(lost), lost ? (lost === 1 ? "One word landed." : lost + " lives lost.") : "No word touched the ground.");
+        return;
+      }
+    }
+    showBuffer();
   }
   function showBuffer(err) {
     var b = $("buffer");
     b.textContent = G.buf || " ";
     b.classList.toggle("err", !!err);
     G.items.forEach(function (it) {
-      var on = G.buf && it.text.indexOf(G.buf) === 0;
-      it.el.firstChild.textContent = on ? G.buf : "";
+      var on = G.buf && rainPrefix(it.text, G.buf);
+      it.el.firstChild.textContent = on ? it.text.slice(0, G.buf.length) : "";
       it.el.lastChild.textContent = on ? it.text.slice(G.buf.length) : it.text;
       it.el.classList.toggle("target", !!on);
     });
   }
+  function dropItem(i) { G.items[i].el.remove(); G.items.splice(i, 1); }
+
   function gameKey(e) {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (!G.running) {
-      if (e.key === " " || e.key === "Enter") { e.preventDefault(); if (G.over) startGame(G.kind); else runGame(); }
+      if (e.key === " " || e.key === "Enter") { e.preventDefault(); if (G.over) { if (G.primary) G.primary(); } else runGame(); }
+      else if (e.key === "Escape" && !G.over) { e.preventDefault(); showLevels(G.kind); }
       return;
     }
     if (G.over) return;
-    if (e.key === "Escape") { e.preventDefault(); if (G.mod && G.mod.esc) G.mod.esc(); else gameOver(); return; }
+    if (e.key === "Escape") { e.preventDefault(); if (G.mod && G.mod.esc) G.mod.esc(); else lvLose("Level stopped", "You pressed Esc."); return; }
     if (G.kind === "rain" && e.key === "Backspace") { e.preventDefault(); G.buf = G.buf.slice(0, -1); showBuffer(); return; }
     if (e.key.length !== 1) return;
     e.preventDefault();
     if (G.mod) { modKey(e.key); return; }
-    var ch = e.key.toLowerCase();
-    if (G.kind === "breaker") { breakerKey(ch); return; }
-    if (G.kind === "bubbles") {
-      var best = -1;
-      G.items.forEach(function (it, i) { if (it.text === ch && (best < 0 || it.y < G.items[best].y)) best = i; });
-      var hk = best > -1 ? ch : null;
-      if (best > -1) {
-        var el = G.items[best].el;
-        G.items.splice(best, 1);
-        el.classList.add("pop");
-        sound.ok();
-        setTimeout(function () { el.remove(); }, 150);
-        addScore(10 + G.level);
-      } else { G.score = Math.max(0, G.score - 2); gameHud(); sound.bad(); }
-      if (hk) { P.keyHit[hk] = (P.keyHit[hk] || 0) + 1; }
-    } else {
-      var nb = G.buf + ch;
-      var match = G.items.filter(function (it) { return it.text.indexOf(nb) === 0; });
-      if (!match.length) { showBuffer(true); sound.bad(); return; }
-      G.buf = nb;
-      var done = match.filter(function (it) { return it.text === nb; }).sort(function (a, b) { return b.y - a.y; })[0];
-      if (done) {
-        G.items.splice(G.items.indexOf(done), 1);
-        done.el.remove();
-        addScore(done.text.length * 5 + G.level * 2);
-        sound.step();
-        G.buf = "";
-      }
-      showBuffer();
-    }
+    if (G.kind === "breaker") { breakerKey(e.key.toLowerCase()); return; }
+    if (G.kind === "bubbles") bubblesKey(e.key);
+    else rainKey(e.key);
   }
   function gameOver() {
     if (!G || G.over) return;
     G.over = true; G.running = false;
     cancelAnimationFrame(G.raf);
-    var rec = P.games[G.kind] || { best: 0, level: 0, plays: 0 };
-    var isBest = G.score > rec.best;
-    if ((isBest && G.score > 0) || G.resultWin) sound.cheer(!!G.resultWin && isBest); else sound.soft();
-    rec.plays++; rec.best = Math.max(rec.best, G.score); rec.level = Math.max(rec.level, G.level);
+    var rec = lvRec(G.kind), n = G.lvl, win = !!G.resultWin, stars = win ? Math.max(1, Math.min(3, G.stars || 1)) : 0;
+    var had = rec.lv[n - 1] || 0, isBest = G.score > rec.best;
+    if (win) sound.cheer(stars === 3 || n === GAME_LEVELS); else sound.soft();
+    rec.plays++; rec.best = Math.max(rec.best, G.score);
+    if (stars > had) rec.lv[n - 1] = stars;
+    rec.level = 0; for (var i = GAME_LEVELS; i >= 1; i--) if (rec.lv[i - 1]) { rec.level = i; break; }
     P.games[G.kind] = rec;
     save();
     if (G.mod) G.mod.draw(G.cx, G.W, G.H);
-    $("arena-msg").innerHTML = '<div class="box"><b>' + esc(G.resultTitle || "Game over") + "</b><p>" + (G.resultLine ? esc(G.resultLine) + "<br>" : "") + "Score " + G.score + (G.resultLine ? "" : " · level " + G.level) + (isBest ? " · new best!" : " · best " + rec.best) +
-      '</p><div class="actions" style="justify-content:center"><button class="btn primary" id="g-again">Play again</button><button class="btn" id="g-menu">All games</button></div></div>';
-    var gk = G.kind; $("g-again").addEventListener("click", function () { startGame(gk); });
-    $("g-menu").addEventListener("click", function () { endGame(true); renderGames(); });
+    var gk = G.kind, next = win && n < GAME_LEVELS, opened = win && !had && n < GAME_LEVELS;
+    var title = G.resultTitle || (win ? "Level " + n + " cleared!" : "Level " + n + " not cleared");
+    if (win && n === GAME_LEVELS && !had) title = "All 10 levels cleared!";
+    var p = (G.resultLine ? esc(G.resultLine) + "<br>" : "") + "Score " + G.score + (isBest && G.score > 0 ? " · new best!" : "");
+    if (opened) p += "<br>Level " + (n + 1) + " is now open.";
+    else if (win && stars > had && had) p += "<br>New record: " + stars + " stars on this level.";
+    if (!win) p += "<br>Clear it with at least 1 star to open level " + Math.min(n + 1, GAME_LEVELS) + ".";
+    if (!win && n === GAME_LEVELS) p = p.replace(/<br>Clear it with.*$/, "<br>Clear it to finish every level.");
+    $("arena-msg").innerHTML = '<div class="box lv-end">' + (win ? '<div class="lv-stars" aria-label="' + stars + ' stars">' + starText(stars) + "</div>" : "") +
+      "<b>" + esc(title) + "</b><p>" + p + '</p><div class="actions" style="justify-content:center">' +
+      (next ? '<button class="btn primary" id="g-next">Next level</button><button class="btn" id="g-again">Play again</button>'
+            : '<button class="btn primary" id="g-again">' + (win ? "Play again" : "Try again") + "</button>") +
+      '<button class="btn" data-levels>Levels</button></div><p style="margin:10px 0 0;font-size:13px">Press Space for ' + (next ? "the next level" : win ? "another go" : "another try") + "</p></div>";
+    G.primary = next ? function () { startGame(gk, n + 1); } : function () { startGame(gk, n); };
+    $("g-again").addEventListener("click", function () { startGame(gk, n); });
+    if (next) $("g-next").addEventListener("click", function () { startGame(gk, n + 1); });
   }
   function endGame(silent) {
     if (!G) return;
@@ -2323,6 +2650,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     G.over = true;
     G.items.forEach(function (it) { it.el.remove(); });
     G.els.forEach(function (el) { el.remove(); });
+    if (G.giant) G.giant.el.remove();
     G = null;
   }
 
@@ -2425,106 +2753,138 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     gameOver();
   }
 
+
   // ----- Ghost Race -----
+  // Three rival cars drive at set speeds; your finishing place gives the stars. On boss levels the fastest car is your own best run.
+  var RIVAL_COLORS = ["#4aa3ff", "#a66bff", "#ffffff"];
   var GhostRace = {
     setup: function () {
-      var hi = topStage();
-      G.text = gameSentence(15, 25);
-      G.pos = 0; G.err = false; G.start = 0; G.done = false;
-      var saved = P.ghost;
-      G.ghostWpm = saved && saved.wpm ? saved.wpm : Math.max(10, STAGES[hi].exam.pass.wpm);
-      G.ghostMarks = saved && saved.marks ? saved.marks : null; // ms at every 2% of the text
-      G.ghostDone = false; G.level = 0; G.lives = 100;
+      var L = G.L;
+      G.text = L.sentence ? gameSentence(L.minW, L.maxW) : lvText(L.words, L.minW, L.maxW);
+      G.pos = 0; G.err = false; G.start = 0; G.done = false; G.skidT = 0;
+      G.rivals = L.rivals.map(function (wpm, i) { return { wpm: wpm, marks: null, name: wpm + " WPM", color: RIVAL_COLORS[i], fin: 0 }; });
+      if (L.boss) {
+        var top = G.rivals[2], saved = P.ghost;
+        if (saved && saved.wpm >= top.wpm && saved.marks) { top.wpm = saved.wpm; top.marks = saved.marks; }
+        top.name = "Your ghost · " + top.wpm + " WPM"; top.ghost = true;
+      }
+      G.level = 0; G.lives = 1;
     },
-    ghostFrac: function (ms) {
-      if (G.ghostMarks) {
-        var m = G.ghostMarks, n = m.length;
+    frac: function (r, ms) {
+      if (r.marks) {
+        var m = r.marks, n = m.length;
         if (ms >= m[n - 1]) return 1;
         for (var i = 0; i < n; i++) if (m[i] > ms) { var prev = i ? m[i - 1] : 0; return (i + (ms - prev) / Math.max(1, m[i] - prev)) / n; }
         return 1;
       }
-      return Math.min(1, (ms / 60000) * G.ghostWpm * 5 / G.text.length);
+      return Math.min(1, (ms / 60000) * r.wpm * 5 / G.text.length);
     },
-    step: function () {
+    step: function (dt) {
+      if (G.skidT > 0) G.skidT = Math.max(0, G.skidT - dt);
       if (!G.start || G.done) return;
-      var ms = performance.now() - G.start;
+      var ms = performance.now() - G.start, pf = G.pos / G.text.length, ahead = 0, all = true;
       G.level = Math.round(G.pos / 5 / Math.max(ms, 1000) * 60000);
-      $("g-level").textContent = G.level;
-      if (!G.ghostDone && GhostRace.ghostFrac(ms) >= 1) G.ghostDone = ms;
-      if (G.ghostDone && !G.done) { G.done = true; GhostRace.end(false); }
+      G.rivals.forEach(function (r) {
+        var f = GhostRace.frac(r, ms);
+        if (f >= 1 && !r.fin) r.fin = ms;
+        if (f > pf) ahead++;
+        if (!r.fin) all = false;
+      });
+      G.lives = ahead + 1;
+      $("g-level").textContent = G.level; $("g-lives").textContent = G.lives;
+      if (all) { G.done = true; GhostRace.end(false); }
     },
     key: function (ch) {
       if (G.done) return null;
+      if (G.skidT > 0) { G.keys--; return null; }
       if (!G.start) { G.start = performance.now(); G.marks = []; }
-      if (!keyMatches(ch, G.text[G.pos])) { G.err = true; return false; }
+      if (!keyMatches(ch, G.text[G.pos])) { G.err = true; if (G.L.skid) G.skidT = 0.5; return false; }
       G.err = false; G.pos++;
       var ms = performance.now() - G.start;
       while (G.marks.length < 50 && G.pos / G.text.length >= (G.marks.length + 1) / 50) G.marks.push(Math.round(ms));
       if (G.pos >= G.text.length) { G.done = true; GhostRace.end(true); }
       return true;
     },
-    hud: function () { G.lives = modAcc(); },
-    end: function (won) {
+    end: function (finished) {
       var ms = performance.now() - G.start, wpm = Math.round(G.text.length / 5 / (ms / 60000));
-      G.score = won ? wpm : G.level; G.level = G.score; G.lives = modAcc();
-      var newBest = won && (!P.ghost || wpm > P.ghost.wpm);
-      if (newBest) P.ghost = { wpm: wpm, marks: G.marks.slice() };
-      G.drawAfter = true;
-      gameFinish(won ? "You beat the ghost!" : "The ghost got there first",
-        (won ? wpm + " WPM" : "You were at " + G.level + " WPM") + " · " + modAcc() + "% accuracy" + (newBest ? " · this run is your new ghost" : ""), won);
+      var place = 1 + G.rivals.filter(function (r) { return r.fin && r.fin < ms; }).length;
+      G.score = finished ? wpm * (5 - place) : G.level; G.level = finished ? wpm : G.level; G.lives = finished ? place : 4;
+      var newGhost = finished && (!P.ghost || wpm > P.ghost.wpm);
+      if (newGhost) P.ghost = { wpm: wpm, marks: G.marks.slice() };
+      G.drawAfter = true; G.place = place;
+      var line = (finished ? wpm + " WPM" : "You were at " + G.level + " WPM") + " · " + modAcc() + "% accuracy" + (newGhost ? " · this run is your new ghost" : "");
+      if (finished && place <= 3) lvWin(4 - place, line, ["", "1st place!", "2nd place", "3rd place"][place]);
+      else lvLose("Every car beat you to the flag", line);
     },
     draw: function (cx, W, H) {
-      var roadTop = 40, roadH = Math.min(170, H * 0.42), laneH = roadH / 2;
+      var roadTop = 34, roadH = Math.min(216, H * 0.48), laneH = roadH / 4;
       cx.fillStyle = "#7cc36a"; cx.fillRect(0, 0, W, H);
-      cx.fillStyle = "#5a5f66"; cx.fillRect(0, roadTop, W, roadH);
-      cx.strokeStyle = "#f4f4f4"; cx.setLineDash([22, 16]); cx.lineWidth = 3;
-      cx.beginPath(); cx.moveTo(0, roadTop + laneH); cx.lineTo(W, roadTop + laneH); cx.stroke(); cx.setLineDash([]);
-      var flagX = W - 54, x0 = 24, x1 = flagX - 72;
+      cx.fillStyle = G.L.night ? "#34383e" : "#5a5f66"; cx.fillRect(0, roadTop, W, roadH);
+      cx.strokeStyle = "rgba(244,244,244,0.8)"; cx.setLineDash([22, 16]); cx.lineWidth = 2;
+      for (var ln = 1; ln < 4; ln++) { cx.beginPath(); cx.moveTo(0, roadTop + laneH * ln); cx.lineTo(W, roadTop + laneH * ln); cx.stroke(); }
+      cx.setLineDash([]);
+      var flagX = W - 42, x0 = 18, x1 = flagX - 64;
       for (var r = 0; r < 8; r++) for (var c = 0; c < 2; c++) { cx.fillStyle = (r + c) % 2 ? "#111" : "#fff"; cx.fillRect(flagX + c * 12, roadTop + r * roadH / 8, 12, roadH / 8); }
-      var ms = G.start ? (G.done && G.ghostDone ? G.ghostDone : performance.now() - G.start) : 0;
-      var gf = G.start ? GhostRace.ghostFrac(ms) : 0, pf = G.pos / G.text.length;
-      function car(x, y, body, alpha, label) {
+      var ms = G.start ? (G.done && G.endMs ? G.endMs : performance.now() - G.start) : 0;
+      if (G.done && !G.endMs && G.start) G.endMs = ms;
+      var pf = G.pos / G.text.length, carH = Math.min(26, laneH - 10);
+      function car(x, y, body, alpha, label, spin) {
         cx.save(); cx.globalAlpha = alpha;
-        cx.fillStyle = body; rrect(cx, x, y - 14, 70, 28, 8); cx.fill();
-        cx.fillStyle = "rgba(255,255,255,0.8)"; rrect(cx, x + 38, y - 10, 18, 20, 4); cx.fill();
-        cx.fillStyle = "#222"; [[x + 10, y - 16], [x + 48, y - 16], [x + 10, y + 12], [x + 48, y + 12]].forEach(function (p) { cx.fillRect(p[0], p[1], 14, 5); });
+        cx.translate(x + 30, y); if (spin) cx.rotate(Math.sin(G.t * 30) * 0.25);
+        cx.fillStyle = body; rrect(cx, -30, -carH / 2, 60, carH, 7); cx.fill();
+        cx.fillStyle = "rgba(20,24,30,0.55)"; rrect(cx, 4, -carH / 2 + 4, 14, carH - 8, 3); cx.fill();
+        cx.fillStyle = "#222"; [[-22, -carH / 2 - 3], [12, -carH / 2 - 3], [-22, carH / 2 - 2], [12, carH / 2 - 2]].forEach(function (p) { cx.fillRect(p[0], p[1], 12, 5); });
         cx.restore();
-        cx.font = "600 13px " + SANS; cx.fillStyle = "#fff"; cx.textBaseline = "bottom";
-        var lw = cx.measureText(label).width;
-        cx.textAlign = "left"; cx.fillText(label, Math.max(4, Math.min(x, W - lw - 8)), y - 18);
+        cx.font = "600 12px " + SANS; cx.fillStyle = "#fff"; cx.textBaseline = "middle"; cx.textAlign = "left";
+        var lw = cx.measureText(label).width, lx = x + 66;
+        if (lx + lw > flagX - 4) lx = Math.max(4, x - lw - 6);
+        cx.fillText(label, lx, y);
       }
-      car(x0 + gf * (x1 - x0), roadTop + laneH / 2, "#ffffff", 0.55, "Ghost · best " + G.ghostWpm + " WPM");
-      car(x0 + pf * (x1 - x0), roadTop + laneH * 1.5, "#f08a24", 1, "You · " + (G.level || 0) + " WPM");
+      G.rivals.forEach(function (rv, i) {
+        var f = G.start ? GhostRace.frac(rv, ms) : 0;
+        car(x0 + f * (x1 - x0), roadTop + laneH * (i + 0.5), rv.color, rv.ghost ? 0.55 : 0.9, rv.name);
+      });
+      car(x0 + pf * (x1 - x0), roadTop + laneH * 3.5, "#f08a24", 1, "You · " + (G.level || 0) + " WPM", G.skidT > 0);
+      if (G.skidT > 0) { cx.font = "800 18px " + SANS; cx.fillStyle = "#ffd23f"; cx.textAlign = "center"; cx.textBaseline = "bottom"; cx.fillText("Skid!", x0 + pf * (x1 - x0) + 30, roadTop + laneH * 3 + 2); }
       // sentence box
-      var bx = 16, by = roadTop + roadH + 18, bw = W - 32, bh = H - by - 14;
-      cx.fillStyle = "#ffffff"; rrect(cx, bx, by, bw, bh, 10); cx.fill();
+      var bx = 16, by = roadTop + roadH + 14, bw = W - 32, bh = H - by - 12;
+      cx.fillStyle = G.L.night ? "#1d232b" : "#ffffff"; rrect(cx, bx, by, bw, bh, 10); cx.fill();
       var fs = W < 500 ? 15 : 19;
       cx.font = "500 " + fs + "px " + MONO; cx.textBaseline = "top"; cx.textAlign = "left";
       var cw = cx.measureText("M").width, per = Math.max(10, Math.floor((bw - 28) / cw)), lines = [], i = 0, t = G.text;
       while (i < t.length) { var end = Math.min(t.length, i + per); if (end < t.length) { var sp = t.lastIndexOf(" ", end); if (sp > i) end = sp + 1; } lines.push([i, end]); i = end; }
-      var lh = fs * 1.7;
+      var lh = fs * 1.6, night = G.L.night;
       lines.forEach(function (ln, li) {
         for (var k = ln[0]; k < ln[1]; k++) {
-          var x = bx + 14 + (k - ln[0]) * cw, y = by + 14 + li * lh;
-          cx.fillStyle = k < G.pos ? "#12823b" : k === G.pos ? (G.err ? "#c62828" : "#1d232b") : "#6b7480";
-          if (k === G.pos && G.err) { cx.fillStyle = "rgba(198,40,40,0.15)"; cx.fillRect(x - 1, y - 2, cw + 2, fs + 6); cx.fillStyle = "#c62828"; }
+          var x = bx + 14 + (k - ln[0]) * cw, y = by + 12 + li * lh;
+          if (night) cx.fillStyle = k < G.pos ? "#5cc48c" : k === G.pos ? (G.err ? "#f07a70" : "#ffffff") : k < G.pos + 10 ? "#e4e9ee" : "rgba(228,233,238,0.07)";
+          else cx.fillStyle = k < G.pos ? "#12823b" : k === G.pos ? (G.err ? "#c62828" : "#1d232b") : "#6b7480";
+          if (k === G.pos && G.err) { cx.fillStyle = "rgba(198,40,40,0.2)"; cx.fillRect(x - 1, y - 2, cw + 2, fs + 6); cx.fillStyle = night ? "#f07a70" : "#c62828"; }
           cx.fillText(t[k], x, y);
           if (k === G.pos) { cx.fillStyle = "#f08a24"; cx.fillRect(x, y + fs + 3, cw, 2); }
         }
       });
-      if (!G.start && !G.over) { cx.font = "500 14px " + SANS; cx.fillStyle = "#1d232b"; cx.textAlign = "center"; cx.textBaseline = "top"; cx.fillText("Start typing. The ghost starts when you do.", W / 2, 12); }
+      if (!G.start && !G.over) { cx.font = "500 14px " + SANS; cx.fillStyle = "#1d232b"; cx.textAlign = "center"; cx.textBaseline = "top"; cx.fillText("Start typing. The race starts when you do.", W / 2, 10); }
     }
   };
 
   // ----- Build a House -----
-  // First wrong key on a brick wobbles the top brick; a second wrong key knocks it off.
-  var HOUSE_ROWS = [4, 3, 4, 3];
+  // First wrong key on a brick wobbles the top brick; a second wrong key knocks it off. Glass bricks fall on the first.
   var BuildHouse = {
     setup: function () {
-      G.hi = topStage();
+      var L = G.L;
+      G.rows = L.rows; G.maxRow = Math.max.apply(null, L.rows);
       G.slots = [];
-      HOUSE_ROWS.forEach(function (n, r) { for (var i = 0; i < n; i++) G.slots.push({ row: r, i: i, n: n, filled: false }); });
-      for (var t = 0; t < 3; t++) G.slots.push({ row: 4, i: t, roof: true, filled: false });
+      L.rows.forEach(function (n, r) { for (var i = 0; i < n; i++) G.slots.push({ row: r, i: i, n: n, filled: false }); });
+      G.roofAt = G.slots.length;
+      for (var t = 0; t < L.roof; t++) G.slots.push({ row: L.rows.length, i: t, roof: true, filled: false });
+      var chars = 0;
+      G.slots.forEach(function (s) {
+        s.word = s.roof ? lvWord(L.k, 3, 5) : L.key ? lvKey(L.k) : lvWord(L.k, 2, 4);
+        chars += s.word.length;
+      });
+      G.timeLeft = L.spc ? Math.round(chars * L.spc + 15) : 0; G.timeAll = G.timeLeft;
+      G.gustIn = L.gust || 0; G.gust = 0; G.msg = ""; G.msgT = 9;
       G.fx = []; G.drop = null; G.wobble = 0; G.mist = 0; G.clean = true; G.level = 1; G.lives = 0;
       BuildHouse.next();
     },
@@ -2533,29 +2893,39 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     next: function () {
       var si = BuildHouse.nextSlot();
       if (si < 0) return;
-      var roof = G.slots[si].roof, hi = G.hi;
-      if (roof) G.word = hi < 4 ? pick(HOME.filter(function (w) { return w.length <= 5; })) : poolWord(3, 5, hi);
-      else G.word = hi < 4 ? pick(poolLetters(hi).split("")) : poolWord(3, 4, hi);
+      G.word = G.slots[si].word;
       G.pos = 0; G.mist = 0; G.clean = true; G.err = false;
     },
     geo: function (W, H) {
-      var bw = Math.max(40, Math.min(92, W * 0.085)), bh = Math.round(bw * 0.46), groundY = H - 34;
-      var left = Math.max(W * 0.34, W * 0.58 - bw * 2);
+      var rows = G.rows.length, cols = G.maxRow;
+      var bw = Math.max(24, Math.min(92, W * 0.085, (W * 0.62 - 8) / (cols + 0.6), (H - 150) / ((rows + 2.6) * 0.46)));
+      var bh = Math.round(bw * 0.46), groundY = H - 34;
+      var left = Math.max(W * 0.32, W * 0.6 - bw * cols / 2);
+      left = Math.min(left, W - 10 - bw * (cols + 0.3));
       return { bw: bw, bh: bh, groundY: groundY, left: left };
     },
     slotRect: function (s, g) {
       if (s.roof) return null;
-      var off = s.n === 3 ? g.bw / 2 : 0;
+      var off = (G.maxRow - s.n) * g.bw / 2;
       return { x: g.left + off + s.i * g.bw, y: g.groundY - (s.row + 1) * g.bh, w: g.bw, h: g.bh };
     },
     roofPoly: function (g) {
-      var baseY = g.groundY - 4 * g.bh, L = g.left - g.bw * 0.3, R = g.left + g.bw * 4.3, apexY = baseY - g.bh * 2.6;
+      var baseY = g.groundY - G.rows.length * g.bh, L = g.left - g.bw * 0.3, R = g.left + g.bw * (G.maxRow + 0.3), apexY = baseY - g.bh * 2.6;
       return { L: L, R: R, baseY: baseY, apexY: apexY, mid: (L + R) / 2 };
     },
     hud: function () {
       var si = BuildHouse.nextSlot();
-      G.level = si < 0 ? 5 : G.slots[si].row + 1;
+      G.level = si < 0 ? G.rows.length + 1 : G.slots[si].row + 1;
       G.lives = G.slots.filter(function (s) { return s.filled; }).length;
+    },
+    knock: function () {
+      var top = BuildHouse.topSlot();
+      if (top < 0) return;
+      var g = BuildHouse.geo(G.W, G.H), s = G.slots[top], r = BuildHouse.slotRect(s, g) || BuildHouse.roofTileRect(top, g);
+      s.filled = false; G.wobble = 0;
+      G.fx.push({ x: r.x, y: r.y, w: r.w, h: r.h, vx: (Math.random() < 0.5 ? -1 : 1) * 120, vy: -160, rot: 0, t: 0, roof: !!s.roof });
+      G.score = Math.max(0, G.score - 10);
+      BuildHouse.hud(); BuildHouse.next(); gameHud();
     },
     key: function (ch) {
       if (G.drop || G.finished) return null;
@@ -2565,30 +2935,41 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
           var si = BuildHouse.nextSlot();
           G.drop = { si: si, t: 0 };
           G.score += 10 + (G.clean ? 5 : 0);
+          if (G.gust > 0) { G.gust = 0; G.gustIn = G.L.gust; G.msg = "Safe!"; G.msgT = 0; G.msgColor = "#22c55e"; }
         }
         return true;
       }
       G.err = true; G.clean = false; G.mist++;
       var top = BuildHouse.topSlot();
       if (top >= 0) {
-        if (G.mist % 2 === 1) { G.wobble = 0.6; G.wobbleSlot = top; }
-        else {
-          var g = BuildHouse.geo(G.W, G.H), s = G.slots[top], r = BuildHouse.slotRect(s, g) || BuildHouse.roofTileRect(top, g);
-          s.filled = false; G.wobble = 0;
-          G.fx.push({ x: r.x, y: r.y, w: r.w, h: r.h, vx: (Math.random() < 0.5 ? -1 : 1) * 120, vy: -160, rot: 0, t: 0, roof: !!s.roof });
-          G.score = Math.max(0, G.score - 10);
-        }
+        if (!G.L.glass && G.mist % 2 === 1) { G.wobble = 0.6; G.wobbleSlot = top; }
+        else { var keepPos = G.pos, keepWord = G.word; BuildHouse.knock(); if (G.word === keepWord) G.pos = keepPos; G.err = true; }
       }
       return false;
     },
     roofTileRect: function (idx, g) {
-      var rp = BuildHouse.roofPoly(g), w3 = (rp.R - rp.L) / 3, i = G.slots[idx].i;
-      return { x: rp.L + i * w3, y: rp.apexY + (rp.baseY - rp.apexY) * 0.35, w: w3, h: g.bh };
+      var rp = BuildHouse.roofPoly(g), wk = (rp.R - rp.L) / G.L.roof, i = G.slots[idx].i;
+      return { x: rp.L + i * wk, y: rp.apexY + (rp.baseY - rp.apexY) * 0.35, w: wk, h: g.bh };
     },
     step: function (dt) {
       if (G.wobble > 0) G.wobble = Math.max(0, G.wobble - dt);
+      G.msgT += dt;
       G.fx.forEach(function (f) { f.t += dt; f.vy += 700 * dt; f.x += f.vx * dt; f.y += f.vy * dt; f.rot += dt * 5; });
       G.fx = G.fx.filter(function (f) { return f.t < 1.6; });
+      if (G.finished) return;
+      if (G.timeAll) {
+        G.timeLeft -= dt;
+        if (G.timeLeft <= 0) { G.timeLeft = 0; G.finished = true; G.drawAfter = true; lvLose("The sun went down", G.lives + " of " + G.slots.length + " pieces in place."); return; }
+      }
+      if (G.L.gust && !G.drop) {
+        if (G.gust > 0) {
+          G.gust -= dt;
+          if (G.gust <= 0) { G.gust = 0; G.gustIn = G.L.gust; G.msg = "Blown away!"; G.msgT = 0; G.msgColor = "#ef4444"; sound.bad(); BuildHouse.knock(); }
+        } else if (BuildHouse.topSlot() >= 0) {
+          G.gustIn -= dt;
+          if (G.gustIn <= 0) { G.gust = 4; G.msg = "Gust! Finish this brick"; G.msgT = 0; G.msgColor = "#f5c518"; }
+        }
+      }
       if (G.drop) {
         G.drop.t += dt;
         if (G.drop.t >= 0.35) {
@@ -2601,66 +2982,70 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     },
     finish: function () {
       var acc = modAcc();
-      G.score += Math.round(acc * 2); gameHud();
+      G.score += Math.round(acc * 2) + Math.round(G.timeLeft || 0); gameHud();
       var stars = acc >= 95 ? 3 : acc >= 85 ? 2 : 1;
       G.drawAfter = true;
-      gameFinish("House finished!", stars + (stars === 1 ? " star" : " stars") + " · " + acc + "% accuracy", true);
+      lvWin(stars, acc + "% accuracy" + (G.timeAll ? " · " + Math.round(G.timeLeft) + " s of daylight left" : ""), G.L.what.replace(/^a /, "The ").replace(/^./, function (c) { return c.toUpperCase(); }) + " is finished!");
     },
     draw: function (cx, W, H) {
-      var g = BuildHouse.geo(W, H);
-      cx.fillStyle = "#bfe6fb"; cx.fillRect(0, 0, W, H);
-      cx.fillStyle = "#ffd23f"; cx.beginPath(); cx.arc(W * 0.8, 96, 26, 0, Math.PI * 2); cx.fill();
+      var g = BuildHouse.geo(W, H), L = G.L;
+      var dusk = G.timeAll ? 1 - G.timeLeft / G.timeAll : 0;
+      cx.fillStyle = dusk > 0.75 ? "#f4b183" : "#bfe6fb"; cx.fillRect(0, 0, W, H);
+      if (dusk > 0.75) { cx.fillStyle = "rgba(60,40,90," + ((dusk - 0.75) * 1.6) + ")"; cx.fillRect(0, 0, W, H); }
+      var sunX = G.timeAll ? W * (0.12 + 0.8 * dusk) : W * 0.8, sunY = G.timeAll ? 60 + Math.pow((dusk - 0.5) * 2, 2) * (H * 0.45) : 96;
+      cx.fillStyle = "#ffd23f"; cx.beginPath(); cx.arc(sunX, sunY, 24, 0, Math.PI * 2); cx.fill();
       cx.fillStyle = "#6cbf57"; cx.fillRect(0, g.groundY, W, H - g.groundY);
       // crane
-      var mastX = Math.max(26, g.left - g.bw * 2.4), beamY = 34;
+      var mastX = Math.max(22, g.left - g.bw * 2.2), beamY = 34;
       cx.fillStyle = "#f2b705"; cx.fillRect(mastX - 7, beamY, 14, g.groundY - beamY);
-      cx.fillRect(mastX - 30, beamY - 8, g.left + g.bw * 4 - mastX + 50, 12);
+      cx.fillRect(mastX - 30, beamY - 8, g.left + g.bw * G.maxRow - mastX + 50, 12);
       cx.strokeStyle = "#b88a00"; cx.lineWidth = 2;
       for (var yy = beamY + 16; yy < g.groundY - 10; yy += 26) { cx.beginPath(); cx.moveTo(mastX - 7, yy); cx.lineTo(mastX + 7, yy + 26); cx.stroke(); }
+      var glass = L.glass;
       function brick(x, y, w, h, text, rot) {
         cx.save(); cx.translate(x + w / 2, y + h / 2); if (rot) cx.rotate(rot);
-        cx.fillStyle = "#c2412d"; cx.strokeStyle = "#7a2518"; cx.lineWidth = 2;
+        cx.fillStyle = glass ? "rgba(125,211,252,0.85)" : "#c2412d"; cx.strokeStyle = glass ? "#0e7490" : "#7a2518"; cx.lineWidth = 2;
         cx.fillRect(-w / 2 + 1, -h / 2 + 1, w - 2, h - 2); cx.strokeRect(-w / 2 + 1, -h / 2 + 1, w - 2, h - 2);
-        if (text) { cx.fillStyle = "#fff"; cx.font = "700 " + Math.round(h * 0.55) + "px " + MONO; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(text, 0, 1); }
+        if (text) { cx.fillStyle = glass ? "#0b3b4a" : "#fff"; cx.font = "700 " + Math.round(Math.min(h * 0.55, 22)) + "px " + MONO; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(text, 0, 1); }
         cx.restore();
       }
-      var ns = BuildHouse.nextSlot();
+      var ns = BuildHouse.nextSlot(), gustShake = G.gust > 0 ? Math.sin(G.t * 50) * 2 : 0;
       G.slots.forEach(function (s, idx) {
         var r = BuildHouse.slotRect(s, g);
         if (!r) return;
         if (s.filled) {
           var rot = G.wobble > 0 && idx === G.wobbleSlot ? Math.sin(G.wobble * 40) * 0.12 : 0;
+          if (gustShake && idx === BuildHouse.topSlot()) rot = gustShake * 0.03;
           brick(r.x, r.y, r.w, r.h, "", rot);
         } else if (idx === ns && !G.drop) {
           cx.setLineDash([6, 5]); cx.strokeStyle = "#1d232b"; cx.lineWidth = 1.5; cx.strokeRect(r.x + 2, r.y + 2, r.w - 4, r.h - 4); cx.setLineDash([]);
         }
       });
-      // roof: a triangle cut into 3 tiles
-      var rp = BuildHouse.roofPoly(g), w3 = (rp.R - rp.L) / 3;
-      for (var t = 0; t < 3; t++) {
-        var idx = 14 + t, s = G.slots[idx];
-        cx.save(); cx.beginPath(); cx.rect(rp.L + t * w3, rp.apexY - 2, w3, rp.baseY - rp.apexY + 4); cx.clip();
+      // roof: a triangle cut into tiles
+      var rp = BuildHouse.roofPoly(g), wk = (rp.R - rp.L) / L.roof;
+      for (var t = 0; t < L.roof; t++) {
+        var idx = G.roofAt + t, s = G.slots[idx];
+        cx.save(); cx.beginPath(); cx.rect(rp.L + t * wk, rp.apexY - 2, wk, rp.baseY - rp.apexY + 4); cx.clip();
         cx.beginPath(); cx.moveTo(rp.L, rp.baseY); cx.lineTo(rp.mid, rp.apexY); cx.lineTo(rp.R, rp.baseY); cx.closePath();
         if (s.filled) {
-          var wob = G.wobble > 0 && idx === G.wobbleSlot;
-          if (wob) { cx.translate(0, Math.sin(G.wobble * 40) * 3); }
+          var wob = (G.wobble > 0 && idx === G.wobbleSlot) || (gustShake && idx === BuildHouse.topSlot());
+          if (wob) { cx.translate(0, Math.sin(G.t * 40) * 3); }
           cx.fillStyle = "#8e2b1f"; cx.fill(); cx.strokeStyle = "#5c1a12"; cx.lineWidth = 2; cx.stroke();
         } else if (idx === ns && !G.drop) { cx.setLineDash([6, 5]); cx.strokeStyle = "#1d232b"; cx.lineWidth = 1.5; cx.stroke(); cx.setLineDash([]); }
         cx.restore();
-        if (s.filled) { cx.strokeStyle = "#5c1a12"; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(rp.L + t * w3, rp.baseY); cx.lineTo(rp.L + t * w3, rp.baseY - 8); cx.stroke(); }
+        if (s.filled && t) { cx.strokeStyle = "#5c1a12"; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(rp.L + t * wk, rp.baseY); cx.lineTo(rp.L + t * wk, rp.baseY - 8); cx.stroke(); }
       }
       // hanging or dropping brick
       if (!G.finished) {
         var target = ns >= 0 ? (BuildHouse.slotRect(G.slots[ns], g) || BuildHouse.roofTileRect(ns, g)) : null;
-        var hookX = target ? target.x + target.w / 2 : g.left + g.bw * 2, hangY = beamY + 70;
-        var bwid = g.bw, bhei = g.bh;
+        var hookX = target ? target.x + target.w / 2 : g.left + g.bw * 2, hangY = beamY + 56;
         if (G.drop) {
           var tr = BuildHouse.slotRect(G.slots[G.drop.si], g) || BuildHouse.roofTileRect(G.drop.si, g), k = Math.min(1, G.drop.t / 0.35);
           brick(tr.x, hangY + (tr.y - hangY) * k * k, tr.w, tr.h, "");
         } else if (target) {
           cx.strokeStyle = "#333"; cx.lineWidth = 2; cx.beginPath(); cx.moveTo(hookX, beamY + 4); cx.lineTo(hookX, hangY); cx.stroke();
-          var bw2 = Math.max(bwid, G.word.length * bhei * 0.42 + 16);
-          brick(hookX - bw2 / 2, hangY, bw2, bhei, G.word);
+          var bhei = Math.max(g.bh, 24), bw2 = Math.max(g.bw, G.word.length * bhei * 0.42 + 16);
+          brick(Math.max(4, Math.min(W - bw2 - 4, hookX - bw2 / 2)), hangY, bw2, bhei, G.word);
         }
       }
       G.fx.forEach(function (f) {
@@ -2668,49 +3053,74 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
         if (f.roof) { cx.translate(f.x + f.w / 2, f.y + f.h / 2); cx.rotate(f.rot); cx.fillStyle = "#8e2b1f"; cx.fillRect(-f.w / 2, -f.h / 2, f.w, f.h); cx.restore(); return; }
         cx.restore(); cx.save(); cx.globalAlpha = Math.max(0, 1 - f.t / 1.6); brick(f.x, f.y, f.w, f.h, "", f.rot); cx.restore();
       });
-      if (G.wobble > 0) { cx.font = "800 22px " + SANS; cx.fillStyle = "#c62828"; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText("wobble!", g.left + g.bw * 2, rp.apexY - 20); }
+      if (G.wobble > 0) { cx.font = "800 22px " + SANS; cx.fillStyle = "#c62828"; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText("wobble!", g.left + g.bw * G.maxRow / 2, rp.apexY - 20); }
       // word box, top right
-      var tag = null;
       if (!G.finished && G.word) {
         cx.font = "600 22px " + MONO; var tw = G.word.length * cx.measureText("M").width + 16;
-        tag = drawWordTag(cx, G.word, G.pos, W - 16 - tw, 34, { align: "left", err: G.err, size: 22 });
+        drawWordTag(cx, G.word, G.pos, W - 16 - tw, 34, { align: "left", err: G.err, size: 22 });
       }
       cx.font = "600 14px " + SANS; cx.fillStyle = "#1d232b"; cx.textAlign = "left"; cx.textBaseline = "top";
-      var fl = G.level;
-      cx.fillText("Floor " + fl + " of 5 · Bricks " + G.lives + " · Accuracy " + modAcc() + "%", 14, 12);
+      var info = "Floor " + G.level + " of " + (G.rows.length + 1) + " · Accuracy " + modAcc() + "%";
+      if (G.timeAll) info += " · Sunset in " + Math.ceil(G.timeLeft) + " s";
+      if (W < 560 && G.timeAll) { cx.fillText("Floor " + G.level + " of " + (G.rows.length + 1) + " · " + modAcc() + "%", 14, 12); cx.fillText("Sunset in " + Math.ceil(G.timeLeft) + " s", 14, 30); }
+      else cx.fillText(info, 14, 12);
+      if (G.gust > 0) { cx.font = "800 16px " + SANS; cx.fillStyle = "#b91c1c"; cx.textAlign = "center"; cx.fillText("Gust! " + Math.ceil(G.gust) + " s to finish this brick", W / 2, H - 26); }
+      else if (G.msg && G.msgT < 1.4) banner(cx, W, G.msg, G.msgColor, G.msgT + 0.34);
     }
   };
 
   // ----- Typing Cricket -----
+  // A chase: reach the target before the balls or wickets run out. Yorkers are fast, no balls give a free hit, spin hides the word at first.
   var Cricket = {
     setup: function () {
-      G.hi = topStage();
+      var L = G.L;
       G.balls = 0; G.wkts = 0; G.runs = 0; G.state = "wait"; G.wait = 1.2; G.msg = "Get ready"; G.msgT = 0;
-      G.T = Math.max(2.0, 3.0 - Math.max(0, G.hi - 4) * 0.2);
-      G.target = P.games.cricket && P.games.cricket.best ? P.games.cricket.best + 1 : 0;
-      G.level = "0.0"; G.lives = 0; G.fly = null; G.stumpsDown = 0;
+      G.maxW = L.wkts || 3; G.free = false; G.fly = null; G.stumpsDown = 0; G.bowled = 0;
+      G.level = "0.0"; G.lives = 0;
     },
-    lens: function () { var h = G.hi; return h <= 4 ? [3, 4] : h === 5 ? [3, 5] : h <= 7 ? [4, 5] : [4, 7]; },
     bowl: function () {
-      var L = Cricket.lens(), prev = G.word;
-      G.word = poolWord(L[0], L[1], G.hi, function (w) { return w === prev; });
+      var L = G.L, prev = G.word;
+      G.word = lvWord(L.k, L.lens[0], L.lens[1], function (w) { return w === prev; });
+      G.bowled++;
+      G.yorker = L.yorker && !G.free && G.bowled % 4 === 0;
+      G.noball = L.noball && !G.free && !G.yorker && Math.random() < 0.18;
+      G.T = L.T * (G.yorker ? 0.72 : 1);
       G.pos = 0; G.err = false; G.bt = 0; G.state = "bowl";
     },
     overs: function () { return Math.floor(G.balls / 6) + "." + (G.balls % 6); },
-    after: function (text, color, out) {
-      G.balls++; G.msg = text; G.msgColor = color; G.msgT = 0; G.state = "wait"; G.wait = 1.4;
+    after: function (text, color, out, noCount) {
+      if (!noCount) G.balls++;
+      G.msg = text; G.msgColor = color; G.msgT = 0; G.state = "wait"; G.wait = 1.4;
       if (out) { G.wkts++; G.stumpsDown = 1; }
       G.level = Cricket.overs(); G.lives = G.wkts; G.score = G.runs; gameHud();
-      if (G.wkts >= 3 || G.balls >= 18) G.endIn = 1.3;
+      var L = G.L;
+      if (G.runs >= L.target) G.endIn = 1.2;
+      else if (G.wkts >= G.maxW || G.balls >= L.balls) G.endIn = 1.3;
+    },
+    // A no ball adds a run, doesn't count, and makes the next ball a free hit.
+    noBall: function (text) {
+      G.runs += 1; G.free = true;
+      Cricket.after(text + " · No ball! Free hit next", "#f5c518", false, true);
     },
     key: function (ch) {
-      if (G.state !== "bowl") return null;
-      if (!keyMatches(ch, G.word[G.pos])) { G.err = true; Cricket.after("OUT!", "#e53935", true); return false; }
+      if (G.state !== "bowl" || (G.L.late && G.bt < G.T * 0.22)) return null;
+      var free = G.free;
+      if (!keyMatches(ch, G.word[G.pos])) {
+        G.err = true; G.free = false;
+        if (G.noball) { Cricket.noBall("Missed"); return false; }
+        if (free) { Cricket.after("Missed · free hit, not out", "#94a3b8", false); return false; }
+        Cricket.after("OUT!", "#e53935", true); return false;
+      }
       G.pos++;
       if (G.pos >= G.word.length) {
         var left = 1 - G.bt / G.T, runs = left > 0.6 ? 6 : left > 0.4 ? 4 : left > 0.2 ? 2 : 1;
-        G.runs += runs; G.fly = { x: 0, y: 0, t: 0, vx: runs >= 4 ? -520 : -260, vy: runs === 6 ? -520 : -260 };
-        Cricket.after(runs === 6 ? "SIX!" : runs === 4 ? "FOUR!" : runs + (runs === 1 ? " run" : " runs"), "#f5c518", false);
+        if (G.yorker) runs += 2;
+        G.runs += runs; G.fly = { x: 0, y: 0, t: 0, vx: runs >= 4 ? -520 : -260, vy: runs >= 6 ? -520 : -260 };
+        var txt = runs >= 6 ? (runs > 6 ? "SIX + 2!" : "SIX!") : runs === 4 ? "FOUR!" : runs + " runs";
+        if (runs === 1) txt = "1 run";
+        G.free = false;
+        if (G.noball) Cricket.noBall(txt);
+        else Cricket.after(txt + (G.yorker ? " off a yorker" : ""), "#f5c518", false);
         if (runs >= 4) sound.step();
       }
       return true;
@@ -2722,75 +3132,107 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       if (G.endIn !== undefined) {
         G.endIn -= dt;
         if (G.endIn <= 0 && !G.over) {
-          var beat = G.target && G.runs >= G.target;
-          G.score = G.runs; G.level = G.balls;
-          gameFinish("Innings over", G.runs + " for " + G.wkts + " in " + Cricket.overs() + " overs" + (beat ? " · target beaten!" : ""), beat || !G.target);
+          var L = G.L, won = G.runs >= L.target, line = G.runs + " for " + G.wkts + " in " + Cricket.overs() + " overs";
+          G.score = G.runs + (won ? (L.balls - G.balls) * 5 : 0); G.drawAfter = true;
+          if (won) lvWin(G.wkts === 0 ? 3 : G.wkts === 1 ? 2 : 1, line + ".", "Target chased!");
+          else lvLose(G.wkts >= G.maxW ? "All out" : "Out of balls", line + ". You needed " + (L.target - G.runs) + " more.");
         }
         return;
       }
       if (G.state === "wait") { G.wait -= dt; if (G.wait <= 0) Cricket.bowl(); return; }
       G.bt += dt;
-      if (G.bt >= G.T) { sound.bad(); Cricket.after("OUT! Bowled", "#e53935", true); }
+      if (G.bt >= G.T) {
+        sound.bad();
+        var free = G.free; G.free = false;
+        if (G.noball) Cricket.noBall("Too slow");
+        else if (free) Cricket.after("Too slow · free hit, not out", "#94a3b8", false);
+        else Cricket.after("OUT! Bowled", "#e53935", true);
+      }
     },
     draw: function (cx, W, H) {
+      var L = G.L;
       cx.fillStyle = "#3f9b3a"; cx.fillRect(0, 0, W, H);
       cx.fillStyle = "#56b24f"; cx.beginPath(); cx.ellipse(W / 2, H / 2, W * 0.42, H * 0.46, 0, 0, Math.PI * 2); cx.fill();
       var pw = 96, px = W / 2 - pw / 2, top = 84, bot = H - 26;
       cx.fillStyle = "#e3c98f"; cx.fillRect(px, top, pw, bot - top);
       cx.strokeStyle = "#fff"; cx.lineWidth = 2;
       [top + 30, bot - 46].forEach(function (y) { cx.beginPath(); cx.moveTo(px - 12, y); cx.lineTo(px + pw + 12, y); cx.stroke(); });
-      // bowler's stumps and bowler
       cx.fillStyle = "#8b5a2b"; for (var i = -1; i <= 1; i++) cx.fillRect(W / 2 + i * 9 - 2, top + 8, 4, 20);
-      cx.fillStyle = "#f4f4f4"; cx.beginPath(); cx.arc(W / 2 + 26, top + 18, 9, 0, Math.PI * 2); cx.fill();
-      // batter's stumps
+      cx.fillStyle = L.boss ? "#f5c518" : "#f4f4f4"; cx.beginPath(); cx.arc(W / 2 + 26, top + 18, 9, 0, Math.PI * 2); cx.fill();
       var sy = bot - 34, fall = G.stumpsDown;
       cx.fillStyle = "#8b5a2b";
       for (var j = -1; j <= 1; j++) { cx.save(); cx.translate(W / 2 + j * 9, sy + 26); cx.rotate(fall * j * 0.7 + (fall ? 0.2 : 0)); cx.fillRect(-2, -26, 4, 26); cx.restore(); }
-      // batter
       cx.fillStyle = "#1e63c6"; cx.beginPath(); cx.arc(W / 2 - 26, sy + 4, 11, 0, Math.PI * 2); cx.fill();
       cx.fillRect(W / 2 - 34, sy + 12, 16, 20);
       cx.save(); cx.translate(W / 2 - 18, sy + 16); cx.rotate(G.fly ? -1.2 : -0.3); cx.fillStyle = "#d9b46a"; cx.fillRect(-3, -30, 7, 32); cx.restore();
-      // ball and word
       if (G.state === "bowl") {
         var k = G.bt / G.T, by = top + 28 + k * (sy - top - 28);
+        if (G.yorker) { cx.strokeStyle = "rgba(239,68,68,0.6)"; cx.lineWidth = 5; cx.beginPath(); cx.moveTo(W / 2 + 4, by - 40); cx.lineTo(W / 2 + 4, by); cx.stroke(); }
         cx.fillStyle = "#c62828"; cx.beginPath(); cx.arc(W / 2 + 4, by, 7, 0, Math.PI * 2); cx.fill();
-        drawWordTag(cx, G.word, G.pos, W / 2 + 4, by - 26, { err: G.err, size: 20 });
+        var hidden = L.late && G.bt < G.T * 0.22;
+        drawWordTag(cx, hidden ? "?" : G.word, hidden ? 0 : G.pos, W / 2 + 4, by - 26, { err: G.err, size: 20 });
+        var tag = G.free ? "FREE HIT" : G.yorker ? "YORKER" : hidden ? "SPIN" : "";
+        if (tag) { cx.font = "800 13px " + SANS; cx.fillStyle = G.free ? "#22c55e" : "#fff"; cx.textAlign = "left"; cx.textBaseline = "middle"; cx.fillText(tag, W / 2 + 60, by); }
       }
       if (G.fly) { cx.fillStyle = "#c62828"; cx.beginPath(); cx.arc(W / 2 + G.fly.x, sy + G.fly.y, 7, 0, Math.PI * 2); cx.fill(); }
-      // scoreboard
-      cx.fillStyle = "#1d232b"; rrect(cx, 12, 12, 196, G.target ? 62 : 44, 8); cx.fill();
+      var need = Math.max(0, L.target - G.runs), left = L.balls - G.balls;
+      cx.fillStyle = "#1d232b"; rrect(cx, 12, 12, 204, 62, 8); cx.fill();
       cx.fillStyle = "#fff"; cx.font = "700 20px " + MONO; cx.textAlign = "left"; cx.textBaseline = "top";
-      cx.fillText(G.runs + "/" + G.wkts, 24, 22);
-      cx.font = "500 13px " + SANS; cx.fillText("Over " + Cricket.overs() + " of 3", 96, 26);
-      if (G.target) { cx.fillStyle = "#f5c518"; cx.fillText("Target " + G.target, 24, 50); }
+      cx.fillText(G.runs + "/" + G.wkts, 24, 20);
+      cx.font = "500 13px " + SANS; cx.fillText("Over " + Cricket.overs() + " of " + L.balls / 6, 100, 24);
+      cx.fillStyle = "#f5c518"; cx.fillText(need ? "Need " + need + " off " + left + (left === 1 ? " ball" : " balls") : "Target reached", 24, 48);
       if (G.state === "wait" && G.msg) banner(cx, W, G.msg, G.msgColor, G.msgT + 0.34);
     }
   };
 
   // ----- Space Defender -----
   // Typing a ship's first letter locks onto it; later letters go only to that ship. Esc drops the lock.
+  // Scouts are small and fast, armoured ships need two words, the mothership needs several and launches scouts.
   var SHIP_COLORS = ["#8e5cf7", "#e5484d", "#3b82f6", "#22c55e"];
   var Space = {
     setup: function () {
-      G.hi = topStage();
-      G.shield = 4; G.wave = 0; G.ships = []; G.lock = null; G.fx = []; G.msg = ""; G.msgT = 0;
-      G.stars = []; for (var i = 0; i < 70; i++) G.stars.push([Math.random(), Math.random(), Math.random() < 0.2 ? 2 : 1]);
+      G.shield = 4; G.wi = -1; G.ships = []; G.lock = null; G.fx = []; G.msg = ""; G.msgT = 0; G.mother = null; G.motherDone = !G.L.mother;
+      G.sky = []; for (var i = 0; i < 70; i++) G.sky.push([Math.random(), Math.random(), Math.random() < 0.2 ? 2 : 1]);
       G.level = 1; G.lives = 4;
       Space.wave();
     },
     wave: function () {
-      G.wave++; G.level = G.wave; G.lostThis = false;
-      G.toSpawn = 5 + G.wave; G.spawnIn = 1.2; G.between = 0;
-      var cap = G.hi >= 10 ? 10 : G.hi >= 9 ? 9 : 8;
-      G.maxL = Math.min(cap, 4 + G.wave); G.minL = Math.min(G.maxL, 3 + Math.floor((G.wave - 1) / 2));
-      G.speed = 20 + G.wave * 5;
-      G.msg = "Wave " + G.wave; G.msgT = 0; G.msgColor = "#f5c518";
-      if (G.lives !== undefined) gameHud();
+      var L = G.L;
+      G.wi++; G.lostThis = false; G.between = 0; G.spawnIn = 1.2;
+      if (G.wi < L.waves.length) {
+        G.toSpawn = L.waves[G.wi];
+        G.level = (G.wi + 1) + "/" + L.waves.length;
+        G.msg = "Wave " + (G.wi + 1); G.msgColor = "#f5c518";
+      } else {
+        G.toSpawn = 0; G.level = "Boss";
+        Space.spawnMother();
+        G.msg = "Mothership!"; G.msgColor = "#ef4444";
+      }
+      G.msgT = 0;
+      gameHud();
     },
-    spawn: function () {
-      var used = G.ships.map(function (s) { return s.word.charAt(0); });
-      var w = poolWord(G.minL, G.maxL, G.hi, function (x) { return used.indexOf(x.charAt(0)) > -1; });
-      G.ships.push({ word: w, pos: 0, x: 60 + Math.random() * (G.W - 120), y: -24, ph: Math.random() * 6, color: pick(SHIP_COLORS) });
+    firsts: function () { return G.ships.map(function (s) { return s.word.charAt(0).toLowerCase(); }); },
+    avoid: function () { var used = Space.firsts(); return function (x) { return used.indexOf(x.charAt(0).toLowerCase()) > -1; }; },
+    spawn: function (scoutAt) {
+      var L = G.L, r = Math.random(), type = scoutAt ? "scout" : "ship";
+      if (!scoutAt) {
+        if (L.scout && r < 0.25) type = "scout";
+        else if (L.armour && r < 0.45) type = "armour";
+        else if (L.zig && r < 0.7) type = "zig";
+      }
+      var av = Space.avoid(), words;
+      if (type === "scout") words = [lvWord(L.k, 2, 3, av)];
+      else if (type === "armour") words = [lvWord(L.k, L.lens[0], L.lens[1], av), lvWord(L.k, L.lens[0], L.lens[1])];
+      else words = [lvWord(L.k, L.lens[0], L.lens[1], av)];
+      var x = scoutAt ? scoutAt.x : 60 + Math.random() * (G.W - 120);
+      G.ships.push({ type: type, words: words, wi: 0, word: words[0], pos: 0, x: x, x0: x, y: scoutAt ? scoutAt.y + 30 : -24, ph: Math.random() * 6,
+        color: type === "armour" ? "#94a3b8" : type === "scout" ? "#f59e0b" : pick(SHIP_COLORS), v: type === "scout" ? 1.7 : 1 });
+    },
+    spawnMother: function () {
+      var L = G.L, words = [], av = Space.avoid();
+      for (var i = 0; i < L.mother; i++) words.push(lvWord(L.k, 4, 6, i ? null : av));
+      var m = { type: "mother", words: words, wi: 0, word: words[0], pos: 0, x: G.W / 2, x0: G.W / 2, y: -40, ph: 0, color: "#b91c1c", v: 0.4, launch: 3 };
+      G.ships.push(m); G.mother = m;
     },
     esc: function () { if (G.lock) { G.lock.pos = 0; G.lock = null; } },
     key: function (ch) {
@@ -2807,36 +3249,49 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       if (s.pos >= s.word.length) {
         G.fx.push({ x: s.x, y: s.y, t: 0 });
         G.score += 10 * s.word.length;
+        if (s.wi < s.words.length - 1) { s.wi++; s.word = s.words[s.wi]; s.pos = 0; sound.ok(); if (s.type === "armour") s.color = pick(SHIP_COLORS); return true; }
         G.ships.splice(G.ships.indexOf(s), 1);
+        if (s === G.mother) { G.mother = null; G.motherDone = true; G.score += 150; G.msg = "Mothership down!"; G.msgT = 0; G.msgColor = "#22c55e"; }
         G.lock = null; sound.step(); gameHud();
       }
       return true;
     },
     step: function (dt) {
+      var L = G.L;
       G.msgT += dt;
       G.fx.forEach(function (f) { f.t += dt; }); G.fx = G.fx.filter(function (f) { return f.t < 0.35; });
       if (G.between > 0) { G.between -= dt; if (G.between <= 0) Space.wave(); return; }
-      if (G.toSpawn > 0) { G.spawnIn -= dt; if (G.spawnIn <= 0) { Space.spawn(); G.toSpawn--; G.spawnIn = Math.max(0.9, 2.3 - G.wave * 0.12); } }
+      if (G.toSpawn > 0) { G.spawnIn -= dt; if (G.spawnIn <= 0) { Space.spawn(); G.toSpawn--; G.spawnIn = Math.max(1.0, 2.5 - G.lvl * 0.1 - G.wi * 0.1); } }
+      var m = G.mother;
+      if (m) { m.launch -= dt; if (m.launch <= 0 && m.y > 10 && G.ships.length < 5) { Space.spawn(m); m.launch = 4.5; } }
       for (var i = G.ships.length - 1; i >= 0; i--) {
         var s = G.ships[i];
-        s.y += G.speed * dt; s.ph += dt; s.x += Math.sin(s.ph) * 10 * dt;
-        if (s.y > G.H - 70) {
+        s.y += L.speed * s.v * dt; s.ph += dt;
+        if (s.type === "zig") s.x = Math.max(30, Math.min(G.W - 30, s.x0 + Math.sin(s.ph * 1.4) * 80));
+        else if (s.type !== "mother") s.x += Math.sin(s.ph) * 10 * dt;
+        if (s.y > G.H - (s.type === "mother" ? 110 : 70)) {
           G.ships.splice(i, 1);
           if (G.lock === s) G.lock = null;
-          G.shield--; G.lostThis = true; G.lives = G.shield; sound.bad(); gameHud();
-          if (G.shield <= 0) { gameFinish("Shield down", "You reached wave " + G.wave, false); return; }
+          var hit = s.type === "mother" ? 4 : 1;
+          G.shield = Math.max(0, G.shield - hit); G.lostThis = true; G.lives = G.shield; sound.bad(); gameHud();
+          if (G.shield <= 0) { lvLose(s.type === "mother" ? "The mothership landed" : "Shield down", "You reached " + (G.wi < L.waves.length ? "wave " + (G.wi + 1) : "the mothership") + "."); return; }
         }
       }
       if (G.toSpawn <= 0 && !G.ships.length) {
+        if (G.wi >= L.waves.length - 1 && G.motherDone) {
+          var lost = 4 - G.shield;
+          lvWin(lost === 0 ? 3 : lost === 1 ? 2 : 1, lost ? "Your shield took " + lost + (lost === 1 ? " hit." : " hits.") : "Nothing got through.");
+          return;
+        }
         if (!G.lostThis) G.score += 50;
         gameHud();
-        G.msg = G.lostThis ? "Wave " + G.wave + " clear" : "Wave " + G.wave + " clear +50"; G.msgT = 0; G.msgColor = "#22c55e";
+        G.msg = "Wave " + (G.wi + 1) + " clear" + (G.lostThis ? "" : " +50"); G.msgT = 0; G.msgColor = "#22c55e";
         G.between = 2;
       }
     },
     draw: function (cx, W, H) {
       cx.fillStyle = "#0b1026"; cx.fillRect(0, 0, W, H);
-      G.stars.forEach(function (st) { cx.fillStyle = "rgba(255,255,255," + (st[2] > 1 ? 0.9 : 0.5) + ")"; cx.fillRect(st[0] * W, st[1] * H, st[2], st[2]); });
+      G.sky.forEach(function (st) { cx.fillStyle = "rgba(255,255,255," + (st[2] > 1 ? 0.9 : 0.5) + ")"; cx.fillRect(st[0] * W, st[1] * H, st[2], st[2]); });
       var px = W / 2, py = H - 34;
       G.fx.forEach(function (f) {
         cx.strokeStyle = "rgba(255,221,0," + (1 - f.t / 0.35) + ")"; cx.lineWidth = 3;
@@ -2844,9 +3299,14 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
         cx.fillStyle = "rgba(255,160,0," + (1 - f.t / 0.35) + ")"; cx.beginPath(); cx.arc(f.x, f.y, 10 + f.t * 60, 0, Math.PI * 2); cx.fill();
       });
       G.ships.forEach(function (s) {
-        cx.fillStyle = s.color; cx.beginPath(); cx.moveTo(s.x, s.y - 14); cx.lineTo(s.x + 16, s.y); cx.lineTo(s.x, s.y + 14); cx.lineTo(s.x - 16, s.y); cx.closePath(); cx.fill();
-        cx.fillStyle = "rgba(255,255,255,0.6)"; cx.beginPath(); cx.arc(s.x, s.y, 4, 0, Math.PI * 2); cx.fill();
-        drawWordTag(cx, s.word, s.pos, s.x, s.y + 30, { size: 16, locked: G.lock === s });
+        var z = s.type === "mother" ? 3 : s.type === "scout" ? 0.7 : 1;
+        cx.fillStyle = s.color; cx.beginPath(); cx.moveTo(s.x, s.y - 14 * z); cx.lineTo(s.x + 16 * z * (s.type === "mother" ? 2 : 1), s.y); cx.lineTo(s.x, s.y + 14 * z); cx.lineTo(s.x - 16 * z * (s.type === "mother" ? 2 : 1), s.y); cx.closePath(); cx.fill();
+        if (s.type === "armour" && s.wi === 0) { cx.strokeStyle = "#e2e8f0"; cx.lineWidth = 3; cx.stroke(); }
+        cx.fillStyle = "rgba(255,255,255,0.6)"; cx.beginPath(); cx.arc(s.x, s.y, 4 * z, 0, Math.PI * 2); cx.fill();
+        if (s.words.length > 1) {
+          for (var d = 0; d < s.words.length; d++) { cx.fillStyle = d < s.wi ? "rgba(255,255,255,0.2)" : "#f87171"; cx.fillRect(s.x - s.words.length * 5 + d * 10, s.y - 14 * z - 10, 8, 5); }
+        }
+        drawWordTag(cx, s.word, s.pos, s.x, s.y + 16 * z + 14, { size: 16, locked: G.lock === s });
       });
       if (G.lock) { cx.strokeStyle = "rgba(245,197,24,0.35)"; cx.setLineDash([4, 6]); cx.lineWidth = 1.5; cx.beginPath(); cx.moveTo(px, py - 14); cx.lineTo(G.lock.x, G.lock.y); cx.stroke(); cx.setLineDash([]); }
       cx.fillStyle = "#f08a24"; cx.beginPath(); cx.moveTo(px, py - 18); cx.lineTo(px + 18, py + 12); cx.lineTo(px - 18, py + 12); cx.closePath(); cx.fill();
@@ -2862,9 +3322,10 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
   // No arrow keys: typing the word in time drops the piece into the best spot the game has found.
   var TET_SHAPES = {
     I: [[0, 0], [0, 1], [0, 2], [0, 3]], O: [[0, 0], [0, 1], [1, 0], [1, 1]], T: [[0, 0], [0, 1], [0, 2], [1, 1]],
-    S: [[0, 1], [0, 2], [1, 0], [1, 1]], Z: [[0, 0], [0, 1], [1, 1], [1, 2]], J: [[0, 0], [1, 0], [1, 1], [1, 2]], L: [[0, 2], [1, 0], [1, 1], [1, 2]]
+    S: [[0, 1], [0, 2], [1, 0], [1, 1]], Z: [[0, 0], [0, 1], [1, 1], [1, 2]], J: [[0, 0], [1, 0], [1, 1], [1, 2]], L: [[0, 2], [1, 0], [1, 1], [1, 2]],
+    B: [[0, 0]]
   };
-  var TET_COLORS = { I: "#4aa3ff", O: "#ffd23f", T: "#a66bff", S: "#46c46b", Z: "#ff8a3d", J: "#4aa3ff", L: "#ff8a3d" };
+  var TET_COLORS = { I: "#4aa3ff", O: "#ffd23f", T: "#a66bff", S: "#46c46b", Z: "#ff8a3d", J: "#4aa3ff", L: "#ff8a3d", B: "#1f2937", junk: "#6b7280" };
   var TCOLS = 10, TROWS = 16;
   function tetRots(cells) {
     // Every distinct rotation; the cell order is kept, so each letter stays on its own square.
@@ -2881,15 +3342,22 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
   var TET_ROTS = {}; Object.keys(TET_SHAPES).forEach(function (k) { TET_ROTS[k] = tetRots(TET_SHAPES[k]); });
   var Tetris = {
     setup: function () {
-      G.hi = topStage();
+      var L = G.L;
       G.board = []; for (var r = 0; r < TROWS; r++) G.board.push(new Array(TCOLS).fill(null));
-      G.lines = 0; G.level = 0; G.lives = 1; G.flash = 0;
+      for (var j = 0; j < (L.junk || 0); j++) Tetris.junkRow(TROWS - 1 - j);
+      G.lines = 0; G.level = "0/" + L.lines; G.lives = 1; G.flash = 0; G.riseIn = L.rise || 0; G.pieces = 0; G.boom = null;
       G.nextPiece = Tetris.make();
       Tetris.spawn();
     },
+    junkRow: function (r) {
+      var gap = rand(TCOLS);
+      G.board[r] = new Array(TCOLS).fill(null).map(function (x, c) { return c === gap ? null : { color: TET_COLORS.junk, ch: "" }; });
+    },
     make: function () {
-      var type = pick(Object.keys(TET_SHAPES)), w = poolWord(3, 4, G.hi);
-      return { type: type, word: w, letters: (w + "    ").slice(0, 4).split("") };
+      var L = G.L;
+      G.pieces = (G.pieces || 0) + 1;
+      var type = L.bomb && G.pieces % 6 === 0 ? "B" : pick("IOTSZJL".split("")), w = lvWord(L.k, L.lens[0], L.lens[1]);
+      return { type: type, word: w, letters: type === "B" ? ["*"] : (w + "    ").slice(0, 4).split("") };
     },
     fits: function (cells, r, c, board) {
       return cells.every(function (x) { var rr = r + x[0], cc = c + x[1]; return cc >= 0 && cc < TCOLS && rr < TROWS && (rr < 0 || !board[rr][cc]); });
@@ -2897,11 +3365,12 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     dropRow: function (cells, r, c, board) { while (Tetris.fits(cells, r + 1, c, board)) r++; return r; },
     spawn: function () {
       var p = G.nextPiece; G.nextPiece = Tetris.make();
-      p.rot = 0; p.cells = TET_ROTS[p.type][0]; p.r = 0; p.c = 3;
+      p.rot = 0; p.cells = TET_ROTS[p.type][0]; p.r = 0; p.c = p.type === "B" ? 4 : 3;
       G.cur = p; G.pos = 0; G.mist = 0; G.err = false; G.fallT = 0;
-      if (!Tetris.fits(p.cells, p.r, p.c, G.board)) { G.cur = null; gameFinish("The well is full", G.lines + (G.lines === 1 ? " line" : " lines") + " cleared", false); return; }
+      if (!Tetris.fits(p.cells, p.r, p.c, G.board)) { Tetris.lose(); return; }
       G.ghost = Tetris.best(p);
     },
+    lose: function () { G.cur = null; G.drawAfter = true; lvLose("The well is full", G.lines + " of " + G.L.lines + " lines cleared."); },
     best: function (p) {
       var bestS = -1e9, best = null;
       TET_ROTS[p.type].forEach(function (cells, ri) {
@@ -2910,7 +3379,8 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
           if (!Tetris.fits(cells, 0, c, G.board)) continue;
           var r = Tetris.dropRow(cells, 0, c, G.board);
           var b = G.board.map(function (row) { return row.slice(); });
-          cells.forEach(function (x) { if (r + x[0] >= 0) b[r + x[0]][c + x[1]] = 1; });
+          if (p.type === "B") { Tetris.blast(b, r, c); }
+          else cells.forEach(function (x) { if (r + x[0] >= 0) b[r + x[0]][c + x[1]] = 1; });
           var lines = b.filter(function (row) { return row.every(Boolean); }).length;
           b = b.filter(function (row) { return !row.every(Boolean); });
           while (b.length < TROWS) b.unshift(new Array(TCOLS).fill(null));
@@ -2928,18 +3398,31 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       });
       return best;
     },
+    // A bomb clears the 3x3 blocks around where it lands.
+    blast: function (b, r, c) {
+      for (var dr = -1; dr <= 1; dr++) for (var dc = -1; dc <= 1; dc++) { var rr = r + dr, cc = c + dc; if (rr >= 0 && rr < TROWS && cc >= 0 && cc < TCOLS) b[rr][cc] = null; }
+    },
     lock: function (cells, r, c) {
       var p = G.cur;
-      cells.forEach(function (x, i) { var rr = r + x[0]; if (rr >= 0) G.board[rr][c + x[1]] = { color: TET_COLORS[p.type], ch: p.letters[i].trim() }; });
+      if (p.type === "B") { Tetris.blast(G.board, r, c); G.boom = { r: r, c: c, t: 0 }; sound.step(); }
+      else cells.forEach(function (x, i) { var rr = r + x[0]; if (rr >= 0) G.board[rr][c + x[1]] = { color: TET_COLORS[p.type], ch: p.letters[i].trim() }; });
       var full = 0;
       G.board = G.board.filter(function (row) { var f = row.every(Boolean); if (f) full++; return !f; });
       while (G.board.length < TROWS) G.board.unshift(new Array(TCOLS).fill(null));
-      if (full) {
-        G.lines += full; G.score += [0, 40, 100, 300, 800][full]; G.flash = 0.3; sound.step();
-        if (G.lines >= 10 && G.lines - full < 10) { G.msg = "10 lines!"; G.msgT = 0; }
-      }
-      G.level = G.lines; G.lives = 1 + Math.floor(G.lines / 5); gameHud();
+      if (full) { G.lines += full; G.score += [0, 40, 100, 300, 800][full]; G.flash = 0.3; sound.step(); }
+      G.level = Math.min(G.lines, G.L.lines) + "/" + G.L.lines; G.lives = 1 + G.lines; gameHud();
       G.cur = null; G.spawnIn = 0.15;
+      if (G.lines >= G.L.lines) {
+        var acc = modAcc(); G.drawAfter = true;
+        lvWin(acc >= 95 ? 3 : acc >= 85 ? 2 : 1, acc + "% accuracy.");
+      }
+    },
+    rise: function () {
+      if (G.board[0].some(Boolean)) { Tetris.lose(); return; }
+      G.board.shift(); G.board.push(null); Tetris.junkRow(TROWS - 1);
+      G.msg = "The floor rises!"; G.msgT = 0;
+      var p = G.cur;
+      if (p) { while (p.r > -2 && !Tetris.fits(p.cells, p.r, p.c, G.board)) p.r--; G.ghost = Tetris.best(p); }
     },
     key: function (ch) {
       var p = G.cur;
@@ -2956,9 +3439,11 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     },
     step: function (dt) {
       if (G.flash > 0) G.flash -= dt;
+      if (G.boom) { G.boom.t += dt; if (G.boom.t > 0.5) G.boom = null; }
       G.msgT = (G.msgT || 0) + dt;
+      if (G.L.rise) { G.riseIn -= dt; if (G.riseIn <= 0) { G.riseIn = G.L.rise; Tetris.rise(); if (G.over) return; } }
       if (!G.cur) { G.spawnIn -= dt; if (G.spawnIn <= 0) Tetris.spawn(); return; }
-      var grav = Math.max(0.2, 0.9 * Math.pow(0.85, Math.floor(G.lines / 5)));
+      var grav = Math.max(0.25, G.L.grav * Math.pow(0.95, G.lines));
       G.fallT += dt;
       if (G.fallT >= grav) {
         G.fallT = 0;
@@ -2977,41 +3462,48 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
         var x = wx + c * cell, y = wy + r * cell;
         cx.fillStyle = color; cx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
         cx.fillStyle = "rgba(255,255,255,0.25)"; cx.fillRect(x + 1, y + 1, cell - 2, 3);
-        if (ch) { cx.fillStyle = typed ? "#0b6b2e" : "#111827"; cx.font = "700 " + Math.round(cell * 0.55) + "px " + MONO; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(ch, x + cell / 2, y + cell / 2 + 1); }
+        if (ch) { cx.fillStyle = color === TET_COLORS.B ? "#fbbf24" : typed ? "#0b6b2e" : "#111827"; cx.font = "700 " + Math.round(cell * 0.55) + "px " + MONO; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(ch, x + cell / 2, y + cell / 2 + 1); }
       }
       for (var r = 0; r < TROWS; r++) for (var c = 0; c < TCOLS; c++) { var b = G.board[r][c]; if (b) block(r, c, b.color, b.ch); }
       var p = G.cur;
       if (p && G.ghost) {
         cx.setLineDash([5, 4]); cx.strokeStyle = "#f5c518"; cx.lineWidth = 2;
         G.ghost.cells.forEach(function (x) { cx.strokeRect(wx + (G.ghost.c + x[1]) * cell + 2, wy + (G.ghost.r + x[0]) * cell + 2, cell - 4, cell - 4); });
+        if (p.type === "B") cx.strokeRect(wx + (G.ghost.c - 1) * cell + 1, wy + (G.ghost.r - 1) * cell + 1, cell * 3 - 2, cell * 3 - 2);
         cx.setLineDash([]);
       }
       if (p) p.cells.forEach(function (x, i) { if (p.r + x[0] >= 0) block(p.r + x[0], p.c + x[1], TET_COLORS[p.type], p.letters[i].trim(), i < G.pos); });
+      if (G.boom) { cx.fillStyle = "rgba(251,191,36," + (0.6 - G.boom.t) + ")"; cx.beginPath(); cx.arc(wx + (G.boom.c + 0.5) * cell, wy + (G.boom.r + 0.5) * cell, cell * (1 + G.boom.t * 3), 0, Math.PI * 2); cx.fill(); }
       if (G.flash > 0) { cx.fillStyle = "rgba(255,255,255," + G.flash + ")"; cx.fillRect(wx, wy, TCOLS * cell, TROWS * cell); }
-      // side panels
       cx.textAlign = "left"; cx.textBaseline = "top";
       if (p) {
         var tx = side ? wx + TCOLS * cell + 22 : wx + 8;
         drawWordTag(cx, p.word, G.pos, tx, side ? wy + 22 : wy + 20, { align: "left", err: G.err, size: 22 });
+        if (p.type === "B" && !side) { cx.font = "700 13px " + SANS; cx.fillStyle = "#fbbf24"; cx.textAlign = "left"; cx.textBaseline = "top"; cx.fillText("Bomb", wx + 8, wy + 40); }
       }
       if (side) {
         var rx = wx + TCOLS * cell + 22;
         cx.fillStyle = "#c7d2fe"; cx.font = "600 13px " + SANS; cx.textBaseline = "top"; cx.textAlign = "left";
+        if (p && p.type === "B") { cx.fillStyle = "#fbbf24"; cx.fillText("Bomb: blasts the blocks around it", rx, wy + 42); cx.fillStyle = "#c7d2fe"; }
         cx.fillText("NEXT", rx, wy + 62);
         var np = G.nextPiece, nc = 18;
         TET_ROTS[np.type][0].forEach(function (x, i) {
           cx.fillStyle = TET_COLORS[np.type]; cx.fillRect(rx + x[1] * nc, wy + 84 + x[0] * nc, nc - 2, nc - 2);
-          cx.fillStyle = "#111827"; cx.font = "700 11px " + MONO; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(np.letters[i].trim(), rx + x[1] * nc + (nc - 2) / 2, wy + 84 + x[0] * nc + (nc - 2) / 2);
+          cx.fillStyle = np.type === "B" ? "#fbbf24" : "#111827"; cx.font = "700 11px " + MONO; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(np.letters[i].trim(), rx + x[1] * nc + (nc - 2) / 2, wy + 84 + x[0] * nc + (nc - 2) / 2);
         });
         cx.textAlign = "left"; cx.textBaseline = "top"; cx.fillStyle = "#c7d2fe"; cx.font = "600 13px " + SANS;
-        cx.fillText("Lines " + G.lines + "   Score " + G.score, rx, wy + 138);
+        cx.fillText("Lines " + G.lines + " of " + G.L.lines + "   Score " + G.score, rx, wy + 138);
+        if (G.L.rise) cx.fillText("Floor rises in " + Math.ceil(G.riseIn) + " s", rx, wy + 158);
         var lx = 16, lw = wx - 32;
         cx.fillStyle = "#e0e7ff"; cx.font = "600 15px " + SANS;
         wrapText(cx, "Type it to drop it into the gap.", lx, wy + 22, lw, 20);
         cx.fillStyle = "#94a3b8"; cx.font = "500 13px " + SANS;
         wrapText(cx, "Type the word before the piece lands and it drops into the yellow outline. Two wrong keys and it falls straight down.", lx, wy + 70, lw, 18);
+      } else if (G.L.rise) {
+        cx.fillStyle = "#c7d2fe"; cx.font = "600 12px " + SANS; cx.textAlign = "right"; cx.textBaseline = "top";
+        cx.fillText("Floor rises in " + Math.ceil(G.riseIn) + " s", wx + TCOLS * cell - 6, wy + 6);
       }
-      if (G.msg && G.msgT < 1.6) banner(cx, W, G.msg, "#22c55e", G.msgT + 0.34);
+      if (G.msg && G.msgT < 1.6) banner(cx, W, G.msg, "#f59e0b", G.msgT + 0.34);
     }
   };
   function wrapText(cx, text, x, y, maxW, lh) {
@@ -3027,62 +3519,138 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
 
   GAMES.house = { title: "Build a House", lives: 0, livesLabel: "Bricks", levelLabel: "Floor", mod: BuildHouse,
     intro: "Type the letter or word on the brick to lay it. One mistake wobbles the top brick; a second knocks it off.",
-    blurb: "Lay bricks by typing them, floor by floor, then finish the roof. Careful: two mistakes knock a brick off.",
-    art: artSvg('<rect width="260" height="110" fill="#bfe6fb"/><rect y="94" width="260" height="16" fill="#6cbf57"/><circle cx="210" cy="24" r="12" fill="#ffd23f"/><rect x="30" y="14" width="8" height="80" fill="#f2b705"/><rect x="24" y="12" width="150" height="6" fill="#f2b705"/><g fill="#c2412d" stroke="#7a2518" stroke-width="1.5"><rect x="100" y="80" width="28" height="13"/><rect x="128" y="80" width="28" height="13"/><rect x="156" y="80" width="28" height="13"/><rect x="184" y="80" width="28" height="13"/><rect x="114" y="67" width="28" height="13"/><rect x="142" y="67" width="28" height="13"/></g><rect x="170" y="67" width="28" height="13" fill="none" stroke="#1d232b" stroke-dasharray="4 3"/><rect x="136" y="36" width="30" height="13" fill="#c2412d"/><path d="M151 18V36" stroke="#333"/>') };
+    blurb: "Lay bricks by typing them, floor by floor, then finish the roof. From a garden shed to a castle.",
+    art: artSvg('<rect width="260" height="110" fill="#bfe6fb"/><rect y="94" width="260" height="16" fill="#6cbf57"/><circle cx="210" cy="24" r="12" fill="#ffd23f"/><rect x="30" y="14" width="8" height="80" fill="#f2b705"/><rect x="24" y="12" width="150" height="6" fill="#f2b705"/><g fill="#c2412d" stroke="#7a2518" stroke-width="1.5"><rect x="100" y="80" width="28" height="13"/><rect x="128" y="80" width="28" height="13"/><rect x="156" y="80" width="28" height="13"/><rect x="184" y="80" width="28" height="13"/><rect x="114" y="67" width="28" height="13"/><rect x="142" y="67" width="28" height="13"/></g><rect x="170" y="67" width="28" height="13" fill="none" stroke="#1d232b" stroke-dasharray="4 3"/><rect x="136" y="36" width="30" height="13" fill="#c2412d"/><path d="M151 18V36" stroke="#333"/>'),
+    levels: [
+      { name: "Garden shed", what: "a garden shed", rows: [3, 2], roof: 2, k: 1, key: true },
+      { name: "Small house", what: "a small house", rows: [4, 3, 4], roof: 3, k: 2, key: true },
+      { name: "Family house", what: "a family house", rows: [4, 3, 4, 3], roof: 3, k: 3, spc: 1.9, news: "Sunset: finish before the sun goes down. The timer is in the top corner." },
+      { name: "Two floors", what: "a two-floor house", rows: [4, 3, 4, 3, 4], roof: 3, k: 4, spc: 1.7 },
+      { name: "Windy day", what: "a house on a windy day", boss: true, rows: [4, 3, 4, 3], roof: 3, k: 4, spc: 1.6, gust: 14,
+        news: "Boss: gusts of wind. When a gust comes, finish the brick you are on within 4 seconds, or the top brick blows away." },
+      { name: "Capital bricks", what: "a big house", rows: [5, 4, 5, 4], roof: 4, k: 6, spc: 1.5, news: "Capital letters on the bricks: hold Shift for them." },
+      { name: "Glass house", what: "a glass house", rows: [4, 3, 4, 3], roof: 3, k: 7, spc: 1.4, glass: true, news: "Glass bricks: one wrong key knocks the top brick off. No wobble this time." },
+      { name: "Number bricks", what: "a block of flats", rows: [5, 4, 5, 4, 5], roof: 4, k: 8, spc: 1.3, news: "Numbers on the bricks: use the number keys along the top." },
+      { name: "Symbol roof", what: "a town hall", rows: [5, 4, 5, 4, 5], roof: 4, k: 9, spc: 1.2, gust: 16, news: "Symbols join in, and the wind is back." },
+      { name: "Castle", what: "a castle", boss: true, rows: [6, 5, 6, 5, 6, 5], roof: 5, k: 10, spc: 1.1, gust: 15, news: "Final boss: a castle, with gusts of wind and a sunset." }
+    ] };
   GAMES.cricket = { title: "Typing Cricket", unlock: 1, lives: 0, livesLabel: "Wickets", levelLabel: "Over", mod: Cricket,
     intro: "Type the word on the ball before it reaches the stumps. The faster you finish, the more runs. A wrong key is out.",
-    blurb: "Three overs, three wickets. Type fast for a FOUR or a SIX; a wrong key or a slow finish and you're out.",
-    art: artSvg('<rect width="260" height="110" fill="#3f9b3a"/><ellipse cx="130" cy="55" rx="110" ry="50" fill="#56b24f"/><rect x="112" y="6" width="36" height="98" fill="#e3c98f"/><path d="M104 88H156M104 20H156" stroke="#fff" stroke-width="2"/><g fill="#8b5a2b"><rect x="124" y="88" width="3" height="14"/><rect x="129" y="88" width="3" height="14"/><rect x="134" y="88" width="3" height="14"/></g><circle cx="114" cy="86" r="6" fill="#1e63c6"/><circle cx="132" cy="50" r="4" fill="#c62828"/><rect x="108" y="30" width="48" height="14" rx="4" fill="#fff"/><rect x="8" y="8" width="60" height="20" rx="4" fill="#1d232b"/>') };
+    blurb: "Chase a target, match by match. Type fast for a FOUR or a SIX; a wrong key or a slow finish and you're out.",
+    art: artSvg('<rect width="260" height="110" fill="#3f9b3a"/><ellipse cx="130" cy="55" rx="110" ry="50" fill="#56b24f"/><rect x="112" y="6" width="36" height="98" fill="#e3c98f"/><path d="M104 88H156M104 20H156" stroke="#fff" stroke-width="2"/><g fill="#8b5a2b"><rect x="124" y="88" width="3" height="14"/><rect x="129" y="88" width="3" height="14"/><rect x="134" y="88" width="3" height="14"/></g><circle cx="114" cy="86" r="6" fill="#1e63c6"/><circle cx="132" cy="50" r="4" fill="#c62828"/><rect x="108" y="30" width="48" height="14" rx="4" fill="#fff"/><rect x="8" y="8" width="60" height="20" rx="4" fill="#1d232b"/>'),
+    levels: [
+      { name: "Friendly match", target: 8, balls: 12, T: 4.6, k: 1, lens: [2, 3] },
+      { name: "Club match", target: 12, balls: 12, T: 4.3, k: 2, lens: [2, 4] },
+      { name: "Fast bowler", target: 18, balls: 18, T: 4.1, k: 3, lens: [3, 4], yorker: true, news: "Yorkers: every fourth ball comes in fast. Hit it and you get 2 extra runs." },
+      { name: "Free hits", target: 22, balls: 18, T: 3.9, k: 4, lens: [3, 4], yorker: true, noball: true, news: "No balls: they give you a run and a free hit next, where a wrong key is not out." },
+      { name: "Super over", boss: true, target: 12, balls: 6, wkts: 2, T: 3.7, k: 4, lens: [3, 5], yorker: true,
+        news: "Boss: one over against the star bowler. 12 runs off 6 balls, and only 2 wickets." },
+      { name: "Captain's knock", target: 22, balls: 18, T: 4.3, k: 6, lens: [3, 5], noball: true, news: "Capital letters: hold Shift for them." },
+      { name: "Spin bowler", target: 24, balls: 18, T: 4.2, k: 7, lens: [3, 5], late: true, news: "Spin: the word only shows once the ball has turned, a moment after it is bowled." },
+      { name: "Scoreboard", target: 24, balls: 18, T: 4.3, k: 8, lens: [2, 4], yorker: true, noball: true, news: "Numbers on the ball: use the number keys along the top." },
+      { name: "Tricky symbols", target: 24, balls: 18, T: 4.5, k: 9, lens: [3, 5], late: true, yorker: true, news: "Symbols join in. Spin and yorkers too." },
+      { name: "World Cup final", boss: true, target: 36, balls: 24, T: 4.1, k: 10, lens: [3, 5], yorker: true, noball: true, late: true,
+        news: "Final boss: chase 36 off 4 overs against yorkers, spin and no balls." }
+    ] };
   GAMES.tetris = { title: "Word Tetris", lives: 1, livesLabel: "Speed", levelLabel: "Lines", mod: Tetris,
     intro: "Every piece carries a word. Type it before the piece lands and it drops into the yellow outline. No arrow keys needed.",
     blurb: "Falling blocks with a word on each piece. Type the word in time and it slots into the best gap; fill rows to clear them.",
-    art: artSvg('<rect width="260" height="110" fill="#101a33"/><rect x="80" y="4" width="100" height="102" fill="#070d1f" stroke="#3b4a78"/><g stroke="#070d1f"><rect x="80" y="86" width="20" height="20" fill="#4aa3ff"/><rect x="100" y="86" width="20" height="20" fill="#4aa3ff"/><rect x="120" y="86" width="20" height="20" fill="#46c46b"/><rect x="160" y="86" width="20" height="20" fill="#ff8a3d"/><rect x="160" y="66" width="20" height="20" fill="#ff8a3d"/><rect x="100" y="20" width="20" height="20" fill="#a66bff"/><rect x="120" y="20" width="20" height="20" fill="#a66bff"/><rect x="140" y="20" width="20" height="20" fill="#a66bff"/><rect x="120" y="40" width="20" height="20" fill="#a66bff"/></g><rect x="140" y="86" width="20" height="20" fill="none" stroke="#f5c518" stroke-dasharray="3 3"/><g font-family="monospace" font-size="12" font-weight="700" fill="#111827" text-anchor="middle"><text x="110" y="34">c</text><text x="130" y="34">a</text><text x="150" y="34">k</text><text x="130" y="54">e</text></g>') };
-  GAMES.ghost = { title: "Ghost Race", lives: 100, livesLabel: "Accuracy", levelLabel: "WPM", mod: GhostRace,
-    intro: "Type the sentence to drive your car to the flag. The see-through car is your best run so far.",
-    blurb: "Race your own best run. Your car moves with every correct letter; beat the ghost to the flag.",
-    art: artSvg('<rect width="260" height="110" fill="#7cc36a"/><rect y="22" width="260" height="66" fill="#5a5f66"/><path d="M0 55H260" stroke="#fff" stroke-width="3" stroke-dasharray="14 10"/><rect x="226" y="22" width="8" height="66" fill="#fff"/><rect x="234" y="22" width="8" height="66" fill="#111"/><rect x="70" y="30" width="48" height="18" rx="5" fill="#fff" opacity=".55"/><rect x="118" y="62" width="48" height="18" rx="5" fill="#f08a24"/>') };
+    art: artSvg('<rect width="260" height="110" fill="#101a33"/><rect x="80" y="4" width="100" height="102" fill="#070d1f" stroke="#3b4a78"/><g stroke="#070d1f"><rect x="80" y="86" width="20" height="20" fill="#4aa3ff"/><rect x="100" y="86" width="20" height="20" fill="#4aa3ff"/><rect x="120" y="86" width="20" height="20" fill="#46c46b"/><rect x="160" y="86" width="20" height="20" fill="#ff8a3d"/><rect x="160" y="66" width="20" height="20" fill="#ff8a3d"/><rect x="100" y="20" width="20" height="20" fill="#a66bff"/><rect x="120" y="20" width="20" height="20" fill="#a66bff"/><rect x="140" y="20" width="20" height="20" fill="#a66bff"/><rect x="120" y="40" width="20" height="20" fill="#a66bff"/></g><rect x="140" y="86" width="20" height="20" fill="none" stroke="#f5c518" stroke-dasharray="3 3"/><g font-family="monospace" font-size="12" font-weight="700" fill="#111827" text-anchor="middle"><text x="110" y="34">c</text><text x="130" y="34">a</text><text x="150" y="34">k</text><text x="130" y="54">e</text></g>'),
+    levels: [
+      { name: "First lines", lines: 2, grav: 1.25, k: 1, lens: [2, 3] },
+      { name: "Keep stacking", lines: 3, grav: 1.15, k: 2, lens: [2, 4] },
+      { name: "Junk rows", lines: 4, grav: 1.05, k: 3, lens: [3, 4], junk: 3, news: "Junk rows: the well starts with grey junk. Fill the gaps to clear it." },
+      { name: "Speed up", lines: 5, grav: 0.92, k: 4, lens: [3, 4], junk: 2 },
+      { name: "Rising floor", boss: true, lines: 6, grav: 0.95, k: 4, lens: [3, 4], rise: 25, news: "Boss: every 25 seconds a junk row pushes the floor up." },
+      { name: "Capital pieces", lines: 6, grav: 0.95, k: 6, lens: [3, 4], junk: 2, news: "Capital letters: hold Shift for them." },
+      { name: "Bombs", lines: 7, grav: 0.88, k: 7, lens: [3, 4], junk: 4, bomb: true, news: "Bomb pieces: type the word on a bomb and it blasts the blocks around where it lands." },
+      { name: "Number pieces", lines: 7, grav: 0.88, k: 8, lens: [2, 4], junk: 2, bomb: true, news: "Numbers on the pieces: use the number keys along the top." },
+      { name: "Symbol pieces", lines: 8, grav: 0.82, k: 9, lens: [3, 4], junk: 3, rise: 30, news: "Symbols join in, and the floor rises again." },
+      { name: "Word tower", boss: true, lines: 10, grav: 0.78, k: 10, lens: [3, 5], bomb: true, rise: 22, news: "Final boss: 10 lines with bombs and a rising floor." }
+    ] };
+  GAMES.ghost = { title: "Ghost Race", lives: 1, livesLabel: "Place", levelLabel: "WPM", mod: GhostRace,
+    intro: "Type the text to drive your car to the flag. The race starts with your first key.",
+    blurb: "Race three cars to the flag by typing. Beat them all for 3 stars; on boss levels you race your own best run.",
+    art: artSvg('<rect width="260" height="110" fill="#7cc36a"/><rect y="22" width="260" height="66" fill="#5a5f66"/><path d="M0 55H260" stroke="#fff" stroke-width="3" stroke-dasharray="14 10"/><rect x="226" y="22" width="8" height="66" fill="#fff"/><rect x="234" y="22" width="8" height="66" fill="#111"/><rect x="70" y="30" width="48" height="18" rx="5" fill="#fff" opacity=".55"/><rect x="118" y="62" width="48" height="18" rx="5" fill="#f08a24"/>'),
+    levels: [
+      { name: "First race", words: 1, minW: 5, maxW: 6, rivals: [3, 5, 8] },
+      { name: "Street race", words: 2, minW: 7, maxW: 8, rivals: [4, 7, 10] },
+      { name: "Wet road", words: 3, minW: 8, maxW: 9, rivals: [5, 8, 12], skid: true, news: "Wet road: a wrong key makes you skid, and you can't type for half a second." },
+      { name: "City circuit", words: 4, minW: 9, maxW: 10, rivals: [6, 10, 14], skid: true },
+      { name: "Race your ghost", boss: true, words: 5, minW: 10, maxW: 12, rivals: [8, 12, 16], skid: true,
+        news: "Boss: the see-through car is your own best race so far, at 16 WPM or faster." },
+      { name: "Real sentences", sentence: true, minW: 8, maxW: 12, rivals: [7, 11, 15], news: "Real sentences, with capital letters and full stops." },
+      { name: "Night race", sentence: true, minW: 10, maxW: 14, rivals: [8, 12, 17], night: true, news: "Night: your headlights only show the next few letters." },
+      { name: "Number plates", words: 8, minW: 9, maxW: 11, rivals: [8, 12, 16], skid: true, news: "Numbers in the text: use the number keys along the top." },
+      { name: "Symbol circuit", words: 9, minW: 9, maxW: 11, rivals: [8, 12, 17], skid: true, night: true, news: "Symbols in the text, at night." },
+      { name: "Grand Prix", boss: true, sentence: true, minW: 15, maxW: 20, rivals: [11, 17, 24], skid: true, night: true,
+        news: "Final boss: a long night race, and your ghost drives at 24 WPM or faster." }
+    ] };
   GAMES.space = { title: "Space Defender", unlock: 1, lives: 4, livesLabel: "Shield", levelLabel: "Wave", mod: Space,
-    intro: "Type a ship's first letter to lock on, then finish its word to fire. Esc drops the lock. Four hits and your shield is gone.",
-    blurb: "Words fly down on enemy ships. Lock on with the first letter, finish the word, and blast them before they get through.",
-    art: artSvg('<rect width="260" height="110" fill="#0b1026"/><g fill="#fff" opacity=".7"><rect x="20" y="14" width="2" height="2"/><rect x="90" y="40" width="1" height="1"/><rect x="200" y="20" width="2" height="2"/><rect x="236" y="70" width="1" height="1"/><rect x="50" y="80" width="1" height="1"/></g><path d="M70 18l12 10-12 10-12-10z" fill="#8e5cf7"/><path d="M180 30l12 10-12 10-12-10z" fill="#e5484d"/><rect x="58" y="44" width="26" height="12" rx="3" fill="#fff" stroke="#f5c518" stroke-width="2"/><rect x="164" y="56" width="34" height="12" rx="3" fill="#fff"/><path d="M130 82L70 30" stroke="#f5c518" stroke-width="2"/><path d="M130 82l12 20h-24z" fill="#f08a24"/>') };
+    intro: "Type a ship's first letter to lock on, then finish its word to fire. Esc drops the lock.",
+    blurb: "Words fly down on enemy ships. Lock on with the first letter, finish the word, and stop the mothership.",
+    art: artSvg('<rect width="260" height="110" fill="#0b1026"/><g fill="#fff" opacity=".7"><rect x="20" y="14" width="2" height="2"/><rect x="90" y="40" width="1" height="1"/><rect x="200" y="20" width="2" height="2"/><rect x="236" y="70" width="1" height="1"/><rect x="50" y="80" width="1" height="1"/></g><path d="M70 18l12 10-12 10-12-10z" fill="#8e5cf7"/><path d="M180 30l12 10-12 10-12-10z" fill="#e5484d"/><rect x="58" y="44" width="26" height="12" rx="3" fill="#fff" stroke="#f5c518" stroke-width="2"/><rect x="164" y="56" width="34" height="12" rx="3" fill="#fff"/><path d="M130 82L70 30" stroke="#f5c518" stroke-width="2"/><path d="M130 82l12 20h-24z" fill="#f08a24"/>'),
+    levels: [
+      { name: "First contact", waves: [6], speed: 16, k: 1, lens: [2, 3] },
+      { name: "Two waves", waves: [6, 7], speed: 18, k: 2, lens: [2, 4] },
+      { name: "Scouts", waves: [7, 8], speed: 19, k: 3, lens: [3, 4], scout: true, news: "Scouts: small orange ships that fly fast but carry short words." },
+      { name: "Armoured ships", waves: [7, 8, 8], speed: 20, k: 4, lens: [3, 4], scout: true, armour: true,
+        news: "Armoured ships: grey ships need two words. The first breaks the armour, the second destroys the ship." },
+      { name: "Mothership", boss: true, waves: [6], speed: 20, k: 4, lens: [3, 4], scout: true, mother: 4,
+        news: "Boss: a mothership with 4 words. Type them one after another before it lands. It launches scouts." },
+      { name: "Capital fleet", waves: [7, 8, 8], speed: 20, k: 6, lens: [3, 5], scout: true, news: "Capital letters: hold Shift for them." },
+      { name: "Zig-zag fleet", waves: [8, 8, 9], speed: 21, k: 7, lens: [3, 5], zig: true, armour: true, news: "Zig-zag ships swing from side to side." },
+      { name: "Number codes", waves: [8, 9, 9], speed: 22, k: 8, lens: [3, 5], scout: true, armour: true, news: "Number codes: use the number keys along the top." },
+      { name: "Symbol storm", waves: [8, 9, 10], speed: 22, k: 9, lens: [3, 5], zig: true, scout: true, news: "Symbols join in." },
+      { name: "Final mothership", boss: true, waves: [8, 9], speed: 23, k: 10, lens: [3, 5], scout: true, armour: true, zig: true, mother: 7,
+        news: "Final boss: two waves, then a mothership with 7 words." }
+    ] };
 
   // Key Breaker: the ball drops toward a lit key; pressing it sends the ball up into that column's bricks.
-  var BREAKER_KEYS = ["asdfjkl;", "qwruiop;", "zxcvnm,.", "asdfghjk", "weruiokl"];
   function breakerSetup() {
-    var arena = $("arena");
+    var arena = $("arena"), L = G.L;
     G.W = arena.clientWidth; G.H = arena.clientHeight; G.cols = 8; G.colW = G.W / 8;
     G.ball = { el: mk("ball"), x: 0, y: 40, c: 0, state: "down" };
     G.paddles = [];
+    G.bkeys = L.keys.split("");
     for (var c = 0; c < G.cols; c++) {
       var pd = mk("paddle");
       pd.style.left = (c * G.colW + 5) + "px"; pd.style.bottom = "12px"; pd.style.width = (G.colW - 10) + "px";
+      pd.textContent = G.bkeys[c].toUpperCase();
       G.paddles.push(pd);
     }
-    breakerLevel();
-  }
-  function mk(cls) { var el = document.createElement("div"); el.className = cls; $("arena").appendChild(el); G.els.push(el); return el; }
-  function breakerLevel() {
-    (G.bricks || []).forEach(function (b) { b.el.remove(); });
     G.bricks = [];
-    var rows = Math.min(3, 1 + Math.ceil(G.level / 2));
-    for (var r = 0; r < rows; r++) for (var c = 0; c < G.cols; c++) {
-      var el = mk("brick r" + r);
-      el.style.left = (c * G.colW + 4) + "px"; el.style.top = (14 + r * 26) + "px"; el.style.width = (G.colW - 8) + "px";
-      G.bricks.push({ el: el, c: c, r: r, bottom: 14 + r * 26 + 20 });
+    var top = 14;
+    if (L.bossHp) {
+      var bel = mk("brick bossb");
+      bel.style.left = "4px"; bel.style.top = "14px"; bel.style.width = (G.W - 8) + "px";
+      G.boss = { el: bel, hp: L.bossHp, bottom: 14 + 30 };
+      breakerBossPaint();
+      top = 52;
     }
-    var keys = BREAKER_KEYS[(G.level - 1) % BREAKER_KEYS.length];
-    G.keys = keys.split("");
-    G.paddles.forEach(function (pd, i) { pd.textContent = G.keys[i].toUpperCase(); });
-    G.speed = 90 + G.level * 22;
+    for (var r = 0; r < L.rows; r++) for (var cc = 0; cc < G.cols; cc++) {
+      var steel = r < (L.steel || 0);
+      var el = mk("brick r" + (r % 3) + (steel ? " steel" : ""));
+      el.style.left = (cc * G.colW + 4) + "px"; el.style.top = (top + r * 26) + "px"; el.style.width = (G.colW - 8) + "px";
+      G.bricks.push({ el: el, c: cc, r: r, hp: steel ? 2 : 1, bottom: top + r * 26 + 20 });
+    }
+    G.total = G.bricks.length; G.maxLives = G.lives;
+    G.level = G.bricks.length + (G.boss ? 1 : 0);
     breakerTarget();
   }
-  function breakerTarget() {
+  function breakerBossPaint() { G.boss.el.textContent = "Boss brick · " + G.boss.hp + " hits left"; }
+  function mk(cls) { var el = document.createElement("div"); el.className = cls; $("arena").appendChild(el); G.els.push(el); return el; }
+  function breakerCols() {
     var cols = [];
     G.bricks.forEach(function (b) { if (cols.indexOf(b.c) === -1) cols.push(b.c); });
-    var b = G.ball;
+    if (!cols.length && G.boss) for (var c = 0; c < G.cols; c++) cols.push(c);
+    return cols;
+  }
+  function breakerTarget() {
+    var cols = breakerCols(), b = G.ball;
     b.c = cols.length ? pick(cols) : rand(G.cols);
     b.x = b.c * G.colW + G.colW / 2 - 9;
-    b.state = "down";
+    b.state = "down"; b.curve = G.L.curve && cols.length > 1 && Math.random() < 0.4;
     G.paddles.forEach(function (pd, i) { pd.classList.toggle("target", i === b.c); });
     placeBall();
   }
@@ -3090,23 +3658,45 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
   function breakerStep(dt, H) {
     var b = G.ball, padTop = H - 12 - 38 - 18;
     if (b.state === "down") {
-      b.y += G.speed * dt;
+      b.y += G.L.speed * dt;
+      if (b.curve && b.y > padTop * 0.45) {
+        b.curve = false;
+        var cols = breakerCols().filter(function (c) { return c !== b.c; });
+        if (cols.length) {
+          b.c = pick(cols); b.x = b.c * G.colW + G.colW / 2 - 9;
+          G.paddles.forEach(function (pd, i) { pd.classList.toggle("target", i === b.c); });
+        }
+      }
       if (b.y >= padTop) {
-        G.lives--; gameHud();
-        if (G.lives <= 0) { gameOver(); return; }
+        G.lives--; sound.bad(); gameHud();
+        if (G.lives <= 0) { lvLose("Out of balls", (G.bricks.length + (G.boss ? 1 : 0)) + " bricks still standing."); return; }
         b.y = 70; breakerTarget(); return;
       }
     } else {
       b.y -= 900 * dt;
       if (b.y <= b.stopY) {
         b.y = b.stopY;
-        if (b.hit) {
-          var hit = b.hit;
-          G.bricks.splice(G.bricks.indexOf(hit), 1);
-          hit.el.classList.add("gone");
-          setTimeout(function () { hit.el.remove(); }, 160);
-          addScore(10 * G.level);
-          if (!G.bricks.length) { G.level++; gameHud(); sound.cheer(false); breakerLevel(); return; }
+        var hit = b.hit;
+        if (hit === G.boss && hit) {
+          hit.hp--; G.score += 15 * G.lvl;
+          hit.el.classList.add("hit"); setTimeout(function () { hit.el.classList.remove("hit"); }, 150);
+          if (hit.hp <= 0) { hit.el.classList.add("gone"); G.boss = null; G.score += 100; sound.step(); }
+          else breakerBossPaint();
+        } else if (hit) {
+          hit.hp--;
+          if (hit.hp > 0) hit.el.classList.add("cracked");
+          else {
+            G.bricks.splice(G.bricks.indexOf(hit), 1);
+            hit.el.classList.add("gone");
+            setTimeout(function () { hit.el.remove(); }, 160);
+          }
+          G.score += 10 * G.lvl;
+        }
+        G.level = G.bricks.length + (G.boss ? 1 : 0); gameHud();
+        if (!G.bricks.length && !G.boss) {
+          var lost = G.maxLives - G.lives;
+          lvWin(3 - lost, lost ? (lost === 1 ? "One ball lost." : lost + " balls lost.") : "Not one ball lost.");
+          return;
         }
         breakerTarget();
       }
@@ -3116,11 +3706,11 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
   function breakerKey(ch) {
     var b = G.ball;
     if (b.state !== "down") return;
-    var want = G.keys[b.c];
+    var want = G.bkeys[b.c];
     P.keyHit[want] = (P.keyHit[want] || 0) + 1;
     if (ch === want) {
       var inCol = G.bricks.filter(function (x) { return x.c === b.c; }).sort(function (x, y) { return y.r - x.r; });
-      b.hit = inCol[0] || null;
+      b.hit = inCol[0] || G.boss || null;
       b.stopY = b.hit ? b.hit.bottom + 2 : 6;
       b.state = "up";
       sound.ok();
