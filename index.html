@@ -326,6 +326,9 @@ td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .bubble.pop { transform: scale(1.5); opacity: 0; }
 .arena-msg { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 16px; z-index: 2; }
 .arena-msg:empty { display: none; }
+.game-canvas { position: absolute; inset: 0; display: block; }
+.game-card.locked .game-art { filter: grayscale(1); opacity: .55; }
+.game-art svg { width: 100%; height: 100%; display: block; }
 .arena-msg .box { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 22px 26px; box-shadow: var(--shadow); max-width: 360px; }
 .arena-msg .box b { display: block; font: 700 26px var(--display); margin-bottom: 4px; }
 .arena-msg .box p { margin: 0 0 14px; color: var(--muted); }
@@ -754,7 +757,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
           <div><button class="back" id="game-back">&larr; All games</button><h2 id="g-title"></h2></div>
           <div class="stats">
             <div class="stat"><b id="g-score">0</b><span>Score</span></div>
-            <div class="stat"><b id="g-level">1</b><span>Level</span></div>
+            <div class="stat"><b id="g-level">1</b><span id="g-level-l">Level</span></div>
             <div class="stat"><b id="g-lives">10</b><span id="g-lives-l">Escapes left</span></div>
           </div>
         </div>
@@ -2134,9 +2137,10 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
   }
   function gameCards() {
     return Object.keys(GAMES).map(function (g) {
-      var d = GAMES[g];
-      return '<article class="game-card">' + d.art.replace('class="game-art', 'aria-hidden="true" class="game-art') + "<h3>" + d.title + "</h3><p>" + d.blurb + "</p>" +
-        '<div class="game-foot"><span class="chip">Best: ' + ((P.games[g] && P.games[g].best) || 0) + '</span><button class="btn primary" data-game="' + g + '">Play</button></div></article>';
+      var d = GAMES[g], locked = d.unlock && !stageOpen(d.unlock);
+      return '<article class="game-card' + (locked ? " locked" : "") + '">' + d.art.replace('class="game-art', 'aria-hidden="true" class="game-art') + "<h3>" + d.title + "</h3><p>" + d.blurb + "</p>" +
+        '<div class="game-foot"><span class="chip">' + (locked ? "Opens at " + STAGES[d.unlock].name : "Best: " + ((P.games[g] && P.games[g].best) || 0)) + "</span>" +
+        (locked ? '<button class="btn" disabled>Locked</button>' : '<button class="btn primary" data-game="' + g + '">Play</button>') + "</div></article>";
     }).join("");
   }
   document.addEventListener("click", function (e) {
@@ -2154,10 +2158,12 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     $("game-play").hidden = false;
     $("g-title").textContent = def.title;
     $("g-lives-l").textContent = def.livesLabel;
+    $("g-level-l").textContent = def.levelLabel || "Level";
     var arena = $("arena");
     arena.querySelectorAll(".bubble, .drop, .brick, .paddle, .ball").forEach(function (n) { n.remove(); });
     G = { kind: kind, items: [], els: [], score: 0, level: 1, cleared: 0, lives: def.lives, spawnIn: 0, last: 0, buf: "", raf: 0, over: false, running: false };
     if (kind === "breaker") breakerSetup();
+    if (def.mod) { G.mod = def.mod; G.keys = 0; G.errs = 0; modCanvas(); def.mod.setup(); def.mod.draw(G.cx, G.W, G.H); }
     $("buffer").hidden = kind !== "rain";
     $("buffer").textContent = "";
     gameHud();
@@ -2184,6 +2190,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     G.last = now;
     var arena = $("arena"), W = arena.clientWidth, H = arena.clientHeight;
     if (G.kind === "breaker") { breakerStep(dt, H); if (G && !G.over) G.raf = requestAnimationFrame(gameLoop); return; }
+    if (G.mod) { modFrame(dt); if (G && !G.over) G.raf = requestAnimationFrame(gameLoop); return; }
     G.spawnIn -= dt;
     if (G.spawnIn <= 0) {
       spawnItem(W, H);
@@ -2256,10 +2263,11 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       return;
     }
     if (G.over) return;
-    if (e.key === "Escape") { e.preventDefault(); gameOver(); return; }
+    if (e.key === "Escape") { e.preventDefault(); if (G.mod && G.mod.esc) G.mod.esc(); else gameOver(); return; }
     if (G.kind === "rain" && e.key === "Backspace") { e.preventDefault(); G.buf = G.buf.slice(0, -1); showBuffer(); return; }
     if (e.key.length !== 1) return;
     e.preventDefault();
+    if (G.mod) { modKey(e.key); return; }
     var ch = e.key.toLowerCase();
     if (G.kind === "breaker") { breakerKey(ch); return; }
     if (G.kind === "bubbles") {
@@ -2297,11 +2305,12 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     cancelAnimationFrame(G.raf);
     var rec = P.games[G.kind] || { best: 0, level: 0, plays: 0 };
     var isBest = G.score > rec.best;
-    if (isBest && G.score > 0) sound.cheer(false); else sound.soft();
+    if ((isBest && G.score > 0) || G.resultWin) sound.cheer(!!G.resultWin && isBest); else sound.soft();
     rec.plays++; rec.best = Math.max(rec.best, G.score); rec.level = Math.max(rec.level, G.level);
     P.games[G.kind] = rec;
     save();
-    $("arena-msg").innerHTML = '<div class="box"><b>Game over</b><p>Score ' + G.score + " · level " + G.level + (isBest ? " · new best!" : " · best " + rec.best) +
+    if (G.mod) G.mod.draw(G.cx, G.W, G.H);
+    $("arena-msg").innerHTML = '<div class="box"><b>' + esc(G.resultTitle || "Game over") + "</b><p>" + (G.resultLine ? esc(G.resultLine) + "<br>" : "") + "Score " + G.score + (G.resultLine ? "" : " · level " + G.level) + (isBest ? " · new best!" : " · best " + rec.best) +
       '</p><div class="actions" style="justify-content:center"><button class="btn primary" id="g-again">Play again</button><button class="btn" id="g-menu">All games</button></div></div>';
     var gk = G.kind; $("g-again").addEventListener("click", function () { startGame(gk); });
     $("g-menu").addEventListener("click", function () { endGame(true); renderGames(); });
@@ -2314,6 +2323,202 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     G.els.forEach(function (el) { el.remove(); });
     G = null;
   }
+
+
+  // ---------- canvas games (Ghost Race, Build a House, Typing Cricket, Space Defender, Word Tetris) ----------
+  // Each game is a module: setup(G), step(dt), draw(cx, W, H), key(ch), and optional esc().
+  var MONO = '"IBM Plex Mono", ui-monospace, Consolas, monospace';
+  var SANS = '"IBM Plex Sans", "Segoe UI", system-ui, sans-serif';
+  function topStage() { var hi = 0; for (var i = 0; i < STAGES.length; i++) if (stageOpen(i)) hi = i; return hi; }
+  // Letters of the rows learned so far, or words once First Words is open.
+  function poolLetters(hi) { return hi <= 1 ? "asdfghjkl" : hi === 2 ? "asdfghjklqwertyuiop" : "abcdefghijklmnopqrstuvwxyz"; }
+  function poolWord(minL, maxL, hi, avoid) {
+    var list = hi <= 4 ? EASY.concat(COMMON.slice(0, 60)) : hi <= 7 ? EASY.concat(COMMON) : COMMON.concat(HARD);
+    var ok = list.filter(function (w) { return w.length >= minL && w.length <= maxL && /^[a-z]+$/.test(w); });
+    if (!ok.length) ok = list.filter(function (w) { return /^[a-z]+$/.test(w); });
+    var w, tries = 0;
+    do { w = pick(ok); tries++; } while (avoid && avoid(w) && tries < 30);
+    return w;
+  }
+  // Typed input is case-sensitive only when the word has capitals.
+  function keyMatches(ch, want) { return /[A-Z]/.test(want) ? ch === want : ch.toLowerCase() === want.toLowerCase(); }
+  function gameSentence(minW, maxW) {
+    var src = pick(STORIES.concat(FACTS));
+    var sents = src.match(/[^.!?]+[.!?]+["']?/g) || [src];
+    var start = rand(sents.length), out = "";
+    for (var i = 0; i < sents.length; i++) {
+      var next = (out ? out + " " : "") + sents[(start + i) % sents.length].trim();
+      var n = next.split(/\s+/).length;
+      if (n > maxW && out) break;
+      out = next;
+      if (n >= minW) break;
+    }
+    var words = out.split(/\s+/);
+    if (words.length > maxW) out = words.slice(0, maxW).join(" ").replace(/[,;:]$/, "") + ".";
+    return out;
+  }
+  // Word label: typed part green, next letter underlined, wrong next letter red.
+  function drawWordTag(cx, word, typed, x, y, o) {
+    o = o || {};
+    var fs = o.size || 18;
+    cx.font = "600 " + fs + "px " + MONO;
+    var cw = cx.measureText("M").width, w = word.length * cw + 16, h = fs + 12;
+    var left = o.align === "left" ? x : x - w / 2, top = y - h / 2;
+    cx.fillStyle = o.bg || "rgba(255,255,255,0.95)";
+    rrect(cx, left, top, w, h, 6); cx.fill();
+    cx.lineWidth = o.locked ? 3 : 1;
+    cx.strokeStyle = o.locked ? "#f5c518" : (o.border || "rgba(0,0,0,0.25)");
+    cx.stroke();
+    cx.textBaseline = "middle"; cx.textAlign = "left";
+    for (var i = 0; i < word.length; i++) {
+      var cxp = left + 8 + i * cw;
+      cx.fillStyle = i < typed ? "#12823b" : (i === typed && o.err ? "#c62828" : "#1d232b");
+      cx.fillText(word[i], cxp, y + 1);
+      if (i === typed) { cx.fillRect(cxp, y + fs / 2 + 1, cw, 2); }
+    }
+    return { left: left, top: top, w: w, h: h };
+  }
+  function rrect(cx, x, y, w, h, r) {
+    cx.beginPath(); cx.moveTo(x + r, y); cx.arcTo(x + w, y, x + w, y + h, r); cx.arcTo(x + w, y + h, x, y + h, r);
+    cx.arcTo(x, y + h, x, y, r); cx.arcTo(x, y, x + w, y, r); cx.closePath();
+  }
+  function banner(cx, W, text, color, t) {
+    if (!text) return;
+    cx.save();
+    cx.globalAlpha = Math.min(1, t * 3);
+    cx.font = "800 34px " + SANS; cx.textAlign = "center"; cx.textBaseline = "middle";
+    var w = cx.measureText(text).width + 40;
+    cx.fillStyle = color || "#f5c518"; rrect(cx, W / 2 - w / 2, 18, w, 52, 10); cx.fill();
+    cx.fillStyle = "#1d232b"; cx.fillText(text, W / 2, 45);
+    cx.restore();
+  }
+  function modCanvas() {
+    var arena = $("arena"), cv = document.createElement("canvas");
+    cv.className = "game-canvas";
+    arena.appendChild(cv); G.els.push(cv);
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    G.W = arena.clientWidth; G.H = arena.clientHeight;
+    cv.width = Math.round(G.W * dpr); cv.height = Math.round(G.H * dpr);
+    cv.style.width = G.W + "px"; cv.style.height = G.H + "px";
+    G.cx = cv.getContext("2d"); G.cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function modFrame(dt) {
+    G.t = (G.t || 0) + dt;
+    G.mod.step(dt);
+    if (!G || G.over && !G.drawAfter) return;
+    G.mod.draw(G.cx, G.W, G.H);
+  }
+  function modKey(ch) {
+    G.keys = (G.keys || 0) + 1;
+    var ok = G.mod.key(ch);
+    if (G && G.mod && G.mod.hud) G.mod.hud();
+    if (ok === false) { G.errs = (G.errs || 0) + 1; sound.bad(); }
+    else if (ok === true) sound.ok();
+    gameHud();
+  }
+  function modAcc() { return G.keys ? Math.round((G.keys - (G.errs || 0)) / G.keys * 1000) / 10 : 100; }
+  function gameFinish(title, line, win) {
+    // Results for the canvas games: same saving as gameOver, with a title and line of their own.
+    G.resultTitle = title; G.resultLine = line; G.resultWin = win;
+    gameOver();
+  }
+
+  // ----- Ghost Race -----
+  var GhostRace = {
+    setup: function () {
+      var hi = topStage();
+      G.text = gameSentence(15, 25);
+      G.pos = 0; G.err = false; G.start = 0; G.done = false;
+      var saved = P.ghost;
+      G.ghostWpm = saved && saved.wpm ? saved.wpm : Math.max(10, STAGES[hi].exam.pass.wpm);
+      G.ghostMarks = saved && saved.marks ? saved.marks : null; // ms at every 2% of the text
+      G.ghostDone = false; G.level = 0; G.lives = 100;
+    },
+    ghostFrac: function (ms) {
+      if (G.ghostMarks) {
+        var m = G.ghostMarks, n = m.length;
+        if (ms >= m[n - 1]) return 1;
+        for (var i = 0; i < n; i++) if (m[i] > ms) { var prev = i ? m[i - 1] : 0; return (i + (ms - prev) / Math.max(1, m[i] - prev)) / n; }
+        return 1;
+      }
+      return Math.min(1, (ms / 60000) * G.ghostWpm * 5 / G.text.length);
+    },
+    step: function () {
+      if (!G.start || G.done) return;
+      var ms = performance.now() - G.start;
+      G.level = Math.round(G.pos / 5 / Math.max(ms, 1000) * 60000);
+      $("g-level").textContent = G.level;
+      if (!G.ghostDone && GhostRace.ghostFrac(ms) >= 1) G.ghostDone = ms;
+      if (G.ghostDone && !G.done) { G.done = true; GhostRace.end(false); }
+    },
+    key: function (ch) {
+      if (G.done) return null;
+      if (!G.start) { G.start = performance.now(); G.marks = []; }
+      if (!keyMatches(ch, G.text[G.pos])) { G.err = true; return false; }
+      G.err = false; G.pos++;
+      var ms = performance.now() - G.start;
+      while (G.marks.length < 50 && G.pos / G.text.length >= (G.marks.length + 1) / 50) G.marks.push(Math.round(ms));
+      if (G.pos >= G.text.length) { G.done = true; GhostRace.end(true); }
+      return true;
+    },
+    hud: function () { G.lives = modAcc(); },
+    end: function (won) {
+      var ms = performance.now() - G.start, wpm = Math.round(G.text.length / 5 / (ms / 60000));
+      G.score = won ? wpm : G.level; G.level = G.score; G.lives = modAcc();
+      var newBest = won && (!P.ghost || wpm > P.ghost.wpm);
+      if (newBest) P.ghost = { wpm: wpm, marks: G.marks.slice() };
+      G.drawAfter = true;
+      gameFinish(won ? "You beat the ghost!" : "The ghost got there first",
+        (won ? wpm + " WPM" : "You were at " + G.level + " WPM") + " · " + modAcc() + "% accuracy" + (newBest ? " · this run is your new ghost" : ""), won);
+    },
+    draw: function (cx, W, H) {
+      var roadTop = 40, roadH = Math.min(170, H * 0.42), laneH = roadH / 2;
+      cx.fillStyle = "#7cc36a"; cx.fillRect(0, 0, W, H);
+      cx.fillStyle = "#5a5f66"; cx.fillRect(0, roadTop, W, roadH);
+      cx.strokeStyle = "#f4f4f4"; cx.setLineDash([22, 16]); cx.lineWidth = 3;
+      cx.beginPath(); cx.moveTo(0, roadTop + laneH); cx.lineTo(W, roadTop + laneH); cx.stroke(); cx.setLineDash([]);
+      var flagX = W - 54, x0 = 24, x1 = flagX - 72;
+      for (var r = 0; r < 8; r++) for (var c = 0; c < 2; c++) { cx.fillStyle = (r + c) % 2 ? "#111" : "#fff"; cx.fillRect(flagX + c * 12, roadTop + r * roadH / 8, 12, roadH / 8); }
+      var ms = G.start ? (G.done && G.ghostDone ? G.ghostDone : performance.now() - G.start) : 0;
+      var gf = G.start ? GhostRace.ghostFrac(ms) : 0, pf = G.pos / G.text.length;
+      function car(x, y, body, alpha, label) {
+        cx.save(); cx.globalAlpha = alpha;
+        cx.fillStyle = body; rrect(cx, x, y - 14, 70, 28, 8); cx.fill();
+        cx.fillStyle = "rgba(255,255,255,0.8)"; rrect(cx, x + 38, y - 10, 18, 20, 4); cx.fill();
+        cx.fillStyle = "#222"; [[x + 10, y - 16], [x + 48, y - 16], [x + 10, y + 12], [x + 48, y + 12]].forEach(function (p) { cx.fillRect(p[0], p[1], 14, 5); });
+        cx.restore();
+        cx.font = "600 13px " + SANS; cx.fillStyle = "#fff"; cx.textBaseline = "bottom";
+        var lw = cx.measureText(label).width;
+        cx.textAlign = "left"; cx.fillText(label, Math.max(4, Math.min(x, W - lw - 8)), y - 18);
+      }
+      car(x0 + gf * (x1 - x0), roadTop + laneH / 2, "#ffffff", 0.55, "Ghost · best " + G.ghostWpm + " WPM");
+      car(x0 + pf * (x1 - x0), roadTop + laneH * 1.5, "#f08a24", 1, "You · " + (G.level || 0) + " WPM");
+      // sentence box
+      var bx = 16, by = roadTop + roadH + 18, bw = W - 32, bh = H - by - 14;
+      cx.fillStyle = "#ffffff"; rrect(cx, bx, by, bw, bh, 10); cx.fill();
+      var fs = W < 500 ? 15 : 19;
+      cx.font = "500 " + fs + "px " + MONO; cx.textBaseline = "top"; cx.textAlign = "left";
+      var cw = cx.measureText("M").width, per = Math.max(10, Math.floor((bw - 28) / cw)), lines = [], i = 0, t = G.text;
+      while (i < t.length) { var end = Math.min(t.length, i + per); if (end < t.length) { var sp = t.lastIndexOf(" ", end); if (sp > i) end = sp + 1; } lines.push([i, end]); i = end; }
+      var lh = fs * 1.7;
+      lines.forEach(function (ln, li) {
+        for (var k = ln[0]; k < ln[1]; k++) {
+          var x = bx + 14 + (k - ln[0]) * cw, y = by + 14 + li * lh;
+          cx.fillStyle = k < G.pos ? "#12823b" : k === G.pos ? (G.err ? "#c62828" : "#1d232b") : "#6b7480";
+          if (k === G.pos && G.err) { cx.fillStyle = "rgba(198,40,40,0.15)"; cx.fillRect(x - 1, y - 2, cw + 2, fs + 6); cx.fillStyle = "#c62828"; }
+          cx.fillText(t[k], x, y);
+          if (k === G.pos) { cx.fillStyle = "#f08a24"; cx.fillRect(x, y + fs + 3, cw, 2); }
+        }
+      });
+      if (!G.start && !G.over) { cx.font = "500 14px " + SANS; cx.fillStyle = "#1d232b"; cx.textAlign = "center"; cx.textBaseline = "top"; cx.fillText("Start typing. The ghost starts when you do.", W / 2, 12); }
+    }
+  };
+
+  function artSvg(inner) { return '<div class="game-art"><svg viewBox="0 0 260 110" preserveAspectRatio="xMidYMid slice">' + inner + "</svg></div>"; }
+  GAMES.ghost = { title: "Ghost Race", unlock: 5, lives: 100, livesLabel: "Accuracy", levelLabel: "WPM", mod: GhostRace,
+    intro: "Type the sentence to drive your car to the flag. The see-through car is your best run so far.",
+    blurb: "Race your own best run. Your car moves with every correct letter; beat the ghost to the flag.",
+    art: artSvg('<rect width="260" height="110" fill="#7cc36a"/><rect y="22" width="260" height="66" fill="#5a5f66"/><path d="M0 55H260" stroke="#fff" stroke-width="3" stroke-dasharray="14 10"/><rect x="226" y="22" width="8" height="66" fill="#fff"/><rect x="234" y="22" width="8" height="66" fill="#111"/><rect x="70" y="30" width="48" height="18" rx="5" fill="#fff" opacity=".55"/><rect x="118" y="62" width="48" height="18" rx="5" fill="#f08a24"/>') };
 
   // Key Breaker: the ball drops toward a lit key; pressing it sends the ball up into that column's bricks.
   var BREAKER_KEYS = ["asdfjkl;", "qwruiop;", "zxcvnm,.", "asdfghjk", "weruiokl"];
