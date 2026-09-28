@@ -430,6 +430,15 @@ body.gate .nav, body.gate .cta, body.gate .foot-links { display: none; }
 .pf .pf-main span { color: var(--muted); font-size: 13px; }
 .pf .actions { gap: 6px; }
 .backup:empty { display: none; }
+.who-col { display: grid; gap: 8px; align-content: start; }
+.who-col .who-card { width: 100%; }
+.who-back { display: grid; gap: 8px; }
+.link-btn { justify-self: start; border: 0; background: none; padding: 4px 2px; color: var(--accent); font: 500 14px var(--sans); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.who-pick { display: flex; gap: 8px; flex-wrap: wrap; }
+.who-pick select { flex: 1 1 180px; min-width: 0; font: 15px var(--sans); padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.pin-input { font: 600 22px var(--mono) !important; letter-spacing: .5em; max-width: 180px; text-align: center; }
+.who-manage summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+.who-manage[open] summary { margin-bottom: 4px; }
 .who-signin { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; color: var(--muted); font-size: 14px; }
 .who-signin .form-note { flex-basis: 100%; }
 .consent { padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); }
@@ -540,16 +549,28 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
   <main>
     <section id="view-welcome" hidden>
       <div class="welcome">
-        <div id="who-existing"></div>
         <div id="who-start">
           <h1 id="who-h">Welcome to DexiType</h1>
           <p class="lede">Who is going to practise on this computer?</p>
           <div class="who-signin" id="who-signin" hidden><span>Already saved your progress online?</span> <button class="btn" type="button" id="who-google">Sign in with Google</button><p class="form-note" id="who-google-msg"></p></div>
           <div class="who">
-            <button class="who-card" data-who="student" type="button"><span class="who-icon" aria-hidden="true">S</span><b>Student</b><span>For school students. We'll ask for your class and roll number.</span></button>
-            <button class="who-card" data-who="user" type="button"><span class="who-icon" aria-hidden="true">U</span><b>User</b><span>For everyone else. You'll get your own DexiType ID.</span></button>
+            <div class="who-col">
+              <button class="who-card" data-who="student" type="button"><span class="who-icon" aria-hidden="true">S</span><b>Student</b><span>For school students. We'll ask for your class and roll number.</span></button>
+              <div class="who-back" id="back-student" hidden>
+                <button class="link-btn" type="button" data-back="student" aria-expanded="false" aria-controls="pickbox-student">Used DexiType before? Choose your name</button>
+                <div class="who-pick" id="pickbox-student" hidden><select id="pick-student" aria-label="Your name"></select><button class="btn primary" type="button" data-pick="student">Open</button></div>
+              </div>
+            </div>
+            <div class="who-col">
+              <button class="who-card" data-who="user" type="button"><span class="who-icon" aria-hidden="true">U</span><b>User</b><span>For everyone else. You'll get your own DexiType ID.</span></button>
+              <div class="who-back" id="back-user" hidden>
+                <button class="link-btn" type="button" data-back="user" aria-expanded="false" aria-controls="pickbox-user">Used DexiType before? Choose your name</button>
+                <div class="who-pick" id="pickbox-user" hidden><select id="pick-user" aria-label="Your name"></select><button class="btn primary" type="button" data-pick="user">Open</button></div>
+              </div>
+            </div>
           </div>
         </div>
+        <div id="who-existing"></div>
         <form id="who-form" class="who-form" hidden novalidate>
           <div class="eyebrow" id="wf-eyebrow"></div>
           <h2 id="wf-title"></h2>
@@ -562,6 +583,11 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
             <label for="f-gender">Gender<select id="f-gender"><option value="">Choose</option><option>Female</option><option>Male</option><option>Other</option><option>Prefer not to say</option></select></label>
             <label for="f-dob">Date of birth<input type="date" id="f-dob"></label>
           </div>
+          <div class="row2">
+            <label for="f-pin">Choose a 4-digit PIN<input id="f-pin" class="pin-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"></label>
+            <label for="f-pin2">Type the PIN again<input id="f-pin2" class="pin-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"></label>
+          </div>
+          <p class="form-note">You'll type this PIN each time you open your progress. If you forget it, your date of birth resets it.</p>
           <p class="form-note user-only">Your DexiType ID: <b id="f-uid"></b>. Write it down; you'll see it on your certificate.</p>
           <p class="form-note user-only" id="f-minor" hidden>Online save with Google is for users aged 18 and over, so your progress will be saved on this computer.</p>
           <div class="consent user-only" id="f-cloud-box" hidden>
@@ -570,6 +596,16 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
           <p class="form-err" id="f-err" role="alert"></p>
           <p class="form-note">These details are saved only on this computer, in this browser. DexiType does not send them anywhere.</p>
           <div class="actions"><button class="btn primary" type="submit">Start typing</button><button class="btn" type="button" id="wf-back">Back</button></div>
+        </form>
+        <form id="pin-form" class="who-form" hidden novalidate>
+          <div class="eyebrow" id="pin-who"></div>
+          <h2 id="pin-title"></h2>
+          <p class="form-note" id="pin-note"></p>
+          <div id="pin-enter-box"><label for="pin-in">PIN<input id="pin-in" class="pin-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"></label></div>
+          <div class="row2" id="pin-set-box"><label for="pin-new">New 4-digit PIN<input id="pin-new" class="pin-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"></label><label for="pin-new2">Type it again<input id="pin-new2" class="pin-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"></label></div>
+          <div id="pin-dob-box"><label for="pin-dob">Date of birth<input type="date" id="pin-dob"></label></div>
+          <p class="form-err" id="pin-err" role="alert"></p>
+          <div class="actions"><button class="btn primary" type="submit" id="pin-go"></button><button class="btn" type="button" id="pin-back">Back</button><button class="link-btn" type="button" id="pin-forgot">Forgot PIN?</button></div>
         </form>
         <div class="backup" id="backup"></div>
       </div>
@@ -803,7 +839,11 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
   function getProfiles() { try { var v = JSON.parse(lsGet(PROFILES_KEY)); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
   function setProfiles(list) { return lsSet(PROFILES_KEY, JSON.stringify(list)); }
   var ME = null;
-  (function () { var id = lsGet(ACTIVE_KEY); ME = getProfiles().filter(function (p) { return p.id === id; })[0] || null; })();
+  var UNLOCK_KEY = "dexitype.unlocked";
+  function ssGet(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+  function ssSet(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }
+  // A person stays open while this browser tab stays open. After that, the PIN is asked again.
+  (function () { var id = lsGet(ACTIVE_KEY); ME = (id && ssGet(UNLOCK_KEY) === id && getProfiles().filter(function (p) { return p.id === id; })[0]) || null; })();
   function storeKey(id) { id = id || (ME && ME.id); return id ? "keycraft.p." + id : null; }
   function load() {
     var k = storeKey();
@@ -2533,40 +2573,172 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     var w = $("progress-who");
     if (w && ME) w.innerHTML = "Progress for <b>" + esc(ME.name) + "</b> · " + profileLine(ME) + ". Saved on this computer only.";
   }
-  $("profile-chip").addEventListener("click", function () { WHO = null; show("welcome"); });
+  $("profile-chip").addEventListener("click", function () { WHO = null; PINS = null; show("welcome"); });
 
+  function pickLabel(p) { return p.name + (p.type === "student" ? " · Class " + p.cls + " · Roll " + p.roll : " · " + p.uid); }
+  function renderPickers(list) {
+    ["student", "user"].forEach(function (t) {
+      var mine = list.filter(function (p) { return p.type === t; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
+      $("back-" + t).hidden = !mine.length;
+      var sel = $("pick-" + t), keep = sel.value || (ME && ME.type === t ? ME.id : lsGet(ACTIVE_KEY));
+      sel.innerHTML = '<option value="">Choose your name</option>' + mine.map(function (p) { return '<option value="' + p.id + '">' + esc(pickLabel(p)) + "</option>"; }).join("");
+      if (mine.some(function (p) { return p.id === keep; })) sel.value = keep;
+    });
+  }
   function renderWelcome() {
-    var list = getProfiles();
-    $("who-form").hidden = !WHO;
-    $("who-start").hidden = !!WHO;
-    $("who-h").textContent = list.length ? "Add someone new" : "Welcome to DexiType";
+    var list = getProfiles(), pin = !!PINS;
+    $("who-form").hidden = !WHO || pin;
+    $("pin-form").hidden = !pin;
+    $("who-start").hidden = !!WHO || pin;
+    $("who-h").textContent = ME ? "Switch person" : "Welcome to DexiType";
+    renderPickers(list);
     var ex = $("who-existing");
-    if (list.length && !WHO) {
-      ex.innerHTML = "<h1>" + (ME ? "Switch person" : "Who is typing?") + '</h1><p class="lede">People who practise on this computer. Choose yours to continue.</p><div class="pf-list">' +
+    var wasOpen = ex.querySelector("details") && ex.querySelector("details").open;
+    if (list.length && !WHO && !pin) {
+      ex.innerHTML = '<details class="who-manage"' + (wasOpen || pendingDelete ? " open" : "") + '><summary>Manage people on this computer (' + list.length + ')</summary><div class="pf-list">' +
         list.map(function (p) {
           var confirm = pendingDelete === p.id;
           return '<div class="pf' + (ME && ME.id === p.id ? " on" : "") + '"><span class="pf-av">' + esc(initials(p.name)) + '</span><div class="pf-main"><b>' + esc(p.name) + "</b><span>" + profileLine(p) + "</span></div>" +
             '<div class="actions">' + (confirm
               ? '<span class="form-note">Delete ' + esc(p.name) + ' and all their progress?</span><button class="btn danger" data-del-yes="' + p.id + '">Delete</button><button class="btn" data-del-no="1">Cancel</button>'
-              : (ME && ME.id === p.id ? '<button class="btn primary" data-use="' + p.id + '">Continue</button>' : '<button class="btn primary" data-use="' + p.id + '">This is me</button>') +
+              : '<button class="btn primary" data-use="' + p.id + '">Open</button>' +
                 (p.gid ? '<button class="btn" data-signout="' + p.id + '">Sign out</button><button class="btn danger" data-cloud-del="' + p.id + '">Delete online data</button>'
                   : (cloudEnabled() && isAdultUser(p) ? '<button class="btn" data-link="' + p.id + '">Save online with Google</button>' : "") +
                     '<button class="btn" data-del="' + p.id + '">Delete</button>')) + '</div><p class="form-note pf-msg" id="cloud-msg-' + p.id + '"></p></div>';
-        }).join("") + "</div>";
+        }).join("") + "</div></details>";
     } else ex.innerHTML = "";
-    ex.querySelectorAll("[data-use]").forEach(function (b) { b.addEventListener("click", function () { useProfile(b.dataset.use); }); });
+    ex.querySelectorAll("[data-use]").forEach(function (b) { b.addEventListener("click", function () { openProfile(b.dataset.use); }); });
     ex.querySelectorAll("[data-del]").forEach(function (b) { b.addEventListener("click", function () { pendingDelete = b.dataset.del; renderWelcome(); }); });
     ex.querySelectorAll("[data-del-no]").forEach(function (b) { b.addEventListener("click", function () { pendingDelete = null; renderWelcome(); }); });
-    ex.querySelectorAll("[data-del-yes]").forEach(function (b) { b.addEventListener("click", function () { deleteProfile(b.dataset.delYes); }); });
+    ex.querySelectorAll("[data-del-yes]").forEach(function (b) { b.addEventListener("click", function () { openProfile(b.dataset.delYes, "delete"); }); });
     ex.querySelectorAll("[data-link]").forEach(function (b) { b.addEventListener("click", function () { linkProfile(b.dataset.link, $("cloud-msg-" + b.dataset.link)); }); });
     ex.querySelectorAll("[data-signout]").forEach(function (b) { b.addEventListener("click", function () { cloudSignOut(b.dataset.signout); }); });
     ex.querySelectorAll("[data-cloud-del]").forEach(function (b) { b.addEventListener("click", function () { cloudDelete(b.dataset.cloudDel, $("cloud-msg-" + b.dataset.cloudDel)); }); });
-    $("who-signin").hidden = !cloudEnabled() || !!WHO;
-    renderBackup(list);
+    $("who-signin").hidden = !cloudEnabled() || !!WHO || pin;
+    if (pin) paintPin();
+    renderBackup(pin ? [] : list);
   }
+  document.querySelectorAll("[data-back]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var box = $("pickbox-" + b.dataset.back), open = box.hidden;
+      box.hidden = !open;
+      b.setAttribute("aria-expanded", String(open));
+      if (open) $("pick-" + b.dataset.back).focus();
+    });
+  });
+  document.querySelectorAll("[data-pick]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var sel = $("pick-" + b.dataset.pick);
+      if (!sel.value) { sel.focus(); return; }
+      openProfile(sel.value);
+    });
+  });
+
+  // ---------- PIN ----------
+  // The PIN keeps classmates out of each other's progress. It is stored as a hash, but anyone who can read
+  // this browser's storage could still get round it, so it is not strong security.
+  var PINS = null;
+  function pinOk(v) { return /^[0-9]{4}$/.test(v); }
+  function fnv(str) { var h = 0x811c9dc5; for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return ("0000000" + h.toString(16)).slice(-8); }
+  function hashPin(id, pin) {
+    var text = "dexitype-pin:" + id + ":" + pin;
+    if (window.crypto && crypto.subtle && window.TextEncoder) {
+      return crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)).then(function (buf) {
+        return "s:" + Array.prototype.map.call(new Uint8Array(buf), function (b) { return ("0" + b.toString(16)).slice(-2); }).join("");
+      }).catch(function () { return "f:" + fnv(text); });
+    }
+    return Promise.resolve("f:" + fnv(text));
+  }
+  function checkPin(p, pin) {
+    if (p.pinHash && p.pinHash.indexOf("f:") === 0) return Promise.resolve(p.pinHash === "f:" + fnv("dexitype-pin:" + p.id + ":" + pin));
+    return hashPin(p.id, pin).then(function (h) { return h === p.pinHash; });
+  }
+  function openProfile(id, purpose) {
+    var p = getProfiles().filter(function (x) { return x.id === id; })[0];
+    if (!p) return;
+    if (purpose === "delete" && !p.pinHash) { deleteProfile(id); return; }
+    WHO = null;
+    PINS = { id: id, purpose: purpose || "open", mode: p.pinHash ? "enter" : "set", tries: 0, lockUntil: 0 };
+    show("welcome");
+    pinMode(PINS.mode);
+  }
+  function paintPin() {
+    var p = getProfiles().filter(function (x) { return x.id === PINS.id; })[0];
+    if (!p) { PINS = null; renderWelcome(); return; }
+    var m = PINS.mode, del = PINS.purpose === "delete";
+    $("pin-who").textContent = pickLabel(p);
+    $("pin-title").textContent = m === "enter" ? (del ? "Enter the PIN to delete " + p.name : "Enter your PIN") : m === "set" ? "Set a 4-digit PIN" : "Reset your PIN";
+    $("pin-note").textContent = m === "enter" ? (del ? "This deletes " + p.name + " and all their progress from this computer." : "Type the 4 numbers you chose.")
+      : m === "set" ? (p.pinHash ? "Choose a new PIN. Tell no one." : "This keeps others out of your progress. Choose 4 numbers you'll remember, and tell no one.")
+      : "Type the date of birth saved for " + p.name + ".";
+    $("pin-enter-box").hidden = m !== "enter";
+    $("pin-set-box").hidden = m !== "set";
+    $("pin-dob-box").hidden = m !== "forgot";
+    $("pin-forgot").hidden = m !== "enter";
+    $("pin-go").textContent = m === "enter" ? (del ? "Delete" : "Open") : m === "set" ? "Save PIN and open" : "Check";
+    $("pin-go").className = "btn " + (del && m === "enter" ? "danger" : "primary");
+  }
+  function pinMode(mode) {
+    PINS.mode = mode;
+    ["pin-in", "pin-new", "pin-new2", "pin-dob"].forEach(function (k) { $(k).value = ""; $(k).removeAttribute("aria-invalid"); });
+    $("pin-err").textContent = "";
+    paintPin();
+    var f = { enter: "pin-in", set: "pin-new", forgot: "pin-dob" }[mode];
+    setTimeout(function () { $(f).focus(); }, 0);
+  }
+  $("pin-back").addEventListener("click", function () { PINS = null; renderWelcome(); });
+  $("pin-forgot").addEventListener("click", function () { pinMode("forgot"); });
+  ["pin-in", "pin-new", "pin-new2", "f-pin", "f-pin2"].forEach(function (k) {
+    $(k).addEventListener("input", function () { var v = this.value.replace(/[^0-9]/g, "").slice(0, 4); if (v !== this.value) this.value = v; });
+  });
+  $("pin-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!PINS) return;
+    var st = PINS, p = getProfiles().filter(function (x) { return x.id === st.id; })[0], err = $("pin-err");
+    if (!p) return;
+    function bad(id, msg) { $(id).setAttribute("aria-invalid", "true"); err.textContent = msg; $(id).focus(); }
+    if (st.mode === "enter") {
+      var wait = Math.ceil((st.lockUntil - Date.now()) / 1000);
+      if (wait > 0) { err.textContent = "Too many wrong tries. Wait " + wait + " seconds, then try again."; return; }
+      var v = $("pin-in").value;
+      if (!pinOk(v)) { bad("pin-in", "Type all 4 numbers of your PIN."); return; }
+      checkPin(p, v).then(function (ok) {
+        if (PINS !== st) return;
+        if (!ok) {
+          st.tries++;
+          $("pin-in").value = "";
+          if (st.tries >= 5) { st.tries = 0; st.lockUntil = Date.now() + 30000; bad("pin-in", "That PIN is wrong 5 times. Wait 30 seconds, then try again."); }
+          else bad("pin-in", "That PIN is wrong. Try again, or choose Forgot PIN.");
+          sound.bad();
+          return;
+        }
+        PINS = null;
+        if (st.purpose === "delete") deleteProfile(p.id); else useProfile(p.id);
+      });
+    } else if (st.mode === "set") {
+      var a = $("pin-new").value, b = $("pin-new2").value;
+      if (!pinOk(a)) { bad("pin-new", "The PIN must be exactly 4 numbers."); return; }
+      if (a !== b) { bad("pin-new2", "The two PINs don't match. Type the same 4 numbers twice."); return; }
+      hashPin(p.id, a).then(function (h) {
+        if (PINS !== st) return;
+        var list = getProfiles();
+        list.forEach(function (x) { if (x.id === p.id) x.pinHash = h; });
+        if (!setProfiles(list)) { err.textContent = "This browser is blocking saved data, so the PIN can't be kept."; return; }
+        PINS = null;
+        if (st.purpose === "delete") deleteProfile(p.id); else useProfile(p.id);
+        sound.step();
+      });
+    } else {
+      var d = $("pin-dob").value;
+      if (!d) { bad("pin-dob", "Choose the date of birth."); return; }
+      if (!p.dob) { err.textContent = "No date of birth is saved for " + p.name + ", so the PIN can't be reset here. Delete this person from Manage people and add them again."; return; }
+      if (d !== p.dob) { bad("pin-dob", "That date doesn't match. Check the day, month and year."); sound.bad(); return; }
+      pinMode("set");
+    }
+  });
   document.querySelectorAll("[data-who]").forEach(function (b) {
     b.addEventListener("click", function () {
-      WHO = b.dataset.who;
+      WHO = b.dataset.who; PINS = null;
       var f = $("who-form");
       f.reset();
       f.classList.toggle("as-student", WHO === "student");
@@ -2614,9 +2786,15 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     }
     need("f-gender", !!$("f-gender").value, "your gender");
     need("f-dob", !!dob && dob >= "1920-01-01" && dob <= today, "a valid date of birth");
+    var pin = $("f-pin").value;
+    need("f-pin", pinOk(pin), "a 4-digit PIN");
+    if (pinOk(pin)) need("f-pin2", $("f-pin2").value === pin, "the same PIN twice");
     if (bad.length) { $("f-err").textContent = "Please add " + bad.join(", ") + "."; return; }
     var p = { id: "p" + Date.now().toString(36) + rand(1e6).toString(36), type: WHO, name: name, gender: $("f-gender").value, dob: dob, created: Date.now() };
-    if (WHO === "student") { p.cls = $("f-class").value.trim(); p.roll = $("f-roll").value.trim(); }
+    hashPin(p.id, pin).then(function (h) { p.pinHash = h; createProfile(p, dob); });
+  });
+  function createProfile(p, dob) {
+    if (p.type === "student") { p.cls = $("f-class").value.trim(); p.roll = $("f-roll").value.trim(); }
     else p.uid = $("f-uid").textContent;
     var list = getProfiles();
     // Progress saved before profiles existed goes to the first person created on this computer.
@@ -2624,7 +2802,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     list.push(p);
     if (!setProfiles(list)) { $("f-err").textContent = "This browser is blocking saved data, so your progress can't be kept. Turn off private browsing and try again."; return; }
     if (legacy) { lsSet(storeKey(p.id), legacy); lsDel(LEGACY_KEY); }
-    var wantCloud = WHO === "user" && cloudEnabled() && $("f-cloud").checked;
+    var wantCloud = p.type === "user" && cloudEnabled() && $("f-cloud").checked;
     WHO = null;
     if (wantCloud && ageFrom(dob) < 18) {
       useProfile(p.id);
@@ -2639,11 +2817,13 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     }
     useProfile(p.id);
     sound.step();
-  });
+  }
   function useProfile(id) {
     var p = getProfiles().filter(function (x) { return x.id === id; })[0];
     if (!p) return;
-    ME = p; lsSet(ACTIVE_KEY, id);
+    ME = p; lsSet(ACTIVE_KEY, id); ssSet(UNLOCK_KEY, id);
+    PINS = null; WHO = null;
+    ["student", "user"].forEach(function (t) { $("pickbox-" + t).hidden = true; document.querySelector('[data-back="' + t + '"]').setAttribute("aria-expanded", "false"); });
     P = load();
     pendingDelete = null;
     if (ME.gid) cloudPull(ME);
