@@ -6,4 +6,4 @@ It has 11 stages, from Keyboard Basics (where to put your hands and which finger
 
 Progress is saved in your browser on your own computer. Adults (18+) can choose to save their progress online with Google sign-in.
 
-Live site: https://dipukumar31.github.io/dexitype/
+Live site: https://dexitype.github.io/
