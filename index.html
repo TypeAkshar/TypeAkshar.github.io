@@ -3366,9 +3366,26 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     spawn: function () {
       var p = G.nextPiece; G.nextPiece = Tetris.make();
       p.rot = 0; p.cells = TET_ROTS[p.type][0]; p.r = 0; p.c = p.type === "B" ? 4 : 3;
-      G.cur = p; G.pos = 0; G.mist = 0; G.err = false; G.fallT = 0;
+      G.cur = p; G.pos = 0; G.mist = 0; G.err = false; G.fallT = 0; G.anim = null;
       if (!Tetris.fits(p.cells, p.r, p.c, G.board)) { Tetris.lose(); return; }
       G.ghost = Tetris.best(p);
+      // Keys typed while the last piece was still moving go to this one.
+      var q = G.queue || []; G.queue = [];
+      q.forEach(function (ch) { if (G.over || G.anim) { if (G.anim) G.queue.push(ch); return; } if (Tetris.key(ch) === false) { G.errs++; sound.bad(); } });
+    },
+    // Slide and turn into the gap, then fall into it, instead of jumping there.
+    glide: function (to, turn) {
+      var p = G.cur, rows = Math.max(0, to.r - p.r);
+      G.anim = { from: { cells: p.cells, r: p.r, c: p.c }, to: to, t: 0, t1: turn ? 0.14 : 0, t2: Math.min(0.26, 0.08 + rows * 0.014) };
+    },
+    animCells: function () {
+      var a = G.anim, t = a.t, k1 = a.t1 ? Math.min(1, t / a.t1) : 1, k2 = Math.max(0, Math.min(1, (t - a.t1) / a.t2));
+      k1 = 1 - Math.pow(1 - k1, 3); k2 = k2 * k2;
+      return a.to.cells.map(function (x, i) {
+        var f = a.from.cells[i], sr = a.from.r + f[0], sc = a.from.c + f[1], mr = a.from.r + x[0], mc = a.to.c + x[1];
+        var r = sr + (mr - sr) * k1, c = sc + (mc - sc) * k1;
+        return [r + (a.to.r + x[0] - mr) * k2, c];
+      });
     },
     lose: function () { G.cur = null; G.drawAfter = true; lvLose("The well is full", G.lines + " of " + G.L.lines + " lines cleared."); },
     best: function (p) {
@@ -3426,15 +3443,15 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     },
     key: function (ch) {
       var p = G.cur;
-      if (!p) return null;
+      if (!p || G.anim) { G.queue = G.queue || []; if (G.queue.length < 12) G.queue.push(ch); return null; }
       var want = p.word[G.pos];
       if (keyMatches(ch, want)) {
         G.pos++; G.err = false;
-        if (G.pos >= p.word.length) { G.score += 10; Tetris.lock(G.ghost.cells, G.ghost.r, G.ghost.c); }
+        if (G.pos >= p.word.length) { G.score += 10; Tetris.glide(G.ghost, true); }
         return true;
       }
       G.err = true; G.mist++;
-      if (G.mist >= 2) Tetris.lock(p.cells, Tetris.dropRow(p.cells, p.r, p.c, G.board), p.c);
+      if (G.mist >= 2) Tetris.glide({ cells: p.cells, r: Tetris.dropRow(p.cells, p.r, p.c, G.board), c: p.c }, false);
       return false;
     },
     step: function (dt) {
@@ -3443,6 +3460,16 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       G.msgT = (G.msgT || 0) + dt;
       if (G.L.rise) { G.riseIn -= dt; if (G.riseIn <= 0) { G.riseIn = G.L.rise; Tetris.rise(); if (G.over) return; } }
       if (!G.cur) { G.spawnIn -= dt; if (G.spawnIn <= 0) Tetris.spawn(); return; }
+      if (G.anim) {
+        var a = G.anim; a.t += dt;
+        if (a.t >= a.t1 + a.t2) {
+          var to = a.to;
+          while (to.r > -2 && !Tetris.fits(to.cells, to.r, to.c, G.board)) to.r--;
+          G.anim = null; G.land = { cells: to.cells, r: to.r, c: to.c, t: 0 };
+          Tetris.lock(to.cells, to.r, to.c);
+        }
+        return;
+      }
       var grav = Math.max(0.25, G.L.grav * Math.pow(0.95, G.lines));
       G.fallT += dt;
       if (G.fallT >= grav) {
@@ -3466,13 +3493,19 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       }
       for (var r = 0; r < TROWS; r++) for (var c = 0; c < TCOLS; c++) { var b = G.board[r][c]; if (b) block(r, c, b.color, b.ch); }
       var p = G.cur;
-      if (p && G.ghost) {
+      if (p && G.ghost && (!G.anim || G.anim.to === G.ghost)) {
         cx.setLineDash([5, 4]); cx.strokeStyle = "#f5c518"; cx.lineWidth = 2;
         G.ghost.cells.forEach(function (x) { cx.strokeRect(wx + (G.ghost.c + x[1]) * cell + 2, wy + (G.ghost.r + x[0]) * cell + 2, cell - 4, cell - 4); });
         if (p.type === "B") cx.strokeRect(wx + (G.ghost.c - 1) * cell + 1, wy + (G.ghost.r - 1) * cell + 1, cell * 3 - 2, cell * 3 - 2);
         cx.setLineDash([]);
       }
-      if (p) p.cells.forEach(function (x, i) { if (p.r + x[0] >= 0) block(p.r + x[0], p.c + x[1], TET_COLORS[p.type], p.letters[i].trim(), i < G.pos); });
+      if (p && G.anim) Tetris.animCells().forEach(function (x, i) { if (x[0] >= 0) block(x[0], x[1], TET_COLORS[p.type], p.letters[i].trim(), true); });
+      else if (p) p.cells.forEach(function (x, i) { if (p.r + x[0] >= 0) block(p.r + x[0], p.c + x[1], TET_COLORS[p.type], p.letters[i].trim(), i < G.pos); });
+      if (G.land) {
+        G.land.t += 1 / 60;
+        if (G.land.t > 0.25) G.land = null;
+        else { cx.fillStyle = "rgba(255,255,255," + (0.35 - G.land.t * 1.4) + ")"; G.land.cells.forEach(function (x) { cx.fillRect(wx + (G.land.c + x[1]) * cell + 1, wy + (G.land.r + x[0]) * cell + 1, cell - 2, cell - 2); }); }
+      }
       if (G.boom) { cx.fillStyle = "rgba(251,191,36," + (0.6 - G.boom.t) + ")"; cx.beginPath(); cx.arc(wx + (G.boom.c + 0.5) * cell, wy + (G.boom.r + 0.5) * cell, cell * (1 + G.boom.t * 3), 0, Math.PI * 2); cx.fill(); }
       if (G.flash > 0) { cx.fillStyle = "rgba(255,255,255," + G.flash + ")"; cx.fillRect(wx, wy, TCOLS * cell, TROWS * cell); }
       cx.textAlign = "left"; cx.textBaseline = "top";
