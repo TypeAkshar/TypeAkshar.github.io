@@ -1,0 +1,2702 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DexiType</title>
+<meta name="description" content="A typing course that runs in the browser: Beginner, Intermediate and Advanced stages, each unlocked by passing the one before.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  --bg: #E7EBEF;
+  --surface: #F6F8FA;
+  --surface-2: #DDE3E9;
+  --ink: #17202B;
+  --muted: #5F6B79;
+  --faint: #98A2AE;
+  --line: #C9D1D9;
+  --accent: #C46A12;
+  --accent-ink: #FFFFFF;
+  --accent-soft: rgba(196, 106, 18, 0.14);
+  --good: #237A4B;
+  --good-soft: rgba(35, 122, 75, 0.13);
+  --bad: #C0392F;
+  --bad-soft: rgba(192, 57, 47, 0.14);
+  --key: #FBFCFD;
+  --key-edge: #B9C2CC;
+  --shadow: 0 1px 0 rgba(23, 32, 43, 0.06), 0 6px 20px -12px rgba(23, 32, 43, 0.25);
+  --f-lp: rgba(214, 90, 90, 0.20);
+  --f-lr: rgba(222, 150, 60, 0.22);
+  --f-lm: rgba(190, 175, 40, 0.24);
+  --f-li: rgba(70, 160, 95, 0.20);
+  --f-ri: rgba(50, 150, 170, 0.20);
+  --f-rm: rgba(70, 110, 200, 0.20);
+  --f-rr: rgba(130, 90, 200, 0.20);
+  --f-rp: rgba(200, 80, 160, 0.20);
+  --f-th: rgba(120, 130, 140, 0.16);
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --sans: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #11151A;
+    --surface: #1A2027;
+    --surface-2: #232B34;
+    --ink: #E4E9EE;
+    --muted: #93A0AD;
+    --faint: #5E6975;
+    --line: #2D3640;
+    --accent: #F0A040;
+    --accent-ink: #1A1206;
+    --accent-soft: rgba(240, 160, 64, 0.16);
+    --good: #5CC48C;
+    --good-soft: rgba(92, 196, 140, 0.14);
+    --bad: #F07A70;
+    --bad-soft: rgba(240, 122, 112, 0.16);
+    --key: #222A33;
+    --key-edge: #10141A;
+    --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 8px 24px -14px rgba(0, 0, 0, 0.6);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11151A;
+  --surface: #1A2027;
+  --surface-2: #232B34;
+  --ink: #E4E9EE;
+  --muted: #93A0AD;
+  --faint: #5E6975;
+  --line: #2D3640;
+  --accent: #F0A040;
+  --accent-ink: #1A1206;
+  --accent-soft: rgba(240, 160, 64, 0.16);
+  --good: #5CC48C;
+  --good-soft: rgba(92, 196, 140, 0.14);
+  --bad: #F07A70;
+  --bad-soft: rgba(240, 122, 112, 0.16);
+  --key: #222A33;
+  --key-edge: #10141A;
+  --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 8px 24px -14px rgba(0, 0, 0, 0.6);
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.55 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 0 48px; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Header */
+.top {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  padding-block: 18px 14px; border-bottom: 1px solid var(--line); margin-bottom: 28px;
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-cap {
+  width: 34px; height: 34px; border-radius: 7px; display: grid; place-items: center;
+  background: var(--key); border: 1px solid var(--line); box-shadow: 0 3px 0 var(--key-edge);
+  font: 600 16px var(--mono); color: var(--accent);
+}
+.brand-name { font: 700 22px/1 var(--display); letter-spacing: -0.01em; }
+.nav { display: flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: 10px; max-width: 100%; overflow-x: auto; }
+.nav button { flex: none; }
+.nav button {
+  border: 0; background: transparent; padding: 7px 11px; border-radius: 7px; cursor: pointer; font-size: 14px;
+  font-weight: 500; color: var(--muted);
+}
+.nav button[aria-current="page"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(26px, 4vw, 34px); line-height: 1.1; letter-spacing: -0.015em; font-weight: 700; }
+h2 { font-size: 22px; line-height: 1.2; font-weight: 700; }
+.lede { color: var(--muted); max-width: 62ch; margin: 8px 0 0; }
+.eyebrow { font: 600 11px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+/* Course */
+.rules {
+  display: flex; flex-wrap: wrap; gap: 10px 22px; margin: 18px 0 26px; padding: 12px 16px;
+  border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); font-size: 14px;
+}
+.rules b { color: var(--ink); font-weight: 600; }
+.stages { display: grid; gap: 18px; }
+.stage { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); }
+.stage.locked { box-shadow: none; background: transparent; }
+.stage-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.stage-head p { margin: 4px 0 0; color: var(--muted); font-size: 14px; max-width: 60ch; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+  font: 500 12px/1.4 var(--mono); white-space: nowrap; background: var(--surface-2); color: var(--muted);
+}
+.chip.good { background: var(--good-soft); color: var(--good); }
+.chip.bad { background: var(--bad-soft); color: var(--bad); }
+.chip.accent { background: var(--accent-soft); color: var(--accent); }
+.meter { height: 4px; border-radius: 4px; background: var(--surface-2); overflow: hidden; margin: 0 0 14px; }
+.meter i { display: block; height: 100%; background: var(--good); border-radius: 4px; transition: width .3s; }
+.ex-list { display: grid; gap: 0; }
+.ex {
+  display: grid; grid-template-columns: 92px minmax(0, 1fr) 118px 118px 96px; gap: 14px; align-items: center;
+  padding: 12px 0; border-top: 1px solid var(--line);
+}
+.ex:first-child { border-top: 0; }
+.ex .kind { font: 500 11px/1.3 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.ex .title { font-weight: 600; }
+.ex .desc { color: var(--muted); font-size: 13.5px; }
+.ex .target, .ex .best { font: 13px/1.35 var(--mono); font-variant-numeric: tabular-nums; }
+.ex .target small, .ex .best small { display: block; color: var(--muted); font: 11px/1.3 var(--sans); text-transform: uppercase; letter-spacing: 0.06em; }
+.ex .best.pass { color: var(--good); }
+.ex.exam { background: var(--accent-soft); border-radius: 10px; border-top: 0; padding: 14px 12px; margin-top: 8px; margin-inline: -12px; }
+.ex.exam .kind { color: var(--accent); }
+.or { font: 500 11px/1 var(--mono); color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; text-align: center; margin-top: 12px; }
+.btn {
+  border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: 8px;
+  cursor: pointer; font-weight: 600; font-size: 14px; white-space: nowrap;
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.danger { color: var(--bad); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.stage.locked .ex { opacity: .55; }
+.lockline { font-size: 13.5px; color: var(--muted); }
+
+/* Practice */
+.p-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.back { border: 0; background: none; color: var(--muted); cursor: pointer; padding: 0; font-size: 14px; margin-bottom: 6px; }
+.back:hover { color: var(--ink); }
+.stats { display: flex; gap: 8px; flex-wrap: wrap; }
+.stat {
+  min-width: 92px; padding: 8px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line);
+}
+.stat b { display: block; font: 600 22px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.stat.target b { color: var(--muted); font-size: 15px; line-height: 1.6; }
+
+.board {
+  position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 22px 24px; box-shadow: var(--shadow); cursor: text;
+}
+.text {
+  position: relative; font: 400 clamp(19px, 2.4vw, 24px)/1.75 var(--mono); height: calc(3 * 1.75em);
+  overflow: hidden; white-space: pre-wrap; word-break: normal; overflow-wrap: break-word; color: var(--faint);
+  scroll-behavior: smooth;
+}
+.text .ch { border-radius: 3px; }
+.text .ok { color: var(--ink); }
+.text .bad { color: var(--bad); background: var(--bad-soft); }
+.text .bad.sp { text-decoration: underline wavy var(--bad); }
+.text .cur { box-shadow: inset 0 -3px 0 var(--accent); color: var(--ink); background: var(--accent-soft); }
+.text .miss { animation: miss .25s; }
+@keyframes miss { 0%, 100% { transform: none; } 30% { transform: translateX(-2px); background: var(--bad-soft); } 60% { transform: translateX(2px); } }
+.board-foot { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; font-size: 13px; color: var(--muted); }
+kbd { font: 500 12px var(--mono); padding: 1px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; background: var(--key); color: var(--ink); }
+.focus-veil {
+  position: absolute; inset: 0; border-radius: 14px; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--surface) 82%, transparent); backdrop-filter: blur(2px);
+  font-weight: 600; color: var(--ink);
+}
+
+.kb { margin: 22px auto 0; max-width: 780px; display: grid; gap: 6px; user-select: none; }
+.kb-row { display: flex; gap: 6px; }
+.key {
+  flex: 1 1 0; min-width: 0; height: 42px; border-radius: 7px; background: var(--key);
+  border: 1px solid var(--line); box-shadow: 0 2px 0 var(--key-edge);
+  display: grid; place-items: center; font: 500 13px var(--mono); color: var(--muted); position: relative;
+  transition: transform .06s, box-shadow .06s;
+}
+.key[data-f] { background-image: linear-gradient(var(--fc), var(--fc)); }
+.key.bump::after { content: ""; position: absolute; bottom: 7px; width: 10px; height: 2px; border-radius: 2px; background: var(--muted); }
+.key.next { background: var(--accent); background-image: none; color: var(--accent-ink); border-color: var(--accent); box-shadow: 0 2px 0 color-mix(in srgb, var(--accent) 60%, #000); }
+.key.down { transform: translateY(2px); box-shadow: 0 0 0 var(--key-edge); }
+.key small { font-size: 10px; }
+.hint { text-align: center; margin-top: 12px; color: var(--muted); font-size: 14px; min-height: 1.5em; }
+.hint b { color: var(--ink); font-weight: 600; }
+.legend { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font-size: 12px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend i { width: 11px; height: 11px; border-radius: 3px; border: 1px solid var(--line); background: var(--key); background-image: linear-gradient(var(--fc), var(--fc)); }
+
+/* Results */
+.result { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 26px; box-shadow: var(--shadow); }
+.result-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.verdict { font: 700 30px/1.1 var(--display); }
+.verdict.good { color: var(--good); }
+.verdict.bad { color: var(--bad); }
+.result p { color: var(--muted); margin: 6px 0 0; max-width: 60ch; }
+.big { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 22px 0; }
+.big div { padding: 14px; border-radius: 10px; background: var(--bg); }
+.big b { display: block; font: 600 32px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.big span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.big em { font-style: normal; font: 12px var(--mono); display: block; margin-top: 4px; }
+.big em.good { color: var(--good); }
+.big em.bad { color: var(--bad); }
+.banner { padding: 14px 16px; border-radius: 10px; background: var(--good-soft); color: var(--good); font-weight: 600; margin-bottom: 18px; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Speed test */
+.durations { display: flex; gap: 8px; flex-wrap: wrap; margin: 20px 0; }
+.dur { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 14px 20px; cursor: pointer; text-align: left; min-width: 130px; }
+.dur b { display: block; font: 600 24px/1.1 var(--mono); }
+.dur span { font-size: 13px; color: var(--muted); }
+.dur:hover { border-color: var(--accent); }
+
+/* Progress */
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 22px 0; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.tile b { display: block; font: 600 28px/1.15 var(--mono); font-variant-numeric: tabular-nums; }
+.tile span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+.panel h3 { font-size: 17px; margin-bottom: 4px; }
+.panel .sub { color: var(--muted); font-size: 13.5px; margin: 0 0 14px; }
+.chart svg { width: 100%; height: auto; display: block; }
+.troubles { display: flex; gap: 10px; flex-wrap: wrap; }
+.trouble { display: grid; justify-items: center; gap: 4px; }
+.trouble .key { width: 48px; flex: none; height: 48px; font-size: 18px; color: var(--ink); }
+.trouble span { font: 12px var(--mono); color: var(--bad); }
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px; border-top: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; border-top: 0; }
+td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.empty { color: var(--muted); font-size: 14px; padding: 8px 0; }
+.reset-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; font-size: 14px; color: var(--muted); }
+
+/* Placement */
+.placement:empty { display: none; }
+.placement {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap;
+  margin: -8px 0 22px; padding: 16px 18px; border-radius: 12px; background: var(--accent-soft);
+}
+.placement b { display: block; font-family: var(--display); font-size: 17px; }
+.placement span { color: var(--muted); font-size: 14px; }
+
+/* Test options */
+.pick-group { margin-top: 18px; display: grid; gap: 8px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 14px; cursor: pointer; font-weight: 500; }
+.seg button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+
+/* Certificate */
+.cert {
+  margin: 0 0 20px; padding: 24px; border-radius: 12px; text-align: center; background: var(--bg);
+  border: 2px solid var(--line); outline: 1px solid var(--line); outline-offset: -8px;
+}
+.cert .eyebrow { margin-bottom: 8px; }
+.cert h3 { font-size: 26px; }
+.cert p { margin: 8px auto 0; color: var(--muted); }
+.cert .cert-num { font: 600 44px/1.1 var(--mono); color: var(--accent); margin-top: 10px; }
+.cert input { font: inherit; text-align: center; border: 0; border-bottom: 1px dashed var(--muted); background: transparent; color: var(--ink); padding: 4px; width: min(280px, 100%); font-family: var(--display); font-size: 20px; font-weight: 700; }
+
+/* Games */
+.games { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 22px; }
+.game-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 10px; align-content: start; }
+.game-card p { margin: 0; color: var(--muted); font-size: 14px; }
+.game-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+.game-art { height: 110px; border-radius: 10px; background: var(--bg); position: relative; overflow: hidden; }
+.bubbles-art span, .bubble {
+  position: absolute; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  font: 600 20px var(--mono); color: var(--ink);
+  background: radial-gradient(circle at 32% 30%, rgba(255,255,255,.7), transparent 38%), var(--f-ri);
+  border: 1.5px solid color-mix(in srgb, var(--ink) 25%, transparent);
+}
+.bubbles-art span:nth-child(1) { left: 12%; top: 50%; }
+.bubbles-art span:nth-child(2) { left: 36%; top: 18%; background-color: var(--f-li); }
+.bubbles-art span:nth-child(3) { left: 60%; top: 58%; background-color: var(--f-rr); }
+.bubbles-art span:nth-child(4) { left: 80%; top: 12%; background-color: var(--f-lr); }
+.rain-art span, .drop {
+  position: absolute; padding: 3px 10px; border-radius: 6px; font: 500 16px var(--mono); color: var(--ink);
+  background: var(--surface); border: 1px solid var(--line); box-shadow: 0 2px 0 var(--key-edge); white-space: nowrap;
+}
+.rain-art span:nth-child(1) { left: 10%; top: 16%; }
+.rain-art span:nth-child(2) { left: 46%; top: 48%; }
+.rain-art span:nth-child(3) { left: 72%; top: 20%; }
+.drop .hit { color: var(--accent); }
+.drop.target { border-color: var(--accent); }
+.arena {
+  position: relative; height: min(460px, 62vh); border-radius: 14px; overflow: hidden;
+  background: linear-gradient(var(--surface), var(--bg)); border: 1px solid var(--line);
+}
+.arena::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--bad-soft); }
+.bubble { transition: transform .12s, opacity .12s; }
+.bubble.pop { transform: scale(1.5); opacity: 0; }
+.arena-msg { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 16px; z-index: 2; }
+.arena-msg:empty { display: none; }
+.arena-msg .box { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 22px 26px; box-shadow: var(--shadow); max-width: 360px; }
+.arena-msg .box b { display: block; font: 700 26px var(--display); margin-bottom: 4px; }
+.arena-msg .box p { margin: 0 0 14px; color: var(--muted); }
+.buffer { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); font: 600 20px var(--mono); padding: 6px 16px; border-radius: 8px; background: var(--surface); border: 1px solid var(--accent); min-width: 120px; text-align: center; z-index: 1; }
+.buffer.err { border-color: var(--bad); color: var(--bad); }
+
+/* Header extras */
+button.brand { border: 0; background: none; padding: 0; cursor: pointer; }
+.top { gap: 12px 16px; }
+.top .nav { margin-left: auto; }
+.cta { flex: none; }
+
+/* Home */
+.hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 36px; align-items: center; padding-block: 12px 36px; }
+.hero-h { font-size: clamp(30px, 4.6vw, 46px); line-height: 1.05; letter-spacing: -0.02em; margin-top: 10px; }
+.hero .lede { font-size: 16px; margin: 14px 0 22px; }
+.big-btn { padding: 12px 20px; font-size: 15px; }
+.hero-note { color: var(--muted); font-size: 14px; margin: 14px 0 0; min-height: 1.4em; }
+.hero-note b { color: var(--ink); }
+.hero-demo { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); }
+.demo-bar { display: flex; justify-content: space-between; font: 500 12px var(--mono); color: var(--muted); margin-bottom: 12px; }
+.demo-bar span:last-child { color: var(--accent); }
+.demo-text { font: 400 20px/1.6 var(--mono); color: var(--faint); min-height: 3.2em; }
+.demo-text .ok { color: var(--ink); }
+.demo-text .cur { box-shadow: inset 0 -3px 0 var(--accent); background: var(--accent-soft); color: var(--ink); }
+.demo-keys { display: flex; gap: 5px; margin-top: 14px; }
+.demo-keys .key { height: 36px; }
+.features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding-block: 8px 12px; }
+.features article { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+.features h3 { font-size: 18px; margin: 12px 0 6px; }
+.features p { margin: 0; color: var(--muted); font-size: 14px; }
+.f-icon { width: 34px; height: 34px; border-radius: 7px; display: grid; place-items: center; background: var(--key); border: 1px solid var(--line); box-shadow: 0 2px 0 var(--key-edge); font: 600 15px var(--mono); color: var(--accent); }
+.home-sec { padding-block: 34px 0; }
+.home-sec .lede { margin-bottom: 18px; }
+.bench { display: grid; gap: 8px; }
+.bench-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) 90px; gap: 14px; align-items: center; font-size: 14px; }
+.bench-row b { font-weight: 600; }
+.bench-row .bar { height: 12px; border-radius: 6px; background: var(--surface-2); position: relative; overflow: visible; }
+.bench-row .bar i { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--accent); opacity: .75; }
+.bench-row .num { font: 13px var(--mono); color: var(--muted); text-align: right; }
+.bench-row.you b::after { content: "  ← you"; color: var(--accent); font-family: var(--mono); font-size: 12px; }
+.faq { display: grid; gap: 8px; margin-top: 14px; }
+.faq details { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
+.faq summary { cursor: pointer; font-weight: 600; }
+.faq p { margin: 8px 0 2px; color: var(--muted); max-width: 70ch; }
+.foot { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--line); display: grid; gap: 10px; color: var(--muted); font-size: 13.5px; }
+.foot b { color: var(--ink); }
+.foot-links { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.foot-links button { border: 0; background: none; padding: 0; color: var(--ink); cursor: pointer; font-size: 13.5px; }
+.foot-links button:hover { color: var(--accent); }
+
+/* Key Breaker */
+.breaker-art .brick, .breaker-art .paddle { position: absolute; }
+.brick { position: absolute; height: 20px; border-radius: 4px; background: var(--f-rm); border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent); transition: opacity .15s, transform .15s; }
+.brick.r1 { background: var(--f-li); }
+.brick.r2 { background: var(--f-lr); }
+.brick.gone { opacity: 0; transform: scale(.6); }
+.paddle { position: absolute; height: 38px; border-radius: 8px; display: grid; place-items: center; background: var(--key); border: 1px solid var(--line); box-shadow: 0 3px 0 var(--key-edge); font: 600 17px var(--mono); color: var(--muted); }
+.paddle.target { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.paddle.flash { background: var(--bad-soft); }
+.ball { position: absolute; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); left: 0; top: 0; }
+
+/* Tools */
+.tester { margin: 0; max-width: 720px; }
+.tester .key.hit { background: var(--good-soft); background-image: none; color: var(--good); border-color: var(--good); }
+.tester .key.down { transform: translateY(2px); box-shadow: none; }
+.calc { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.calc label { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+.calc input { font: 500 16px var(--mono); padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); width: 100%; }
+.calc-out { margin-top: 16px; padding: 14px 16px; border-radius: 10px; background: var(--accent-soft); font-size: 15px; }
+.calc-out b { font: 600 22px var(--mono); color: var(--accent); }
+
+.calm-bar { height: 6px; border-radius: 6px; background: var(--surface-2); overflow: hidden; margin-top: 12px; }
+.calm-bar i { display: block; height: 100%; width: 0; background: var(--good); opacity: .7; transition: width .2s linear; }
+
+/* Profiles */
+body.gate .nav, body.gate .cta, body.gate .foot-links { display: none; }
+.profile-chip { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px 4px 4px; cursor: pointer; font: 500 13px var(--sans); color: var(--ink); max-width: 180px; flex: none; }
+.profile-chip i, .who-icon, .pf-av { font-style: normal; flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font: 600 12px var(--mono); }
+.profile-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.welcome { max-width: 720px; display: grid; gap: 22px; }
+.who { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
+.who-card { display: grid; gap: 6px; justify-items: start; text-align: left; padding: 22px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; box-shadow: var(--shadow); }
+.who-card:hover { border-color: var(--accent); }
+.who-card b { font: 700 22px var(--display); }
+.who-card span:last-child { color: var(--muted); font-size: 14px; }
+.who-icon { width: 40px; height: 40px; font-size: 16px; }
+.who-form { display: grid; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; box-shadow: var(--shadow); }
+.who-form label { display: grid; gap: 6px; font-size: 13.5px; font-weight: 500; color: var(--muted); }
+.who-form input, .who-form select { font: 16px var(--sans); padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); width: 100%; }
+.who-form input[aria-invalid="true"], .who-form select[aria-invalid="true"] { border-color: var(--bad); }
+.row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.who-form.as-user .student-only, .who-form.as-student .user-only { display: none; }
+.form-note { margin: 0; color: var(--muted); font-size: 13px; }
+.form-err { margin: 0; color: var(--bad); font-size: 14px; min-height: 1.2em; }
+.form-err:empty { display: none; }
+.pf-list { display: grid; gap: 8px; margin-top: 12px; }
+.pf { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.pf.on { border-color: var(--accent); }
+.pf .pf-main { flex: 1; min-width: 160px; }
+.pf .pf-main b { display: block; }
+.pf .pf-main span { color: var(--muted); font-size: 13px; }
+.pf .actions { gap: 6px; }
+.backup:empty { display: none; }
+.who-signin { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; color: var(--muted); font-size: 14px; }
+.who-signin .form-note { flex-basis: 100%; }
+.consent { padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); }
+.check { display: flex !important; grid-template-columns: none; gap: 10px !important; align-items: flex-start; color: var(--ink) !important; font-weight: 400 !important; font-size: 13.5px !important; }
+.check input { width: 18px !important; height: 18px; margin-top: 2px; flex: none; accent-color: var(--accent); }
+.pf-msg { flex-basis: 100%; }
+.pf-msg:empty { display: none; }
+.backup { border-top: 1px solid var(--line); padding-top: 18px; color: var(--muted); font-size: 14px; }
+.backup h3 { font-size: 16px; color: var(--ink); margin-bottom: 4px; }
+.backup .actions { margin-top: 10px; }
+.backup-msg { margin-top: 8px; color: var(--ink); }
+
+/* Course ladder */
+.ladder { list-style: none; margin: 0 0 6px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+.rung { width: 100%; display: flex; align-items: center; gap: 8px; text-align: left; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: 13px; }
+.rung b { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 600 12px var(--mono); background: var(--surface-2); color: var(--muted); }
+.rung span { min-width: 0; line-height: 1.25; }
+.rung.done b { background: var(--good); color: var(--surface); }
+.rung.open b { background: var(--accent-soft); color: var(--accent); }
+.rung.locked { opacity: .6; }
+.rung.now { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-align: left; cursor: pointer; color: inherit; font: inherit; }
+.stage-head .caret { width: 10px; height: 10px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); margin: 8px 6px 0 0; flex: none; transition: transform .15s; }
+.stage-head[aria-expanded="true"] .caret { transform: rotate(-135deg); margin-top: 12px; }
+.stage-head > div:first-child { flex: 1; }
+.stage.folded .meter { margin-bottom: 0; }
+.stage.folded .lockline { display: none; }
+.sound-ctl { display: flex; align-items: center; gap: 6px; flex: none; }
+#sound-vol { width: 64px; accent-color: var(--accent); }
+.sound-btn { display: inline-flex; align-items: center; padding: 8px 10px; color: var(--muted); flex: none; }
+.sound-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.sound-btn[aria-pressed="true"] { color: var(--ink); }
+
+/* Guided lessons */
+.gd-progress { display: grid; gap: 6px; min-width: 180px; font: 500 12px var(--mono); color: var(--muted); }
+.gd-progress .meter { margin: 0; }
+.guide-card { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px; box-shadow: var(--shadow); min-height: 220px; }
+.guide-card h3 { font-size: 22px; margin-bottom: 8px; }
+.gd-body { color: var(--ink); max-width: 68ch; }
+.gd-body p { margin: 0 0 10px; }
+.gd-body ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.gd-keys { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 4px; }
+.gd-keys:empty { display: none; }
+.gk {
+  min-width: 48px; height: 48px; padding: 0 12px; border-radius: 8px; display: grid; place-items: center;
+  font: 600 18px var(--mono); background: var(--key); border: 1px solid var(--line); box-shadow: 0 3px 0 var(--key-edge); color: var(--faint);
+}
+.gk.cur { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.gk.ok { color: var(--good); background: var(--good-soft); border-color: var(--good); box-shadow: none; }
+.gk.miss { animation: miss .25s; }
+.gd-msg { min-height: 1.5em; margin-top: 10px; font-size: 14.5px; color: var(--muted); }
+.gd-msg.good { color: var(--good); font-weight: 600; }
+.gd-msg.bad { color: var(--bad); }
+.gd-msg.warn { color: var(--accent); }
+.gd-tip { color: var(--muted); font-size: 13px; align-self: center; }
+#guide-kb-slot .kb { margin-top: 18px; }
+.kb.halves .key[data-f^="l"] { background-image: linear-gradient(var(--half-l), var(--half-l)); }
+.kb.halves .key[data-f^="r"] { background-image: linear-gradient(var(--half-r), var(--half-r)); }
+.kb.halves .key.next { background-image: none; }
+.key.mark { outline: 2px solid var(--accent); outline-offset: 1px; }
+:root { --half-l: rgba(50, 120, 220, 0.22); --half-r: rgba(230, 140, 40, 0.24); }
+
+/* Heatmap */
+.heat { display: grid; gap: 4px; max-width: 620px; }
+.heat .kb-row { gap: 4px; }
+.heat .key { height: 34px; font-size: 12px; color: var(--ink); background-image: linear-gradient(var(--hc), var(--hc)); }
+
+@media (max-width: 760px) {
+  .ex { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; }
+  .ex .kind { grid-column: 1 / -1; }
+  .ex .target, .ex .best { grid-row: 3; }
+  .ex .main { grid-column: 1 / -1; }
+  .ex .go { grid-column: 2; grid-row: 3; justify-self: end; }
+  .ex .best { display: none; }
+  .big, .tiles, .calc { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hero, .features, .who, .row2 { grid-template-columns: minmax(0, 1fr); }
+  .profile-chip span { display: none; }
+  .profile-chip { padding: 4px; }
+  .bench-row { grid-template-columns: 110px minmax(0, 1fr) 64px; gap: 8px; }
+  .top .nav { margin-left: 0; order: 3; }
+  .key { height: 30px; font-size: 10px; border-radius: 5px; }
+  .kb, .kb-row { gap: 3px; }
+  .board { padding: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .text { scroll-behavior: auto; }
+  .text .miss { animation: none; }
+  .key, .meter i { transition: none; }
+}
+</style>
+</head><body>
+
+<div class="wrap">
+  <header class="top">
+    <button class="brand" data-go="home" aria-label="Home"><span class="brand-cap" aria-hidden="true">D</span><span class="brand-name">DexiType</span></button>
+    <nav class="nav" aria-label="Sections">
+      <button id="nav-course" data-view="course">Typing Tutor</button>
+      <button id="nav-test" data-view="test">Typing Test</button>
+      <button id="nav-games" data-view="games">Typing Games</button>
+      <button id="nav-tools" data-view="tools">Tools</button>
+      <button id="nav-progress" data-view="progress">Statistics</button>
+    </nav>
+    <button class="profile-chip" id="profile-chip" type="button" hidden></button>
+    <div class="sound-ctl"><button class="btn sound-btn" id="sound-btn" type="button"></button><input type="range" id="sound-vol" min="0" max="100" step="5" aria-label="Volume" title="Volume"></div>
+    <button class="btn primary cta" data-go="course">Start free</button>
+  </header>
+
+  <main>
+    <section id="view-welcome" hidden>
+      <div class="welcome">
+        <div id="who-existing"></div>
+        <div id="who-start">
+          <h1 id="who-h">Welcome to DexiType</h1>
+          <p class="lede">Who is going to practise on this computer?</p>
+          <div class="who-signin" id="who-signin" hidden><span>Already saved your progress online?</span> <button class="btn" type="button" id="who-google">Sign in with Google</button><p class="form-note" id="who-google-msg"></p></div>
+          <div class="who">
+            <button class="who-card" data-who="student" type="button"><span class="who-icon" aria-hidden="true">S</span><b>Student</b><span>For school students. We'll ask for your class and roll number.</span></button>
+            <button class="who-card" data-who="user" type="button"><span class="who-icon" aria-hidden="true">U</span><b>User</b><span>For everyone else. You'll get your own DexiType ID.</span></button>
+          </div>
+        </div>
+        <form id="who-form" class="who-form" hidden novalidate>
+          <div class="eyebrow" id="wf-eyebrow"></div>
+          <h2 id="wf-title"></h2>
+          <label for="f-name">Full name<input id="f-name" autocomplete="name" maxlength="60"></label>
+          <div class="row2 student-only">
+            <label for="f-class">Class<input id="f-class" maxlength="12" placeholder="For example 7 or 10-B"></label>
+            <label for="f-roll">Roll number<input id="f-roll" maxlength="12"></label>
+          </div>
+          <div class="row2">
+            <label for="f-gender">Gender<select id="f-gender"><option value="">Choose</option><option>Female</option><option>Male</option><option>Other</option><option>Prefer not to say</option></select></label>
+            <label for="f-dob">Date of birth<input type="date" id="f-dob"></label>
+          </div>
+          <p class="form-note user-only">Your DexiType ID: <b id="f-uid"></b>. Write it down; you'll see it on your certificate.</p>
+          <p class="form-note user-only" id="f-minor" hidden>Online save with Google is for users aged 18 and over, so your progress will be saved on this computer.</p>
+          <div class="consent user-only" id="f-cloud-box" hidden>
+            <label class="check" for="f-cloud"><input type="checkbox" id="f-cloud"> <span><b>Save my progress online with Google.</b> I am 18 or older, and I agree that DexiType stores my name, DexiType ID and typing progress in Google's Firebase cloud so I can use any computer. My date of birth and gender stay on this computer. I can delete my online data at any time from the switch-person screen.</span></label>
+          </div>
+          <p class="form-err" id="f-err" role="alert"></p>
+          <p class="form-note">These details are saved only on this computer, in this browser. DexiType does not send them anywhere.</p>
+          <div class="actions"><button class="btn primary" type="submit">Start typing</button><button class="btn" type="button" id="wf-back">Back</button></div>
+        </form>
+        <div class="backup" id="backup"></div>
+      </div>
+    </section>
+
+    <section id="view-home" hidden>
+      <div class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">Free touch typing tutor</div>
+          <h1 class="hero-h">Type faster, with fewer mistakes, without looking at the keys.</h1>
+          <p class="lede">Guided lessons from your very first key to symbols and code, feedback on every keystroke, and tests that show your real speed. Free for everyone, with no sign-up.</p>
+          <div class="actions"><button class="btn primary big-btn" data-go="course">Start the typing tutor</button><button class="btn big-btn" data-go="test">Take a typing test</button></div>
+          <p class="hero-note" id="hero-note"></p>
+        </div>
+        <div class="hero-demo" aria-hidden="true">
+          <div class="demo-bar"><span>Lesson 5 · Simple sentences</span><span id="demo-wpm">0 WPM</span></div>
+          <div class="demo-text" id="demo-text"></div>
+          <div class="demo-keys" id="demo-keys"></div>
+        </div>
+      </div>
+
+      <div class="features">
+        <article><div class="f-icon">1</div><h3>Lessons that adapt to you</h3><p>Every keystroke is recorded. The Review drill is rebuilt from the keys you miss most, so practice time goes where you need it.</p></article>
+        <article><div class="f-icon">2</div><h3>Practice that stays fresh</h3><p>Key drills, words, sentences, passages, code, timed sprints and three games keep sessions short and varied.</p></article>
+        <article><div class="f-icon">3</div><h3>Proof of your progress</h3><p>Tests from one to ten minutes report net and gross speed, and give you a certificate with your name on it.</p></article>
+      </div>
+
+      <div class="home-sec">
+        <h2>How fast is fast?</h2>
+        <p class="lede">A rough guide to net typing speed. Take a test to see where you are.</p>
+        <div class="bench" id="bench"></div>
+      </div>
+
+      <div class="home-sec">
+        <h2>Sharpen your skills with games</h2>
+        <p class="lede">Quick rounds that build reaction speed. Scores are saved in Statistics.</p>
+        <div class="games" id="home-games"></div>
+      </div>
+
+      <div class="home-sec">
+        <h2>Questions</h2>
+        <div class="faq">
+          <details><summary>Is it really free?</summary><p>Yes. Every lesson, test, game and tool is free, and you don't need an account.</p></details>
+          <details><summary>Where is my progress saved?</summary><p>In the browser you practise in, on this device. If you clear your browser data or switch computers, your progress starts again.</p></details>
+          <details><summary>I have never used a keyboard. Where do I start?</summary><p>Start with the Keyboard Basics stage in the Typing Tutor. It shows you how to sit, where to rest your hands, which finger presses which key, and how Space, Enter, Backspace and Shift work.</p></details>
+          <details><summary>Can I skip lessons I already know?</summary><p>Yes. Take the placement test, or pass a stage test. Either one clears that stage and opens the next.</p></details>
+          <details><summary>What is the difference between gross and net speed?</summary><p>Gross speed counts every key you press. Net speed counts only the characters you typed correctly, so it is the number that reflects real, usable speed.</p></details>
+          <details><summary>How long does it take to learn touch typing?</summary><p>It varies a lot from person to person. Short daily sessions of 15 to 20 minutes usually beat one long session a week. Expect to feel slower for the first days while your fingers learn the new positions.</p></details>
+          <details><summary>Does it work on Windows, Mac and Linux?</summary><p>Yes. It runs in any modern browser. It is designed for a physical keyboard, so it isn't suited to phones.</p></details>
+        </div>
+      </div>
+    </section>
+    <section id="view-course" hidden>
+      <h1>Learn to type without looking</h1>
+      <p class="lede">Eleven stages, from your very first key to professional speed. Each stage opens only after you clear the one before it.</p>
+      <div class="rules">
+        <span><b>Two ways to clear a stage:</b> pass every exercise in it, or pass the stage test.</span>
+        <span><b>To pass an exercise:</b> reach its speed (WPM) and accuracy target.</span>
+      </div>
+      <div class="placement" id="placement"></div>
+      <div class="stages" id="stages"></div>
+    </section>
+
+    <section id="view-practice" hidden>
+      <div class="p-head">
+        <div>
+          <button class="back" id="back">&larr; Back</button>
+          <div class="eyebrow" id="p-kind"></div>
+          <h2 id="p-title"></h2>
+        </div>
+        <div class="stats" id="live">
+          <div class="stat"><b id="s-wpm">0</b><span>WPM</span></div>
+          <div class="stat"><b id="s-acc">100%</b><span>Accuracy</span></div>
+          <div class="stat" id="s-time-box"><b id="s-time">0:00</b><span id="s-time-l">Time</span></div>
+          <div class="stat target" id="s-target-box"><b id="s-target"></b><span>Target</span></div>
+        </div>
+      </div>
+
+      <div id="typing">
+        <div class="board" id="board">
+          <div class="text" id="text" aria-live="off"></div>
+          <div class="calm-bar" id="calm-bar" hidden><i id="calm-fill"></i></div>
+          <div class="focus-veil" id="veil" hidden>Click here, then start typing</div>
+          <div class="board-foot">
+            <span id="p-desc"></span>
+            <span><kbd>Esc</kbd> restart</span>
+          </div>
+        </div>
+        <div id="kb-wrap">
+          <div class="kb" id="kb" aria-hidden="true"></div>
+          <div class="hint" id="hint"></div>
+          <div class="legend" id="legend" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <div class="result" id="result" hidden></div>
+    </section>
+
+    <section id="view-guide" hidden>
+      <div class="p-head">
+        <div>
+          <button class="back" id="guide-back">&larr; Back to course</button>
+          <div class="eyebrow" id="gd-kind"></div>
+          <h2 id="gd-title"></h2>
+        </div>
+        <div class="gd-progress"><span id="gd-step"></span><div class="meter"><i id="gd-meter"></i></div></div>
+      </div>
+      <div class="guide-card" id="guide-card">
+        <h3 id="gd-h"></h3>
+        <div class="gd-body" id="gd-body"></div>
+        <div class="gd-keys" id="gd-keys"></div>
+        <div class="gd-msg" id="gd-msg" aria-live="polite"></div>
+        <div class="actions" id="gd-actions"></div>
+        <div class="focus-veil" id="gd-veil" hidden>Click here, then use your keyboard</div>
+      </div>
+      <div id="guide-kb-slot"></div>
+    </section>
+
+    <section id="view-test" hidden>
+      <h1>Typing test</h1>
+      <p class="lede">Measure your speed on real text. You get gross and net speed, keystrokes per minute and accuracy, plus a certificate for tests of one minute or longer.</p>
+      <div class="pick-group">
+        <div class="eyebrow">Length</div>
+        <div class="seg" id="test-len">
+          <button data-v="60" aria-pressed="true">1 min</button><button data-v="120">2 min</button><button data-v="180">3 min</button><button data-v="300">5 min</button><button data-v="600">10 min</button>
+        </div>
+      </div>
+      <div class="pick-group">
+        <div class="eyebrow">Text</div>
+        <div class="seg" id="test-src">
+          <button data-v="words" aria-pressed="true">Common words</button><button data-v="stories">Stories</button><button data-v="facts">Facts</button><button data-v="numbers">Numbers and symbols</button>
+        </div>
+      </div>
+      <div class="actions" style="margin-top:20px"><button class="btn primary" id="test-go">Start test</button></div>
+      <p class="lede" id="test-best"></p>
+    </section>
+
+    <section id="view-games" hidden>
+      <div id="games-menu">
+        <h1>Typing games</h1>
+        <p class="lede">Short games that train reaction speed and accuracy. Your best scores are kept in Statistics.</p>
+        <div class="games" id="games-grid"></div>
+      </div>
+      <div id="game-play" hidden>
+        <div class="p-head">
+          <div><button class="back" id="game-back">&larr; All games</button><h2 id="g-title"></h2></div>
+          <div class="stats">
+            <div class="stat"><b id="g-score">0</b><span>Score</span></div>
+            <div class="stat"><b id="g-level">1</b><span>Level</span></div>
+            <div class="stat"><b id="g-lives">10</b><span id="g-lives-l">Escapes left</span></div>
+          </div>
+        </div>
+        <div class="arena" id="arena">
+          <div class="arena-msg" id="arena-msg"></div>
+          <div class="buffer" id="buffer" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-tools" hidden>
+      <h1>Tools</h1>
+      <p class="lede">Extra helpers for targeted practice and checking your setup.</p>
+      <div class="panel" style="margin-top:20px">
+        <h3>Weak-key review</h3>
+        <p class="sub" id="review-sub"></p>
+        <div id="review-keys"></div>
+        <div class="actions" style="margin-top:16px"><button class="btn primary" id="review-go">Start review drill</button></div>
+      </div>
+      <div class="panel">
+        <h3>Keyboard tester</h3>
+        <p class="sub">Press every key on your keyboard. Keys that work turn green. <span id="tester-count"></span></p>
+        <div class="kb tester" id="tester"></div>
+        <div class="actions" style="margin-top:12px"><button class="btn" id="tester-reset">Clear</button></div>
+      </div>
+      <div class="panel">
+        <h3>Time savings calculator</h3>
+        <p class="sub">See how much time a faster typing speed gives back to you each year.</p>
+        <div class="calc">
+          <label for="c-hours">Hours you type per day<input id="c-hours" type="number" min="0.25" max="16" step="0.25" value="2"></label>
+          <label for="c-now">Your speed now (WPM)<input id="c-now" type="number" min="5" max="200" value="30"></label>
+          <label for="c-goal">Goal speed (WPM)<input id="c-goal" type="number" min="5" max="200" value="60"></label>
+          <label for="c-days">Typing days per year<input id="c-days" type="number" min="1" max="366" value="230"></label>
+        </div>
+        <div class="calc-out" id="c-out"></div>
+      </div>
+    </section>
+
+    <section id="view-progress" hidden>
+      <h1>Your progress</h1>
+      <p class="lede" id="progress-who"></p>
+      <div class="tiles" id="tiles"></div>
+      <div class="panel chart">
+        <h3>Speed over time</h3>
+        <p class="sub">Words per minute for your last 30 attempts.</p>
+        <div id="chart"></div>
+      </div>
+      <div class="panel">
+        <h3>Key accuracy map</h3>
+        <p class="sub">Redder keys are the ones you miss most often, as a share of the times you typed them.</p>
+        <div id="heatmap"></div>
+        <div id="troubles" style="margin-top:16px"></div>
+      </div>
+      <div class="panel">
+        <h3>Game high scores</h3>
+        <div class="tbl-wrap" id="game-scores"></div>
+      </div>
+      <div class="panel">
+        <h3>Recent attempts</h3>
+        <div class="tbl-wrap" id="recent"></div>
+      </div>
+      <div class="reset-row" id="reset-row"></div>
+    </section>
+  </main>
+  <footer class="foot">
+    <div><b>DexiType</b> is a free typing tutor for everyone.</div>
+    <div class="foot-links"><button data-go="course">Typing Tutor</button><button data-go="test">Typing Test</button><button data-go="games">Typing Games</button><button data-go="tools">Tools</button><button data-go="progress">Statistics</button></div>
+    <div>Your progress stays in this browser. Nothing is sent anywhere.</div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- storage ----------
+  // ---------- profiles and storage (this computer, this browser) ----------
+  var PROFILES_KEY = "keycraft.profiles", ACTIVE_KEY = "keycraft.active", LEGACY_KEY = "keystone.progress.v1";
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+  function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+  function getProfiles() { try { var v = JSON.parse(lsGet(PROFILES_KEY)); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  function setProfiles(list) { return lsSet(PROFILES_KEY, JSON.stringify(list)); }
+  var ME = null;
+  (function () { var id = lsGet(ACTIVE_KEY); ME = getProfiles().filter(function (p) { return p.id === id; })[0] || null; })();
+  function storeKey(id) { id = id || (ME && ME.id); return id ? "keycraft.p." + id : null; }
+  function load() {
+    var k = storeKey();
+    if (!k) return fresh();
+    try {
+      var v = JSON.parse(lsGet(k));
+      if (v && v.ex && v.history && v.keyErr) { v.keyHit = v.keyHit || {}; v.games = v.games || {}; return v; }
+    } catch (e) {}
+    return fresh();
+  }
+  function fresh() { return { ex: {}, history: [], keyErr: {}, keyHit: {}, games: {}, placed: false }; }
+  function save() {
+    var k = storeKey();
+    if (!k) return;
+    P.updated = Date.now();
+    lsSet(k, JSON.stringify(P));
+    if (ME && ME.gid && typeof cloudPush === "function") cloudPush();
+  }
+  var P = load();
+
+  // ---------- content ----------
+  var HOME = "as ask all fall hall lad sad dad add flask glad has had gas alas salad flag ash dash lash half".split(" ");
+  var EASY = ("the and for you not are but can all any her was one our out day get has him his how man new now old see two way who boy " +
+    "did its let put say she too use big run sun cat dog red box cup sit top map pen hat bus fun egg ice jam kid leg net owl pig rug toy " +
+    "van web yes zoo book look good time home work play fish milk bird tree rain snow cake door hand word").split(" ");
+  var COMMON = ("about after again also always another because before between both came come could does down each even every find first " +
+    "from give good great hand have help here home house just keep kind know large last leave life light line little live long look made " +
+    "make many might more most move much must name never next number often only open other over part people place point right same school " +
+    "seem should show small some sound spell still study such take tell than that their them then there these thing think those thought " +
+    "three through time together under until very want water well went were what when where which while white will with word work world " +
+    "would write year young").split(" ");
+  var HARD = ("abandon absolute accurate achieve acquire adequate advocate analysis anticipate apparatus approximate architecture assessment " +
+    "atmosphere bureaucracy calibrate catastrophe circumstance collaborate comprehensive configuration consequence contemporary contribution " +
+    "controversy deliberate demonstrate discrepancy distinguish elaborate environment equilibrium exaggerate extraordinary fluctuation " +
+    "hypothesis implementation inevitable infrastructure initiative jurisdiction legitimate magnificent maintenance manufacture mechanism " +
+    "metropolitan negotiation nevertheless opportunity parliament perspective phenomenon predominantly psychological questionnaire " +
+    "recommendation rehabilitation relationship responsibility significant simultaneously sophisticated specification substantial " +
+    "synchronize temperature thoroughly transformation unprecedented vulnerability whereas").split(" ");
+
+  var B_SENT = [
+    "the cat sat on the mat", "a red fox ran past the old barn", "we can go to the park after lunch",
+    "she has a big blue kite", "my dog likes to dig in the sand", "the sun is warm and the sky is clear",
+    "he put the cup on the desk", "we ate fresh bread and jam", "the bus stops at the end of the road",
+    "i like to read a book at night"
+  ];
+  var I_SENT = [
+    "The quick brown fox jumps over the lazy dog.", "Please send the report by Friday, if you can.",
+    "Where did you leave the keys? Check the kitchen.", "Maria and Tom visited Paris, Rome, and Madrid last summer.",
+    "It's not about speed; it's about rhythm.", "Good habits take time to build, so start small.",
+    "The meeting moved to Tuesday at the main office.", "Can you believe it? The train was early!",
+    "Keep your wrists relaxed and your eyes on the screen.", "\"Practice every day,\" the coach said."
+  ];
+  var NUM_SENT = [
+    "The shop opens at 9 and closes at 6.", "Order 24 boxes, 150 labels, and 3 rolls of tape.",
+    "Flight 207 leaves from gate 18 at 10:45.", "The year 1969 saw the first moon landing.",
+    "Call extension 4082 before 5 pm.", "We walked 12 km in 3 hours on day 2.",
+    "Room 306 holds 40 people and 8 tables.", "The recipe needs 2 eggs, 250 g flour, and 100 ml milk."
+  ];
+  var I_PASSAGES = [
+    "Mira opened the window and let the cool morning air fill the room. The street below was quiet, except for a baker loading trays of bread into a small van. She made a cup of tea, sat at her desk, and began the first page of her new story.",
+    "Learning to type well is a lot like learning an instrument. At first each key feels far away, and every word takes effort. After a few weeks of steady practice, your fingers find the keys on their own, and your mind is free to think about what you want to say."
+  ];
+  var PRECISION = [
+    "Slow down, breathe, and aim for clean keystrokes. A single careful minute teaches your hands more than a rushed and messy hour.",
+    "Accuracy comes first. Speed follows once your fingers trust the path to each key, so resist the urge to hurry."
+  ];
+  var SYM_SENT = [
+    "Email support@example.com or visit https://example.org/help for details.",
+    "The total was $1,249.99 (tax included) & shipping was free!",
+    "Use #tags, @mentions, and codes like SAVE-20 for 15% off.",
+    "Mix 3/4 cup flour; ratio 2:1; score = 98.5% [final].",
+    "Is it true? Yes! The {config} file loaded at 08:30 ~ no errors.",
+    "Keep it simple: a < b, b > c, and x != y; that's all_you_need."
+  ];
+  var CODE = [
+    "function add(a, b) { return a + b; }",
+    "const items = [1, 2, 3].map((n) => n * 2);",
+    "if (score >= 90 && time < 60) { level++; }",
+    "let name = user?.profile?.name ?? \"guest\";",
+    "for (let i = 0; i < rows.length; i++) { sum += rows[i]; }",
+    "print(f\"Total: {total:.2f}\")"
+  ];
+  var A_PASSAGES = [
+    "The printing press, introduced in Europe around 1440, changed how knowledge moved through society. Books that once took months to copy by hand could be produced in days, and ideas that had been confined to monasteries and courts reached merchants, students, and craftsmen. Literacy rose, arguments spread faster, and the modern world began to take shape.",
+    "Touch typing is not a trick; it is a habit built from thousands of small, correct repetitions. Experienced typists rarely think about single letters. Instead, they see whole words and common letter groups, such as \"th\", \"ing\", and \"tion\", as single movements. The goal is fluency: steady speed, few corrections, and relaxed hands."
+  ];
+
+  var STORIES = I_PASSAGES.concat([
+    "The lighthouse keeper climbed the spiral stairs every evening at dusk. He wiped the salt from the glass, trimmed the wick, and watched the beam sweep across the dark water. Ships he would never meet passed safely in the night, and that was enough for him.",
+    "Ravi missed the last bus, so he walked home along the river. The city lights shook on the water, a dog barked somewhere across the bridge, and for the first time in weeks he was not in a hurry to be anywhere at all.",
+    "On the morning of the race, the field was covered in fog. The runners gathered at the line, stamping their feet to stay warm. When the whistle blew, they disappeared into the white air one by one, and only their footsteps could be heard."
+  ]);
+  var FACTS = A_PASSAGES.slice(0, 1).concat([
+    "Honeybees communicate the location of flowers through a movement known as the waggle dance. The angle of the dance shows the direction relative to the sun, and its length tells the other bees how far they will need to fly.",
+    "The Pacific Ocean covers more area than all of the land on Earth combined. Its deepest point, the Challenger Deep in the Mariana Trench, lies nearly eleven kilometres below the surface.",
+    "A bolt of lightning can heat the air around it to about thirty thousand degrees Celsius, several times hotter than the surface of the sun. That sudden heat makes the air expand so fast that we hear it as thunder.",
+    "The first computer mouse, built in the 1960s, was a small wooden box with two metal wheels. Its inventors called it a mouse because the cord coming out of the back looked like a tail."
+  ]);
+  var WEAK_WORDS = COMMON.concat(EASY, HARD, HOME);
+
+  function rand(n) { return Math.floor(Math.random() * n); }
+  function pick(a) { return a[rand(a.length)]; }
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function keyDrill(chars, groups) {
+    var out = [];
+    for (var i = 0; i < groups; i++) {
+      var len = 2 + rand(3), g = "";
+      for (var j = 0; j < len; j++) g += chars[rand(chars.length)];
+      out.push(g);
+    }
+    return out.join(" ");
+  }
+  function words(list, n) {
+    var out = [], last = "";
+    while (out.length < n) { var w = pick(list); if (w !== last) { out.push(w); last = w; } }
+    return out.join(" ");
+  }
+  function sentences(list, n) {
+    var out = [];
+    while (out.length < n) out = out.concat(shuffle(list));
+    return out.slice(0, n).join(" ");
+  }
+
+  // ---------- keyboard basics (guided lessons) ----------
+  function K(s) { return s.split(""); }
+  var BASICS = (function () {
+    function upTo(fn, chars) { var s = ""; while (s.length < chars) s += (s ? " " : "") + fn(); return s; }
+    function pickRun(list, n) { var out = []; for (var i = 0; i < n; i++) out.push(pick(list)); return out.join(" "); }
+    function task(id, title, desc, gen, pass) {
+      return { id: id, kind: "Practice", title: title, desc: desc, seconds: 120, strict: true, calm: true,
+        pass: pass || { wpm: 0, acc: 90, minKeys: 60 }, gen: function () { return upTo(gen, 1200); } };
+    }
+    var HOME_BITS = ["asdf", "jkl;", "fdsa", ";lkj", "fj", "dk", "sl", "a;", "ff", "jj", "dd", "kk", "fjfj", "dkdk", "slsl", "asdf jkl;"];
+    var LEFT = "qwertasdfgzxcvb", RIGHT = "yuiophjkl;nm,./";
+    var LEFT_COLS = ["aqaza", "swsxs", "dedcd", "frfvf", "gtgbg", "fgf", "ded", "sws"];
+    var RIGHT_COLS = ["jujmj", "hyhnh", "kik,k", "lol.l", ";p;/;", "jhj", "kik", "lol"];
+    var CAP_WORDS = ["Dad", "Sal", "Hal", "Ada", "Jak", "Ask", "Fall", "Glad", "Flask", "Salad", "Lass", "Half", "Dash", "Gash"];
+    var CAP_SENT = ["Dad has a salad.", "Sal asks Dad.", "Ada has a flask.", "Hal falls.", "Jak had a flag.", "Ask Dad!", "Is Sal glad?", "Dad adds a salad."];
+    function pepper(n, set) { var out = []; for (var i = 0; i < n; i++) { out.push(set[rand(set.length)]); if (i % 4 === 3) out.push(" "); } return out; }
+    return {
+      id: "basics", name: "Keyboard Basics",
+      blurb: "Never typed before? Start here. Five short guides show you how to sit, where your hands rest, which finger presses which key, and what Space, Enter, Backspace and Shift do. After each guide, two practice tasks help you remember it.",
+      exercises: [
+        { id: "g1", kind: "Guide", title: "Sit well and find home", desc: "Posture, the home row and the F and J bumps.", steps: [
+          { type: "read", title: "Get comfortable", body: "<ul><li>Sit up straight with both feet flat on the floor.</li><li>Keep the screen at eye level, about an arm's length away.</li><li>Relax your shoulders. Bend your elbows to about a right angle and keep them close to your body.</li><li>Keep your wrists straight and curve your fingers lightly, as if you were holding a small ball.</li><li>Look at the screen, not at your hands, as much as you can.</li></ul>" },
+          { type: "read", title: "The home row", body: "<p>The middle row of letters is the <b>home row</b>. Your fingers rest there, and after every key they come back there.</p><p>Look at the <b>F</b> and <b>J</b> keys below. On a real keyboard each has a small raised bump, so you can find them without looking.</p>", mark: ["f", "j"] },
+          { type: "keys", title: "Find the bumps", body: "<p>Put your left index finger on <b>F</b> and your right index finger on <b>J</b>. Feel the bumps, then press the keys shown.</p>", keys: K("fjfjfjfj") },
+          { type: "keys", title: "Left hand on home", body: "<p>Rest your left fingers on <b>A S D F</b>: pinky on A, ring finger on S, middle finger on D, index finger on F.</p>", keys: K("asdfasdffdsa") },
+          { type: "keys", title: "Right hand on home", body: "<p>Rest your right fingers on <b>J K L ;</b>: index finger on J, middle on K, ring on L, pinky on the semicolon.</p>", keys: K("jkl;jkl;;lkj") },
+          { type: "keys", title: "Thumbs on Space", body: "<p>Your thumbs rest on the long <b>Space</b> bar. Either thumb can press it.</p>", keys: K("    ") },
+          { type: "keys", title: "All eight fingers", body: "<p>Keep every finger on its home key and press each one in turn.</p>", keys: K("asdf jkl; asdf jkl;") },
+          { type: "keys", title: "Practice round", body: "<p>Mixed home row keys. Keep your fingers resting on the home row between keys.</p>", gen: function () { return pepper(20, "asdfjkl;"); } }
+        ] },
+        task("g1a", "Home row drill", "Two minutes of home row keys. Only the right key moves you on.", function () { return pickRun(HOME_BITS, 6); }),
+        task("g1b", "Home row with Space", "Home row groups with Space between them, using your thumb.", function () { return keyDrill("asdfjkl;", 6); }),
+
+        { id: "g2", kind: "Guide", title: "Left half, right half", desc: "Which hand types which side of the keyboard.", steps: [
+          { type: "read", title: "Two halves", kb: "halves", body: "<p>Imagine a line running down the keyboard between <b>5 and 6</b>, <b>T and Y</b>, <b>G and H</b>, and <b>B and N</b>.</p><p>Keys on the left of the line belong to your <b>left hand</b>. Keys on the right belong to your <b>right hand</b>. The keyboard below is shaded to show the two halves.</p>" },
+          { type: "keys", title: "Left hand only", kb: "halves", body: "<p>Use only your left hand for these keys.</p>", keys: K("qaztgbwsxedc") },
+          { type: "keys", title: "Right hand only", kb: "halves", body: "<p>Use only your right hand for these keys.</p>", keys: K("yhnujmik,ol.") },
+          { type: "keys", title: "Switch sides", kb: "halves", body: "<p>Now switch between hands. Think about which side each key is on before you press it.</p>", keys: K("fjdkslgha;") },
+          { type: "keys", title: "Practice round", kb: "halves", body: "<p>Left, right, left, right. Let the correct hand do the work.</p>", gen: function () { var out = []; for (var i = 0; i < 30; i++) out.push(i % 2 ? RIGHT[rand(RIGHT.length)] : LEFT[rand(LEFT.length)]); return out; } }
+        ] },
+        task("g2a", "Left hand side", "Keys from the left half only. Keep your right hand still on J K L ;.", function () { return keyDrill(LEFT, 6); }),
+        task("g2b", "Right hand side", "Keys from the right half only. Keep your left hand still on A S D F.", function () { return keyDrill(RIGHT, 6); }),
+
+        { id: "g3", kind: "Guide", title: "One finger for each column", desc: "Which finger presses which key, colour by colour.", steps: [
+          { type: "read", title: "Every finger has its own keys", body: "<p>Each colour on the keyboard belongs to one finger. A finger reaches straight up or down from its home key to the keys of its colour, then goes back home.</p><p>Your index fingers do the most work: each one covers two columns.</p>" },
+          { type: "keys", title: "Left pinky", body: "<p>Your left pinky covers <b>Q, A, Z</b> and <b>1</b>. Start on A, reach up, come home, reach down.</p>", keys: K("aqazaqaza") },
+          { type: "keys", title: "Left ring finger", body: "<p>Your left ring finger covers <b>W, S, X</b> and <b>2</b>.</p>", keys: K("swsxswsxs") },
+          { type: "keys", title: "Left middle finger", body: "<p>Your left middle finger covers <b>E, D, C</b> and <b>3</b>.</p>", keys: K("dedcdedcd") },
+          { type: "keys", title: "Left index finger", body: "<p>Your left index finger covers two columns: <b>R, F, V</b> and <b>T, G, B</b>, plus 4 and 5.</p>", keys: K("frfvfgtgbf") },
+          { type: "keys", title: "Right index finger", body: "<p>Your right index finger covers <b>U, J, M</b> and <b>Y, H, N</b>, plus 6 and 7.</p>", keys: K("jujmjhyhnj") },
+          { type: "keys", title: "Right middle finger", body: "<p>Your right middle finger covers <b>I, K</b>, the <b>comma</b> and <b>8</b>.</p>", keys: K("kik,kik,k") },
+          { type: "keys", title: "Right ring finger", body: "<p>Your right ring finger covers <b>O, L</b>, the <b>full stop</b> and <b>9</b>.</p>", keys: K("lol.lol.l") },
+          { type: "keys", title: "Right pinky", body: "<p>Your right pinky covers <b>P, ;</b>, <b>/</b> and <b>0</b>, and also reaches Enter, Backspace and the right Shift.</p>", keys: K(";p;/;p;/;") }
+        ] },
+        task("g3a", "Left hand columns", "Up and down each left-hand column, always back to home.", function () { return pickRun(LEFT_COLS, 4); }),
+        task("g3b", "Right hand columns", "Up and down each right-hand column, always back to home.", function () { return pickRun(RIGHT_COLS, 4); }),
+
+        { id: "g4", kind: "Guide", title: "Space, Enter and Backspace", desc: "The keys that make gaps, new lines and corrections.", steps: [
+          { type: "keys", title: "Space", body: "<p><b>Space</b> puts a gap between words. Tap it lightly with your thumb.</p>", keys: K("     ") },
+          { type: "keys", title: "Enter", body: "<p><b>Enter</b> starts a new line, or confirms something, like pressing OK. Reach to the right with your right pinky from the ; key, then come back.</p>", keys: ["\n", ";", "\n", ";", "\n"] },
+          { type: "keys", title: "Backspace", body: "<p><b>Backspace</b> deletes the character just before the cursor. It is how you fix a mistake. Reach up with your right pinky.</p><p>Type a letter, then delete it.</p>", keys: ["d", "\b", "k", "\b", "s", "\b", "l", "\b"] },
+          { type: "keys", title: "Put them together", body: "<p>Type <b>ask</b>, press Space, type <b>dad</b>, press Enter. Then do it again with <b>sad lad</b>.</p>", keys: K("ask dad").concat(["\n"], K("sad lad"), ["\n"]) },
+          { type: "keys", title: "Practice round", body: "<p>Type each word, fix the extra letter with Backspace, then press Space. Press Enter at the end.</p>", gen: function () {
+            var out = [];
+            for (var i = 0; i < 5; i++) { out = out.concat(K(pick(HOME))); if (i % 2 === 0) out.push("x", "\b"); out.push(" "); }
+            out.push("\n"); return out;
+          } }
+        ] },
+        task("g4a", "Words and spaces", "Home row words with one Space between each.", function () { return wordsFrom("asdfghjkl", 8); }),
+        { id: "g4b", kind: "Practice", title: "Fix it with Backspace", desc: "Wrong keys now move you on. Press Backspace to fix each mistake before you continue.", seconds: 120, strict: false, calm: true,
+          pass: { wpm: 0, acc: 85, minKeys: 60 }, gen: function () { var s = ""; while (s.length < 1200) s += (s ? " " : "") + wordsFrom("asdfghjkl", 8); return s; } },
+
+        { id: "g5", kind: "Guide", title: "Shift and capital letters", desc: "Capitals, symbols, and which Shift key to use.", steps: [
+          { type: "read", title: "How Shift works", body: "<p>Hold <b>Shift</b> and press a letter to type a capital. Use the Shift key on the <b>opposite hand</b> from the letter: the right Shift for a left-hand letter, the left Shift for a right-hand letter.</p><p>Hold Shift down with your pinky, press the letter with the other hand, then let go of both. Shift also types the upper symbol on number and punctuation keys, such as ! and ?.</p><p><b>Caps Lock</b> turns every letter into a capital until you press it again. Keep it off while you practise.</p>" },
+          { type: "keys", title: "Left-hand capitals", body: "<p>These letters are on the left, so hold the <b>right</b> Shift with your right pinky.</p>", keys: K("FDSAGF") },
+          { type: "keys", title: "Right-hand capitals", body: "<p>These letters are on the right, so hold the <b>left</b> Shift with your left pinky.</p>", keys: K("JKLHJ") },
+          { type: "keys", title: "Symbols with Shift", body: "<p>The same rule works for symbols. <b>!</b> is Shift + 1, <b>?</b> is Shift + /, and <b>:</b> is Shift + ;.</p>", keys: K("!?:!?") },
+          { type: "keys", title: "Your first sentence", body: "<p>Type a whole sentence with a capital letter and a full stop.</p>", keys: K("Dad asks Sal.") },
+          { type: "keys", title: "Practice round", body: "<p>Names start with a capital. Choose the Shift on the other hand each time.</p>", gen: function () { return K(pickRun(CAP_WORDS, 6)); } }
+        ] },
+        task("g5a", "Capital letters", "Names and words that start with a capital.", function () { return pickRun(CAP_WORDS, 6); }),
+        task("g5b", "Short sentences", "Capitals at the start, a full stop, ! or ? at the end.", function () { return pickRun(CAP_SENT, 3); })
+      ],
+      exam: { id: "gx", kind: "Stage test", title: "Basics check", desc: "A short home-row drill. Wrong keys don't advance.", strict: true, pass: { wpm: 5, acc: 85 }, gen: function () { return keyDrill("asdfjkl;", 14); } }
+    };
+  })();
+
+  // ---------- the ladder: Keyboard Basics to Pro ----------
+  var BANK = WEAK_WORDS.concat(("ash add all ask dad fad gag gal gas had has hall lad lag lash sad sag salad shall flask glass jazz " +
+    "fig dig sit tie tea set sea see eat ate east feet fit life like kite hike wide ride side idea field yield tied died " +
+    "red rest real read rate tree true tire tile rule rust just jury dust fury quit quiet quite equal quest query type yet " +
+    "pie pot pad post paper people pepper power wipe wise ship shop stop top tip pit wrote write water tower sweet street " +
+    "cat can car cold coat code cash cake came cute cube bike back bank band vase vast van very move mine milk make most " +
+    "name nine next zoo zero zip size fox box mix taxi exit extra vex black brown zebra quiz jump").split(" "));
+  function wordsFrom(letters, n) {
+    var pool = BANK.filter(function (w) { for (var i = 0; i < w.length; i++) if (letters.indexOf(w[i]) === -1) return false; return true; });
+    var uniq = pool.filter(function (w, i) { return pool.indexOf(w) === i; });
+    return uniq.length >= 6 ? words(uniq, n) : keyDrill(letters, n);
+  }
+  function capWords(n) {
+    return words(EASY.concat(COMMON), n).split(" ").map(function (w, i) { return i % 2 === 0 ? w.charAt(0).toUpperCase() + w.slice(1) : w; }).join(" ");
+  }
+  function numWords(n) {
+    var nouns = ["cats", "days", "books", "cups", "miles", "apples", "rooms", "pages", "boxes", "hours", "steps", "coins"];
+    var out = [];
+    for (var i = 0; i < n; i++) out.push(String(1 + rand(i % 3 === 0 ? 999 : 20)) + " " + pick(nouns));
+    return out.join(" ");
+  }
+  var HOME_PHR = ["a sad lad", "ask dad", "all fall", "a glad lass has a flask", "dad has a salad", "ask all lads", "a flag has a gash", "half a salad"];
+  var Q_SENT = ["Are you ready? Let's begin!", "Did you see that? Wow!", "Who left the door open?", "What a great day! Shall we go out?",
+    "Is it raining again? Bring a coat.", "Stop! Look both ways first.", "Can you help me? Thank you!"];
+  var APOS_SENT = ["It's time to go, isn't it?", "\"Keep going,\" she said, \"you're nearly there.\"", "Tom's bag is on Anna's desk.",
+    "We can't wait; they're already here.", "\"Well done!\" the teacher said.", "I'd like tea, but there's none left.", "Don't forget your friend's book."];
+  var DATE_SENT = ["The shop opens on 12 March at 9:30.", "My birthday is on 7 July 1998.", "The train leaves at 14:45 from platform 3.",
+    "Class starts on 1 June and ends on 30 August.", "The meeting is at 10:15 on 21 October.", "The bill of 2,450 was paid on 5 May 2024."];
+  var WEB_SENT = ["Write to hello@dexitype.example for help.", "Visit https://example.org/learn to find more lessons.",
+    "My username is sam_2024 and my score is 87%.", "Send the file to team@school.example by 5 pm.", "The link is www.example.com/typing?level=3."];
+  function T(id, title, desc, seconds, pass, gen) { return { id: id, kind: "Timed", title: title, desc: desc, seconds: seconds, pass: pass, gen: gen }; }
+  function E(id, kind, title, desc, pass, gen, strict) { return { id: id, kind: kind, title: title, desc: desc, pass: pass, gen: gen, strict: !!strict }; }
+  function X(id, title, desc, pass, gen) { return { id: id, kind: "Stage test", title: title, desc: desc, seconds: 60, pass: pass, gen: gen }; }
+  function W(wpm, acc) { return { wpm: wpm, acc: acc }; }
+  var HOMEL = "asdfghjkl;", TOPL = HOMEL + "qwertyuiop", ALLL = "abcdefghijklmnopqrstuvwxyz";
+
+  var STAGES = [BASICS,
+    { id: "home", name: "Home Row", blurb: "Type with all eight fingers on the home row, then reach one step sideways to G and H.", exercises: [
+      E("h1", "Key drill", "Home keys", "A S D F and J K L ; with the right fingers.", W(8, 90), function () { return keyDrill("asdfjkl;", 22); }, true),
+      E("h2", "Key drill", "Reach to G and H", "Index fingers step in one key, then come back.", W(8, 90), function () { return keyDrill("fgfghjhjasdfjkl", 22); }, true),
+      E("h3", "Words", "Home row words", "Real words made only from home row letters.", W(10, 90), function () { return wordsFrom("asdfghjkl", 22); }),
+      E("h4", "Sentences", "Home row phrases", "Short phrases with spaces between words.", W(10, 90), function () { return sentences(HOME_PHR, 5); }),
+      T("h5", "Home row sprint", "30 seconds of home row words.", 30, W(12, 90), function () { return wordsFrom("asdfghjkl", 120); })
+    ], exam: X("hx", "Home Row test", "One minute of home row words.", W(12, 90), function () { return wordsFrom("asdfghjkl", 200); }) },
+
+    { id: "top", name: "Top Row", blurb: "Reach up from home to the top row, one finger at a time, and always come back.", exercises: [
+      E("t1", "Key drill", "E and I", "Middle fingers reach up.", W(10, 90), function () { return keyDrill("eieidkdk", 20); }, true),
+      E("t2", "Key drill", "R, T, U and Y", "Index fingers reach up and in.", W(10, 90), function () { return keyDrill("rtuyrtuyfj", 20); }, true),
+      E("t3", "Key drill", "W, O, Q and P", "Ring fingers and pinkies reach up.", W(10, 90), function () { return keyDrill("woqpwoqpsl;a", 20); }, true),
+      E("t4", "Words", "Top and home row words", "Words using the top two rows.", W(12, 90), function () { return wordsFrom(TOPL, 24); }),
+      T("t5", "Top row sprint", "45 seconds of top and home row words.", 45, W(14, 90), function () { return wordsFrom(TOPL, 160); })
+    ], exam: X("tx", "Top Row test", "One minute of top and home row words.", W(14, 90), function () { return wordsFrom(TOPL, 200); }) },
+
+    { id: "bottom", name: "Bottom Row", blurb: "Reach down to the bottom row. After this stage you know every letter.", exercises: [
+      E("m1", "Key drill", "C and comma", "Middle fingers reach down.", W(10, 90), function () { return keyDrill("c,c,dkdk", 20); }, true),
+      E("m2", "Key drill", "V, B, N and M", "Index fingers reach down and in.", W(10, 90), function () { return keyDrill("vbnmvbnmfj", 20); }, true),
+      E("m3", "Key drill", "X, Z, full stop and slash", "Ring fingers and pinkies reach down.", W(10, 90), function () { return keyDrill("xz./xz./sa;l", 20); }, true),
+      E("m4", "Words", "All letters", "Everyday words that use the whole keyboard.", W(14, 90), function () { return words(EASY, 24); }),
+      E("m5", "Sentences", "Simple sentences", "Lowercase sentences with no punctuation.", W(15, 90), function () { return sentences(B_SENT, 4); })
+    ], exam: X("mx", "Bottom Row test", "One minute of everyday words.", W(16, 92), function () { return words(EASY, 240); }) },
+
+    { id: "words", name: "First Words", blurb: "Stop thinking in letters and start typing whole words.", exercises: [
+      E("w1", "Words", "Short common words", "The words you will type most often.", W(16, 92), function () { return words(EASY, 26); }),
+      E("w2", "Words", "Longer words", "Common words of five letters or more.", W(16, 92), function () { return words(COMMON, 22); }),
+      E("w3", "Sentences", "Everyday sentences", "Short lowercase sentences.", W(18, 92), function () { return sentences(B_SENT, 5); }),
+      T("w4", "One-minute words", "A full minute of common words.", 60, W(18, 92), function () { return words(COMMON.concat(EASY), 240); }),
+      E("w5", "Precision", "Careful typing", "Go slowly. Almost no mistakes allowed.", W(12, 97), function () { return sentences(B_SENT, 3); })
+    ], exam: X("wx", "First Words test", "One minute of common words.", W(20, 92), function () { return words(COMMON.concat(EASY), 240); }) },
+
+    { id: "caps", name: "Capitals and Punctuation", blurb: "Use Shift for capitals, and add full stops, commas, question marks and quotes.", exercises: [
+      E("c1", "Words", "Capital letters", "Every other word starts with a capital.", W(16, 92), function () { return capWords(20); }),
+      E("c2", "Sentences", "Full stops and commas", "Proper sentences.", W(18, 92), function () { return sentences(I_SENT, 4); }),
+      E("c3", "Sentences", "Questions and exclamations", "? and ! use Shift too.", W(18, 92), function () { return sentences(Q_SENT, 4); }),
+      E("c4", "Sentences", "Apostrophes and quotes", "It's, don't and \"speech\".", W(18, 92), function () { return sentences(APOS_SENT, 4); }),
+      E("c5", "Passage", "Short passage", "A full paragraph of prose.", W(20, 93), function () { return pick(I_PASSAGES); })
+    ], exam: X("cx", "Punctuation test", "One minute of mixed sentences.", W(22, 93), function () { return sentences(I_SENT.concat(Q_SENT, APOS_SENT), 30); }) },
+
+    { id: "numbers", name: "Numbers", blurb: "Reach up to the number row for counts, times, dates and prices.", exercises: [
+      E("n1", "Key drill", "Number row", "Each finger reaches two rows up.", W(10, 90), function () { return keyDrill("1234567890", 20); }, true),
+      E("n2", "Words", "Numbers and words", "Counts like 12 books.", W(14, 92), function () { return numWords(14); }),
+      E("n3", "Sentences", "Numbers in sentences", "Times, prices and counts.", W(18, 92), function () { return sentences(NUM_SENT, 4); }),
+      E("n4", "Sentences", "Dates and times", "Days, months and the colon.", W(18, 92), function () { return sentences(DATE_SENT, 4); }),
+      T("n5", "Number sprint", "45 seconds of number sentences.", 45, W(20, 92), function () { return sentences(NUM_SENT.concat(DATE_SENT), 30); })
+    ], exam: X("nx", "Numbers test", "One minute of sentences with numbers.", W(22, 93), function () { return sentences(NUM_SENT.concat(DATE_SENT), 30); }) },
+
+    { id: "symbols", name: "Symbols", blurb: "Brackets, @, #, $, % and the other symbols you need for email, the web and code.", exercises: [
+      E("y1", "Key drill", "Brackets and signs", "( ) [ ] - = + and friends.", W(8, 90), function () { return keyDrill("()[]-=+", 16); }, true),
+      E("y2", "Key drill", "Shifted number keys", "! @ # $ % ^ & *", W(8, 90), function () { return keyDrill("!@#$%^&*", 16); }, true),
+      E("y3", "Sentences", "Symbols in context", "Prices, percentages and brackets.", W(18, 93), function () { return sentences(SYM_SENT, 3); }),
+      E("y4", "Sentences", "Email and web addresses", "@, dots, slashes and underscores.", W(18, 93), function () { return sentences(WEB_SENT, 3); }),
+      E("y5", "Code", "Code snippets", "Brackets, operators and quotes.", W(20, 93), function () { return sentences(CODE, 4); })
+    ], exam: X("yx", "Symbols test", "One minute of symbols and code.", W(22, 93), function () { return sentences(SYM_SENT.concat(WEB_SENT, CODE), 30); }) },
+
+    { id: "speed", name: "Speed Building", blurb: "You know every key. Now build speed while keeping accuracy high.", exercises: [
+      T("s1", "30-second sprint", "As fast as you can stay accurate.", 30, W(30, 93), function () { return words(COMMON, 200); }),
+      T("s2", "One-minute words", "Keep a steady pace for a full minute.", 60, W(30, 93), function () { return words(COMMON.concat(EASY), 300); }),
+      E("s3", "Passage", "Story passage", "A paragraph from a short story.", W(28, 93), function () { return pick(STORIES); }),
+      T("s4", "One-minute facts", "Real sentences with longer words.", 60, W(28, 93), function () { return testText("facts", 60); }),
+      E("s5", "Precision", "Clean copy", "98% accuracy. Speed comes second.", W(22, 98), function () { return pick(PRECISION); })
+    ], exam: X("sx", "Speed test", "One minute of common words.", W(35, 94), function () { return words(COMMON.concat(EASY), 300); }) },
+
+    { id: "advanced", name: "Advanced", blurb: "Long words, dense prose, code and longer tests.", exercises: [
+      E("v1", "Passage", "Long passage", "Dense prose with commas and quotes.", W(35, 95), function () { return pick(A_PASSAGES); }),
+      E("v2", "Code", "Code at speed", "Programming lines with symbols.", W(30, 95), function () { return sentences(CODE, 5); }),
+      E("v3", "Words", "Long words", "Words of three or more syllables.", W(30, 95), function () { return words(HARD, 20); }),
+      T("v4", "Facts minute", "A minute of factual text.", 60, W(35, 95), function () { return testText("facts", 60); }),
+      T("v5", "Endurance", "Two minutes of long words.", 120, W(35, 95), function () { return words(HARD.concat(COMMON), 400); })
+    ], exam: X("vx", "Advanced test", "One minute of real prose.", W(40, 95), function () { return testText("stories", 60); }) },
+
+    { id: "pro", name: "Pro", blurb: "Professional speed: fast, accurate and steady for minutes at a time.", exercises: [
+      T("p1", "Pro sprint", "30 seconds flat out.", 30, W(60, 96), function () { return words(COMMON, 250); }),
+      T("p2", "Pro minute", "A minute of stories at speed.", 60, W(50, 96), function () { return testText("stories", 60); }),
+      T("p3", "Two-minute facts", "Two minutes of factual text.", 120, W(45, 96), function () { return testText("facts", 120); }),
+      E("p4", "Precision", "Perfect copy", "99% accuracy on a full passage.", W(40, 99), function () { return pick(A_PASSAGES); }),
+      T("p5", "Three-minute endurance", "Hold your speed for three minutes.", 180, W(45, 96), function () { return testText("stories", 180); })
+    ], exam: X("px", "Pro test", "One minute at professional speed.", W(60, 97), function () { return testText("facts", 60); }) }
+  ];
+  var EX_BY_ID = {};
+  STAGES.forEach(function (s, si) {
+    s.exercises.concat([s.exam]).forEach(function (e) { e.stage = si; EX_BY_ID[e.id] = e; });
+  });
+
+  function exPassed(id) { return !!(P.ex[id] && P.ex[id].passed); }
+  function stagePassed(si) {
+    var s = STAGES[si];
+    return exPassed(s.exam.id) || s.exercises.every(function (e) { return exPassed(e.id); });
+  }
+  function stageOpen(si) {
+    // A stage the learner has already worked in stays open (progress from before Keyboard Basics existed).
+    var s = STAGES[si];
+    return si === 0 || stagePassed(si - 1) || s.exercises.concat([s.exam]).some(function (e) { return !!P.ex[e.id]; });
+  }
+
+  // ---------- sound (generated in the browser, no audio files) ----------
+  var $ = function (id) { return document.getElementById(id); };
+  var SND = { on: true, ctx: null, master: null, vol: 0.8 };
+  try {
+    SND.on = localStorage.getItem("keycraft.sound") !== "off";
+    var sv0 = parseFloat(localStorage.getItem("keycraft.volume"));
+    if (sv0 >= 0 && sv0 <= 1) SND.vol = sv0;
+  } catch (e) {}
+  function actx() {
+    if (!SND.ctx) {
+      var C = window.AudioContext || window.webkitAudioContext;
+      if (!C) return null;
+      try { SND.ctx = new C(); } catch (e) { return null; }
+      SND.master = SND.ctx.createGain();
+      SND.master.gain.value = SND.vol * 1.6;
+      SND.master.connect(SND.ctx.destination);
+    }
+    if (SND.ctx.state === "suspended") SND.ctx.resume();
+    return SND.ctx;
+  }
+  function tone(freq, start, dur, type, vol) {
+    var c = actx(); if (!c) return;
+    var t = c.currentTime + start, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(SND.master);
+    o.start(t); o.stop(t + dur + 0.03);
+  }
+  var sound = {
+    ok: function () { if (SND.on) { tone(1250, 0, 0.07, "triangle", 0.3); tone(2500, 0, 0.04, "sine", 0.08); } },
+    bad: function () { if (SND.on) { tone(330, 0, 0.16, "sawtooth", 0.16); tone(262, 0.07, 0.18, "sawtooth", 0.14); } },
+    step: function () { if (SND.on) { tone(1319, 0, 0.14, "triangle", 0.3); tone(1568, 0.1, 0.2, "triangle", 0.3); } },
+    cheer: function (big) {
+      if (!SND.on) return;
+      [523, 659, 784, 1047].forEach(function (f, i) { tone(f, i * 0.11, 0.26, "triangle", 0.32); });
+      if (big) {
+        [1319, 1568, 2093].forEach(function (f, i) { tone(f, 0.5 + i * 0.08, 0.35, "triangle", 0.22); });
+        [523, 659, 784, 1047].forEach(function (f) { tone(f, 0.5, 0.8, "triangle", 0.16); });
+      }
+    },
+    soft: function () { if (SND.on) { tone(523, 0, 0.2, "triangle", 0.25); tone(392, 0.17, 0.3, "triangle", 0.22); } }
+  };
+  function paintSoundBtn() {
+    var b = $("sound-btn");
+    b.setAttribute("aria-pressed", SND.on ? "true" : "false");
+    b.setAttribute("aria-label", SND.on ? "Sound is on. Turn sound off." : "Sound is off. Turn sound on.");
+    b.title = SND.on ? "Sound on" : "Sound off";
+    b.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/>' +
+      (SND.on ? '<path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'
+              : '<path d="M16.5 9.5l5 5M21.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>') + "</svg>" +
+      "<span>" + (SND.on ? "Sound on" : "Sound off") + "</span>";
+  }
+  $("sound-vol").value = Math.round(SND.vol * 100);
+  $("sound-vol").addEventListener("input", function (e) {
+    SND.vol = Math.max(0, Math.min(1, e.target.value / 100));
+    if (SND.master) SND.master.gain.value = SND.vol * 1.6;
+    try { localStorage.setItem("keycraft.volume", String(SND.vol)); } catch (err) {}
+  });
+  $("sound-vol").addEventListener("change", function () { if (SND.on) sound.ok(); });
+  $("sound-btn").addEventListener("click", function () {
+    SND.on = !SND.on;
+    try { localStorage.setItem("keycraft.sound", SND.on ? "on" : "off"); } catch (e) {}
+    paintSoundBtn();
+    if (SND.on) sound.step();
+  });
+  paintSoundBtn();
+
+  // ---------- views ----------
+  var $ = function (id) { return document.getElementById(id); };
+  var view = "course";
+  function show(v) {
+    if (S && !S.done) stopSession();
+    if (G) endGame(true);
+    view = v;
+    if (!ME) v = "welcome";
+    document.body.classList.toggle("gate", !ME);
+    ["welcome", "home", "course", "practice", "guide", "test", "games", "tools", "progress"].forEach(function (n) { $("view-" + n).hidden = n !== v; });
+    ["course", "test", "games", "tools", "progress"].forEach(function (n) {
+      var b = $("nav-" + n);
+      var navOf = S && (S.ctx.kind === "placement" ? "course" : S.ctx.kind === "review" ? "tools" : S.ctx.kind);
+      if (n === v || (v === "practice" && navOf === n) || (v === "guide" && n === "course")) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+    });
+    if (v === "course") renderCourse();
+    if (v === "progress") renderProgress();
+    if (v === "test") renderTest();
+    if (v === "games") renderGames();
+    if (v === "tools") renderTools();
+    if (v === "welcome") renderWelcome();
+    paintProfileChip();
+    if (v === "home") renderHome(); else stopDemo();
+    try { localStorage.setItem("keystone.view", v === "practice" ? "course" : v); } catch (e) {}
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll(".nav button").forEach(function (b) {
+    b.addEventListener("click", function () { show(b.dataset.view); });
+  });
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  var EXPANDED = {};
+  function currentStage() {
+    for (var i = 0; i < STAGES.length; i++) if (stageOpen(i) && !stagePassed(i)) return i;
+    return STAGES.length - 1;
+  }
+  function renderCourse() {
+    var pl = $("placement");
+    if (!P.placed && !P.history.length) {
+      pl.innerHTML = "<div><b>New here?</b><span>Never used a keyboard? Start with Keyboard Basics. Already type a little? Take the one-minute placement test, and any stage whose test target you already meet is cleared for you.</span></div>" +
+        '<div class="actions"><button class="btn primary" id="pl-go">Take placement test</button><button class="btn" id="pl-skip">Start with Keyboard Basics</button></div>';
+      $("pl-go").addEventListener("click", startPlacement);
+      $("pl-skip").addEventListener("click", function () { P.placed = true; save(); startGuide(BASICS.exercises[0]); });
+    } else pl.innerHTML = "";
+    var html = "", current = currentStage();
+    var ladder = '<ol class="ladder" aria-label="Course stages">' + STAGES.map(function (s, si) {
+      var st = stagePassed(si) ? "done" : stageOpen(si) ? "open" : "locked";
+      return '<li><button class="rung ' + st + (si === current ? " now" : "") + '" data-stage="' + si + '"><b>' + (si + 1) + "</b><span>" + esc(s.name) + "</span></button></li>";
+    }).join("") + "</ol>";
+    STAGES.forEach(function (s, si) {
+      var open = stageOpen(si), passed = stagePassed(si);
+      var expanded = EXPANDED[si] !== undefined ? EXPANDED[si] : si === current;
+      var done = s.exercises.filter(function (e) { return exPassed(e.id); }).length;
+      var chip = !open ? '<span class="chip">Locked</span>'
+        : passed ? '<span class="chip good">Cleared</span>'
+        : '<span class="chip accent">' + done + " of " + s.exercises.length + " passed</span>";
+      html += '<article class="stage' + (open ? "" : " locked") + (expanded ? "" : " folded") + '" id="stage-' + si + '">' +
+        '<button class="stage-head" data-toggle="' + si + '" aria-expanded="' + expanded + '"><div><div class="eyebrow">Stage ' + (si + 1) + " of " + STAGES.length + "</div><h2>" + s.name + "</h2><p>" + esc(s.blurb) + "</p></div>" + chip + '<span class="caret" aria-hidden="true"></span></button>' +
+        '<div class="meter"><i style="width:' + (passed ? 100 : Math.round(done / s.exercises.length * 100)) + '%"></i></div>' +
+        (open ? "" : '<p class="lockline">Clear ' + STAGES[si - 1].name + " to open this stage.</p>") +
+        '<div class="ex-list"' + (expanded ? "" : " hidden") + ">";
+      s.exercises.forEach(function (e) { html += exRow(e, open); });
+      html += '<div class="or">or skip ahead</div>' + exRow(s.exam, open, true);
+      html += "</div></article>";
+    });
+    $("stages").innerHTML = ladder + html;
+    $("stages").querySelectorAll("[data-toggle]").forEach(function (b) {
+      b.addEventListener("click", function () { var i = +b.dataset.toggle; EXPANDED[i] = b.getAttribute("aria-expanded") !== "true"; renderCourse(); });
+    });
+    $("stages").querySelectorAll("[data-stage]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var i = +b.dataset.stage; EXPANDED[i] = true; renderCourse();
+        var el = $("stage-" + i); if (el && el.scrollIntoView) el.scrollIntoView({ block: "start", behavior: "smooth" });
+      });
+    });
+    $("stages").querySelectorAll("[data-start]").forEach(function (b) {
+      b.addEventListener("click", function () { startExercise(EX_BY_ID[b.dataset.start]); });
+    });
+  }
+  function exRow(e, open, exam) {
+    var r = P.ex[e.id];
+    var best = e.steps ? '<div class="best' + (r && r.passed ? " pass" : "") + '"><small>Status</small>' + (r && r.passed ? "Completed" : "Not started") + "</div>"
+      : r ? '<div class="best' + (r.passed ? " pass" : "") + '"><small>Best</small>' + r.bestWpm + " wpm · " + r.bestAcc + "%</div>"
+      : '<div class="best"><small>Best</small>&mdash;</div>';
+    var label = r && r.passed ? "Again" : r ? "Retry" : "Start";
+    return '<div class="ex' + (exam ? " exam" : "") + '">' +
+      '<div class="kind">' + e.kind + (e.seconds ? " · " + fmtSec(e.seconds) : "") + "</div>" +
+      '<div class="main"><div class="title">' + esc(e.title) + (r && r.passed ? ' <span class="chip good">' + (e.steps ? "Done" : "Passed") + "</span>" : "") + '</div><div class="desc">' + esc(e.desc) + "</div></div>" +
+      (e.steps ? '<div class="target"><small>Steps</small>' + e.steps.length + " steps</div>" : '<div class="target"><small>Target</small>' + (e.pass.wpm ? e.pass.wpm + " wpm · " : "") + e.pass.acc + "%" + (e.pass.wpm ? "" : " accuracy") + "</div>") + best +
+      '<div class="go"><button class="btn' + (open && !(r && r.passed) ? " primary" : "") + '" data-start="' + e.id + '"' + (open ? "" : " disabled") + ">" + label + "</button></div></div>";
+  }
+  function fmtSec(s) { return s >= 60 ? (s / 60) + " min" : s + "s"; }
+
+  // ---------- keyboard ----------
+  var FINGER_NAME = { lp: "left pinky", lr: "left ring", lm: "left middle", li: "left index", ri: "right index", rm: "right middle", rr: "right ring", rp: "right pinky", th: "thumb" };
+  var ROWS = [
+    [["`", "lp"], ["1", "lp"], ["2", "lr"], ["3", "lm"], ["4", "li"], ["5", "li"], ["6", "ri"], ["7", "ri"], ["8", "rm"], ["9", "rr"], ["0", "rp"], ["-", "rp"], ["=", "rp"], ["bksp", "rp", 2, "⌫"]],
+    [["tab", "lp", 1.5, "Tab"], ["q", "lp"], ["w", "lr"], ["e", "lm"], ["r", "li"], ["t", "li"], ["y", "ri"], ["u", "ri"], ["i", "rm"], ["o", "rr"], ["p", "rp"], ["[", "rp"], ["]", "rp"], ["\\", "rp", 1.5]],
+    [["caps", "lp", 1.8, "Caps"], ["a", "lp"], ["s", "lr"], ["d", "lm"], ["f", "li"], ["g", "li"], ["h", "ri"], ["j", "ri"], ["k", "rm"], ["l", "rr"], [";", "rp"], ["'", "rp"], ["enter", "rp", 2.2, "Enter"]],
+    [["lshift", "lp", 2.4, "Shift"], ["z", "lp"], ["x", "lr"], ["c", "lm"], ["v", "li"], ["b", "li"], ["n", "ri"], ["m", "ri"], [",", "rm"], [".", "rr"], ["/", "rp"], ["rshift", "rp", 2.6, "Shift"]],
+    [["space", "th", 7, ""]]
+  ];
+  var SHIFTED = { "~": "`", "!": "1", "@": "2", "#": "3", "$": "4", "%": "5", "^": "6", "&": "7", "*": "8", "(": "9", ")": "0", "_": "-", "+": "=", "{": "[", "}": "]", "|": "\\", ":": ";", "\"": "'", "<": ",", ">": ".", "?": "/" };
+  var KEY_EL = {}, KEY_FINGER = {};
+  (function buildKb() {
+    var kb = $("kb");
+    ROWS.forEach(function (row, ri) {
+      var r = document.createElement("div");
+      r.className = "kb-row";
+      if (ri === 4) { r.style.padding = "0 22%"; }
+      row.forEach(function (k) {
+        var el = document.createElement("div");
+        el.className = "key";
+        el.style.flexGrow = k[2] || 1;
+        el.textContent = k[3] !== undefined ? k[3] : k[0].toUpperCase();
+        var fingerKey = ["tab", "caps", "enter", "bksp"].indexOf(k[0]) === -1;
+        if (fingerKey) { el.dataset.f = k[1]; el.style.setProperty("--fc", "var(--f-" + k[1] + ")"); }
+        if (k[0] === "f" || k[0] === "j") el.classList.add("bump");
+        r.appendChild(el);
+        KEY_EL[k[0]] = el; KEY_FINGER[k[0]] = k[1];
+      });
+      kb.appendChild(r);
+    });
+    var lg = "";
+    ["lp", "lr", "lm", "li", "ri", "rm", "rr", "rp"].forEach(function (f) {
+      lg += '<span><i style="--fc:var(--f-' + f + ')"></i>' + FINGER_NAME[f] + "</span>";
+    });
+    $("legend").innerHTML = lg;
+  })();
+  function keysFor(ch) {
+    if (ch === " ") return { base: "space", shift: null };
+    if (ch === "\n") return { base: "enter", shift: false };
+    if (ch === "\b") return { base: "bksp", shift: false };
+    if (SHIFTED[ch]) return { base: SHIFTED[ch], shift: true };
+    if (ch >= "A" && ch <= "Z") return { base: ch.toLowerCase(), shift: true };
+    return { base: ch, shift: false };
+  }
+  var lit = [];
+  function lightKeys(ch) {
+    lit.forEach(function (el) { el.classList.remove("next"); });
+    lit = [];
+    if (ch === undefined) { $("hint").innerHTML = ""; return; }
+    var k = keysFor(ch), el = KEY_EL[k.base];
+    if (!el) { $("hint").textContent = "Next: " + ch; return; }
+    el.classList.add("next"); lit.push(el);
+    var finger = KEY_FINGER[k.base];
+    var name = { space: "Space", enter: "Enter", bksp: "Backspace" }[k.base] || k.base.toUpperCase();
+    if (k.shift) {
+      var shiftSide = finger.charAt(0) === "l" ? "rshift" : "lshift";
+      KEY_EL[shiftSide].classList.add("next"); lit.push(KEY_EL[shiftSide]);
+      $("hint").innerHTML = "Next: <b>Shift + " + esc(name) + "</b> &middot; " + (shiftSide === "rshift" ? "right" : "left") + " pinky on Shift, " + FINGER_NAME[finger] + " on " + esc(name);
+    } else {
+      $("hint").innerHTML = "Next: <b>" + esc(name) + "</b> &middot; " + (finger === "th" ? "either thumb" : FINGER_NAME[finger]);
+    }
+  }
+  function pressFlash(ch) {
+    var k = keysFor(ch), el = KEY_EL[k.base];
+    if (!el) return;
+    el.classList.add("down");
+    setTimeout(function () { el.classList.remove("down"); }, 90);
+  }
+
+  // ---------- typing session ----------
+  var S = null;
+  function startExercise(ex) {
+    if (ex.steps) { startGuide(ex); return; }
+    startSession({ kind: "course", ex: ex, title: ex.title, label: STAGES[ex.stage].name + " · " + ex.kind, desc: ex.desc, seconds: ex.seconds || 0, strict: !!ex.strict, calm: !!ex.calm, pass: ex.pass, gen: ex.gen });
+  }
+  var SRC_NAME = { words: "Common words", stories: "Stories", facts: "Facts", numbers: "Numbers and symbols" };
+  function testText(src, sec) {
+    var need = sec * 20 + 200; // characters, enough for about 200 WPM
+    function fill(pool) { var s = ""; while (s.length < need) s += (s ? " " : "") + shuffle(pool).join(" "); return s; }
+    if (src === "stories") return fill(STORIES);
+    if (src === "facts") return fill(FACTS);
+    if (src === "numbers") return fill(NUM_SENT.concat(SYM_SENT));
+    return words(COMMON.concat(EASY), Math.ceil(need / 5));
+  }
+  function startTest(sec, src) {
+    startSession({ kind: "test", title: "Typing test", label: fmtSec(sec) + " · " + SRC_NAME[src], desc: "Type the text as it appears. Backspace fixes mistakes.", seconds: sec, src: src, strict: false, pass: null, gen: function () { return testText(src, sec); } });
+  }
+  function startPlacement() {
+    startSession({ kind: "placement", title: "Placement test", label: "1 min · mixed text", desc: "Type at your normal pace. Accuracy matters as much as speed.", seconds: 60, strict: false, pass: null, gen: function () { return testText("stories", 60); } });
+  }
+  function weakKeys() {
+    return Object.keys(P.keyErr).map(function (k) {
+      var hits = P.keyHit[k] || P.keyErr[k];
+      return { k: k, err: P.keyErr[k], hits: hits, rate: P.keyErr[k] / Math.max(hits, 1) };
+    }).filter(function (x) { return x.k !== "space" && x.err >= 2; })
+      .sort(function (a, b) { return b.rate - a.rate || b.err - a.err; }).slice(0, 5);
+  }
+  function reviewText(keys) {
+    var ks = keys.map(function (x) { return x.k; });
+    var pool = WEAK_WORDS.filter(function (w) { return ks.some(function (k) { return w.indexOf(k) > -1; }); });
+    var letters = ks.filter(function (k) { return /[a-z;,.\/']/.test(k); }).join("");
+    var parts = [];
+    if (letters) parts.push(keyDrill(letters + "fjdk", 10));
+    if (pool.length) parts.push(words(pool, 26));
+    if (!parts.length) parts.push(words(COMMON, 30));
+    return parts.join(" ");
+  }
+  function startReview() {
+    var keys = weakKeys();
+    startSession({ kind: "review", title: "Review drill", label: "Weak keys · " + keys.map(function (x) { return x.k.toUpperCase(); }).join(" "), desc: "Focus on the keys you usually miss.", seconds: 0, strict: false, pass: null, gen: function () { return reviewText(keys); } });
+  }
+  function startSession(ctx) {
+    stopSession();
+    S = { ctx: ctx, text: ctx.gen(), pos: 0, marks: [], correct: 0, errors: 0, keystrokes: 0, start: 0, done: false, tick: null };
+    view = "practice";
+    show("practice");
+    $("p-title").textContent = ctx.title;
+    $("p-kind").textContent = ctx.label;
+    $("p-desc").textContent = ctx.desc + (ctx.strict ? " Wrong keys don't advance." : "");
+    $("s-target-box").hidden = !ctx.pass;
+    if (ctx.pass) $("s-target").textContent = ctx.pass.wpm + " · " + ctx.pass.acc + "%";
+    $("s-time-l").textContent = ctx.seconds ? "Left" : "Time";
+    $("s-time-box").hidden = !!ctx.calm;
+    $("calm-bar").hidden = !ctx.calm;
+    $("calm-fill").style.width = "0%";
+    $("typing").hidden = false;
+    $("result").hidden = true;
+    $("typing").appendChild($("kb-wrap"));
+    $("kb").classList.remove("halves");
+    if (typeof setLegend === "function") setLegend(false);
+    var t = $("text");
+    t.innerHTML = "";
+    var frag = document.createDocumentFragment();
+    S.spans = [];
+    for (var i = 0; i < S.text.length; i++) {
+      var sp = document.createElement("span");
+      sp.className = "ch";
+      sp.textContent = S.text[i];
+      frag.appendChild(sp);
+      S.spans.push(sp);
+    }
+    t.appendChild(frag);
+    t.scrollTop = 0;
+    updateCaret();
+    updateStats();
+    checkFocus();
+  }
+  function stopSession() { if (S && S.tick) { clearInterval(S.tick); S.tick = null; } }
+  function restart() { if (S) startSession(S.ctx); }
+
+  function elapsed() { return S.start ? (performance.now() - S.start) / 1000 : 0; }
+  function calc() {
+    var sec = S.ctx.seconds ? Math.min(elapsed(), S.ctx.seconds) : elapsed();
+    if (S.done && S.ctx.seconds && S.timedOut) sec = S.ctx.seconds;
+    if (S.done && !S.timedOut) sec = S.endSec;
+    var min = Math.max(sec, 1) / 60;
+    return {
+      sec: sec,
+      wpm: Math.round(S.correct / 5 / min),
+      acc: S.keystrokes ? Math.floor(((S.keystrokes - S.errors) / S.keystrokes) * 1000) / 10 : 100
+    };
+  }
+  function fmtClock(s) { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2); }
+  function updateStats() {
+    var c = calc();
+    if (S.ctx.calm && S.ctx.seconds) $("calm-fill").style.width = Math.min(100, c.sec / S.ctx.seconds * 100) + "%";
+    $("s-wpm").textContent = c.wpm;
+    $("s-acc").textContent = (S.keystrokes ? c.acc : 100) + "%";
+    $("s-time").textContent = S.ctx.seconds ? fmtClock(S.ctx.seconds - c.sec) : fmtClock(c.sec);
+  }
+  function updateCaret() {
+    if (S.curEl) S.curEl.classList.remove("cur");
+    var el = S.spans[S.pos];
+    S.curEl = el || null;
+    if (el) el.classList.add("cur");
+    lightKeys(S.text[S.pos]);
+    var ref = el || S.spans[S.spans.length - 1];
+    if (ref) {
+      var t = $("text"), lh = parseFloat(getComputedStyle(t).lineHeight) || 40;
+      var target = Math.max(0, ref.offsetTop - lh);
+      if (Math.abs(t.scrollTop - target) > 2) t.scrollTop = target;
+    }
+  }
+  function begin() {
+    S.start = performance.now();
+    S.tick = setInterval(function () {
+      if (!S || S.done) return;
+      if (S.ctx.seconds && elapsed() >= S.ctx.seconds) { S.timedOut = true; finish(); return; }
+      updateStats();
+    }, 200);
+  }
+  function typeChar(ch) {
+    if (!S || S.done) return;
+    if (!S.start) begin();
+    var expected = S.text[S.pos];
+    S.keystrokes++;
+    pressFlash(ch);
+    var hk = expected === " " ? "space" : expected.toLowerCase();
+    P.keyHit[hk] = (P.keyHit[hk] || 0) + 1;
+    if (ch === expected) {
+      sound.ok();
+      S.marks[S.pos] = "ok"; S.correct++;
+      S.spans[S.pos].className = "ch ok";
+      S.pos++;
+    } else {
+      S.errors++;
+      sound.bad();
+      var k = expected === " " ? "space" : expected.toLowerCase();
+      P.keyErr[k] = (P.keyErr[k] || 0) + 1;
+      if (S.ctx.strict) {
+        var sp = S.spans[S.pos];
+        sp.classList.remove("miss"); void sp.offsetWidth; sp.classList.add("miss");
+        updateStats();
+        return;
+      }
+      S.marks[S.pos] = "bad";
+      S.spans[S.pos].className = "ch bad" + (expected === " " ? " sp" : "");
+      S.pos++;
+    }
+    updateCaret();
+    updateStats();
+    if (S.pos >= S.text.length) finish();
+  }
+  function backspace() {
+    if (!S || S.done || S.ctx.strict || S.pos === 0) return;
+    S.pos--;
+    if (S.marks[S.pos] === "ok") S.correct--;
+    S.marks[S.pos] = undefined;
+    S.spans[S.pos].className = "ch";
+    updateCaret();
+    updateStats();
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (view === "games" && G) { gameKey(e); return; }
+    if (view === "tools") { testerKey(e); return; }
+    if (view === "guide" && GD) { guideKey(e); return; }
+    if (view !== "practice" || !S) return;
+    if (S.done) {
+      if (e.key === "Enter") { e.preventDefault(); var b = $("result").querySelector(".btn.primary"); if (b) b.click(); }
+      return;
+    }
+    var altGr = e.getModifierState && e.getModifierState("AltGraph");
+    if ((e.ctrlKey || e.metaKey || e.altKey) && !altGr) return;
+    if (e.key === "Escape") { e.preventDefault(); restart(); return; }
+    if (e.key === "Backspace") { e.preventDefault(); backspace(); return; }
+    if (e.key.length !== 1 || e.isComposing) return;
+    e.preventDefault();
+    typeChar(e.key);
+  });
+
+  function checkFocus() { $("veil").hidden = view !== "practice" || !S || S.done || document.hasFocus(); }
+  window.addEventListener("blur", checkFocus);
+  window.addEventListener("focus", checkFocus);
+  $("board").addEventListener("click", function () { window.focus(); setTimeout(checkFocus, 0); });
+  function homeOf(ctx) { return ctx.kind === "test" ? "test" : ctx.kind === "review" ? "tools" : "course"; }
+  $("back").addEventListener("click", function () { show(S ? homeOf(S.ctx) : "course"); });
+
+  // ---------- results ----------
+  function finish() {
+    if (S.done) return;
+    S.endSec = elapsed();
+    S.done = true;
+    stopSession();
+    var c = calc();
+    updateStats();
+    lightKeys(undefined);
+    checkFocus();
+    var ctx = S.ctx, typedSomething = S.keystrokes > 0;
+    var min = Math.max(c.sec, 1) / 60;
+    var gross = Math.round(S.keystrokes / 5 / min), kpm = Math.round(S.keystrokes / min);
+    var enoughKeys = !ctx.pass || !ctx.pass.minKeys || S.correct >= ctx.pass.minKeys;
+    var passed = ctx.pass ? (typedSomething && c.wpm >= ctx.pass.wpm && c.acc >= ctx.pass.acc && enoughKeys) : null;
+    var stageBefore = ctx.kind === "course" ? stagePassed(ctx.ex.stage) : null;
+    var placedInto = -1;
+
+    if (typedSomething) {
+      if (ctx.kind === "course") {
+        var r = P.ex[ctx.ex.id] || { bestWpm: 0, bestAcc: 0, passed: false, attempts: 0 };
+        r.attempts++;
+        r.bestWpm = Math.max(r.bestWpm, c.wpm);
+        r.bestAcc = Math.max(r.bestAcc, c.acc);
+        r.passed = r.passed || passed;
+        P.ex[ctx.ex.id] = r;
+      }
+      if (ctx.kind === "placement") {
+        P.placed = true;
+        for (var si = 0; si < STAGES.length; si++) {
+          var ex = STAGES[si].exam;
+          if (!(stageOpen(si) && c.wpm >= ex.pass.wpm && c.acc >= ex.pass.acc)) break;
+          var er = P.ex[ex.id] || { bestWpm: 0, bestAcc: 0, passed: false, attempts: 0 };
+          er.passed = true; er.bestWpm = Math.max(er.bestWpm, c.wpm); er.bestAcc = Math.max(er.bestAcc, c.acc);
+          P.ex[ex.id] = er;
+          placedInto = si;
+        }
+      }
+      var name = ctx.kind === "course" ? ctx.ex.title
+        : ctx.kind === "test" ? "Typing test " + fmtSec(ctx.seconds)
+        : ctx.kind === "placement" ? "Placement test" : "Review drill";
+      P.history.push({ t: Date.now(), id: ctx.kind === "course" ? ctx.ex.id : ctx.kind + (ctx.seconds || ""), kind: ctx.kind, name: name, wpm: c.wpm, gross: gross, acc: c.acc, pass: passed });
+      if (P.history.length > 300) P.history = P.history.slice(-300);
+    }
+    save();
+
+    var banner = "";
+    if (ctx.kind === "course" && !stageBefore && stagePassed(ctx.ex.stage)) {
+      var s0 = ctx.ex.stage;
+      banner = s0 < STAGES.length - 1 ? STAGES[s0].name + " cleared. " + STAGES[s0 + 1].name + " is now open."
+        : STAGES[s0].name + " cleared. You have finished the whole course. You are a pro typist.";
+    }
+
+    if (typedSomething) {
+      if (banner || placedInto >= 0) sound.cheer(true);
+      else if (passed) sound.cheer(false);
+      else if (passed === false) sound.soft();
+      else sound.step();
+    }
+    var verdict, note;
+    if (!typedSomething) { verdict = '<div class="verdict bad">No keys typed</div>'; note = "The time ran out before you started. Try again."; }
+    else if (ctx.kind === "placement") {
+      verdict = '<div class="verdict">' + c.wpm + " WPM</div>";
+      if (placedInto === STAGES.length - 1) note = "You already meet every stage test target, so every stage is cleared. Use the typing test and games to keep sharp.";
+      else if (placedInto >= 0) note = "You met the " + STAGES[placedInto].name + " test target, so that stage is cleared. Start with " + STAGES[placedInto + 1].name + ".";
+      else note = "Start with Keyboard Basics. It shows you where your fingers go, one key at a time.";
+    }
+    else if (!ctx.pass) { verdict = '<div class="verdict">' + c.wpm + " WPM</div>"; note = ctx.kind === "review" ? "Review complete. Your weak-key list updates with every attempt." : "Test complete. Net speed counts only correct characters."; }
+    else if (passed) { verdict = '<div class="verdict good">Passed</div>'; note = ctx.pass.wpm ? "You met both targets for " + esc(ctx.title) + "." : "You reached the accuracy target for " + esc(ctx.title) + ". Well done."; }
+    else {
+      verdict = '<div class="verdict bad">Not yet</div>';
+      var miss = [];
+      if (c.wpm < ctx.pass.wpm) miss.push("speed is " + (ctx.pass.wpm - c.wpm) + " WPM short");
+      if (!enoughKeys) miss.push("correct keys are " + (ctx.pass.minKeys - S.correct) + " short of the " + ctx.pass.minKeys + " needed");
+      if (c.acc < ctx.pass.acc) miss.push("accuracy is " + (Math.round((ctx.pass.acc - c.acc) * 10) / 10) + " points short");
+      note = "Your " + miss.join(" and your ") + ". " + (c.acc < ctx.pass.acc ? "Slow down a little; accuracy builds speed." : "Stay relaxed and keep a steady rhythm.");
+    }
+    function m(val, unit, label, target, ok) {
+      return "<div><b>" + val + unit + "</b><span>" + label + "</span>" +
+        (target !== undefined ? '<em class="' + (ok ? "good" : "bad") + '">target ' + target + unit + "</em>" : "") + "</div>";
+    }
+    var P_ = ctx.pass, isTest = ctx.kind === "test" || ctx.kind === "placement";
+    var h = (banner ? '<div class="banner">' + banner + "</div>" : "") +
+      '<div class="result-top"><div><div class="eyebrow">' + esc(ctx.label) + "</div>" + verdict + "<p>" + note + "</p></div></div>" +
+      '<div class="big">' +
+      m(c.wpm, "", isTest ? "Net WPM" : "WPM", P_ && P_.wpm ? P_.wpm : undefined, P_ && c.wpm >= P_.wpm) +
+      m(c.acc, "%", "Accuracy", P_ ? P_.acc : undefined, P_ && c.acc >= P_.acc) +
+      (isTest ? m(gross, "", "Gross WPM") + m(kpm, "", "Keystrokes/min")
+              : m(fmtClock(c.sec), "", "Time") + m(S.errors, "", "Mistakes")) + "</div>";
+
+    if (ctx.kind === "test" && typedSomething && ctx.seconds >= 60) {
+      var d = new Date();
+      h += '<div class="cert"><div class="eyebrow">Certificate of typing speed</div>' +
+        '<input id="cert-name" aria-label="Your name" placeholder="Type your name" value="' + esc(P.name || (ME && ME.name) || "") + '">' +
+        '<div class="cert-num">' + c.wpm + ' WPM</div>' +
+        "<p>Net speed at " + c.acc + "% accuracy on a " + fmtSec(ctx.seconds) + " test of " + SRC_NAME[ctx.src].toLowerCase() + ", " +
+        d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) + ".</p></div>";
+    }
+
+    var next = null;
+    if (ctx.kind === "course" && passed) {
+      var s = STAGES[ctx.ex.stage], list = s.exercises;
+      var idx = list.indexOf(ctx.ex);
+      if (idx > -1) next = list.slice(idx + 1).concat(list.slice(0, idx)).filter(function (e) { return !exPassed(e.id); })[0] || null;
+      if (!next && stagePassed(ctx.ex.stage) && ctx.ex.stage < STAGES.length - 1) next = STAGES[ctx.ex.stage + 1].exercises[0];
+    }
+    var home = homeOf(ctx);
+    h += '<div class="actions">';
+    if (ctx.kind === "placement") h += '<button class="btn primary" id="r-back">Go to the course</button>';
+    else {
+      if (next) h += '<button class="btn primary" id="r-next">Next: ' + esc(next.title) + "</button>";
+      h += '<button class="btn' + (next ? "" : " primary") + '" id="r-again">' + (ctx.kind === "review" ? "New review drill" : "Try again") + "</button>";
+      h += '<button class="btn" id="r-back">' + (home === "test" ? "Choose another test" : home === "tools" ? "Back to tools" : "Back to course") + "</button>";
+    }
+    if (ctx.kind === "test" && typedSomething && ctx.seconds >= 60 && window.self === window.top) h += '<button class="btn" id="r-print">Print certificate</button>';
+    h += "</div>";
+    $("result").innerHTML = h;
+    $("typing").hidden = true;
+    $("result").hidden = false;
+    if (next) $("r-next").addEventListener("click", function () { startExercise(next); });
+    if ($("r-again")) $("r-again").addEventListener("click", ctx.kind === "review" ? startReview : restart);
+    $("r-back").addEventListener("click", function () { show(home); });
+    if ($("r-print")) $("r-print").addEventListener("click", function () { window.print(); });
+    if ($("cert-name")) $("cert-name").addEventListener("input", function (e) { P.name = e.target.value.slice(0, 60); save(); });
+  }
+
+  // ---------- typing test ----------
+  var testOpt = { len: 60, src: "words" };
+  try { var to = JSON.parse(localStorage.getItem("keystone.testopt")); if (to && to.len && SRC_NAME[to.src]) testOpt = to; } catch (e) {}
+  ["test-len", "test-src"].forEach(function (id) {
+    $(id).addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      if (id === "test-len") testOpt.len = +b.dataset.v; else testOpt.src = b.dataset.v;
+      try { localStorage.setItem("keystone.testopt", JSON.stringify(testOpt)); } catch (err) {}
+      renderTest();
+    });
+  });
+  $("test-go").addEventListener("click", function () { startTest(testOpt.len, testOpt.src); });
+  function renderTest() {
+    $("test-len").querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", +b.dataset.v === testOpt.len); });
+    $("test-src").querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.v === testOpt.src); });
+    var best = P.history.filter(function (h) { return h.kind === "test" || h.id.indexOf("test") === 0; });
+    $("test-best").textContent = best.length
+      ? "Your best test: " + Math.max.apply(null, best.map(function (h) { return h.wpm; })) + " net WPM over " + best.length + " test" + (best.length > 1 ? "s" : "") + "."
+      : "No tests yet. A one-minute test on common words is a good first measure.";
+  }
+
+  // ---------- review ----------
+  $("review-go").addEventListener("click", startReview);
+  function renderReview() {
+    var keys = weakKeys();
+    $("review-go").disabled = !keys.length;
+    $("review-sub").textContent = keys.length
+      ? "Your five least accurate keys, based on every lesson, test and drill so far."
+      : "Not enough data yet. Finish a few lessons or a typing test, and your weak keys will appear here.";
+    $("review-keys").innerHTML = keys.length ? '<div class="troubles">' + keys.map(function (x) {
+      return '<div class="trouble"><div class="key">' + esc(x.k.toUpperCase()) + "</div><span>" + Math.round((1 - x.rate) * 100) + "% right</span></div>";
+    }).join("") + "</div>" : "";
+  }
+
+  // ---------- progress ----------
+  var resetArmed = false;
+  function renderProgress() {
+    var H = P.history, last10 = H.slice(-10);
+    var passedCount = Object.keys(P.ex).filter(function (k) { return P.ex[k].passed; }).length;
+    var cleared = STAGES.filter(function (s, i) { return stagePassed(i); }).length;
+    var avgAcc = last10.length ? Math.round(last10.reduce(function (a, h) { return a + h.acc; }, 0) / last10.length * 10) / 10 + "%" : "—";
+    var bestWpm = H.length ? Math.max.apply(null, H.map(function (h) { return h.wpm; })) : "—";
+    $("tiles").innerHTML =
+      '<div class="tile"><b>' + cleared + '<small style="font-size:15px;color:var(--muted)"> / ' + STAGES.length + '</small></b><span>Stages cleared</span></div>' +
+      '<div class="tile"><b>' + passedCount + '</b><span>Exercises passed</span></div>' +
+      '<div class="tile"><b>' + bestWpm + '</b><span>Best WPM</span></div>' +
+      '<div class="tile"><b>' + avgAcc + '</b><span>Accuracy, last 10</span></div>';
+
+    // chart
+    var pts = H.slice(-30);
+    if (pts.length < 2) {
+      $("chart").innerHTML = '<p class="empty">Finish at least two attempts to see a trend.</p>';
+    } else {
+      var W = 640, Ht = 180, L = 36, R = 12, T = 12, B = 26;
+      var max = Math.max(20, Math.ceil(Math.max.apply(null, pts.map(function (p) { return p.wpm; })) / 10) * 10);
+      var x = function (i) { return L + (i / (pts.length - 1)) * (W - L - R); };
+      var y = function (v) { return T + (1 - v / max) * (Ht - T - B); };
+      var grid = "", step = max <= 40 ? 10 : max <= 100 ? 20 : 50;
+      for (var g = 0; g <= max; g += step) {
+        grid += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(g) + '" y2="' + y(g) + '" stroke="var(--line)" stroke-width="1"/>' +
+          '<text x="' + (L - 8) + '" y="' + (y(g) + 4) + '" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--mono)">' + g + "</text>";
+      }
+      var line = pts.map(function (p, i) { return (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p.wpm).toFixed(1); }).join(" ");
+      var area = line + " L" + x(pts.length - 1).toFixed(1) + " " + y(0) + " L" + x(0).toFixed(1) + " " + y(0) + " Z";
+      var dots = pts.map(function (p, i) {
+        return '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.wpm).toFixed(1) + '" r="' + (i === pts.length - 1 ? 5 : 3) + '" fill="' + (p.pass === false ? "var(--bad)" : "var(--accent)") + '"><title>' + esc(p.name) + ": " + p.wpm + " WPM, " + p.acc + "%</title></circle>";
+      }).join("");
+      var lastP = pts[pts.length - 1];
+      $("chart").innerHTML = '<svg viewBox="0 0 ' + W + " " + Ht + '" role="img" aria-label="WPM trend">' + grid +
+        '<path d="' + area + '" fill="var(--accent-soft)"/>' +
+        '<path d="' + line + '" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>' + dots +
+        '<text x="' + (W - R) + '" y="' + (Ht - 6) + '" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--mono)">latest: ' + lastP.wpm + " WPM</text>" +
+        '<text x="' + L + '" y="' + (Ht - 6) + '" font-size="11" fill="var(--muted)" font-family="var(--mono)">' + pts.length + " attempts ago</text></svg>";
+    }
+
+    // trouble keys
+    var te = Object.keys(P.keyErr).map(function (k) { return [k, P.keyErr[k]]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 8);
+    $("troubles").innerHTML = te.length
+      ? '<div class="troubles">' + te.map(function (t) {
+          return '<div class="trouble"><div class="key">' + (t[0] === "space" ? "<small>space</small>" : esc(t[0].toUpperCase())) + "</div><span>" + t[1] + " missed</span></div>";
+        }).join("") + "</div>"
+      : '<p class="empty">No mistakes recorded yet.</p>';
+
+    // heatmap
+    var hm = '<div class="heat">';
+    ROWS.slice(0, 4).forEach(function (row) {
+      hm += '<div class="kb-row">';
+      row.forEach(function (k) {
+        var special = ["tab", "caps", "enter", "bksp", "lshift", "rshift"].indexOf(k[0]) > -1;
+        var hits = P.keyHit[k[0]] || 0, err = P.keyErr[k[0]] || 0;
+        var rate = hits ? Math.min(1, err / hits) : 0;
+        var tint = special || !hits ? "transparent" : "color-mix(in srgb, var(--bad) " + Math.round(Math.min(rate * 4, 1) * 70) + "%, var(--good-soft))";
+        var tip = special ? "" : hits ? Math.round((1 - rate) * 100) + "% right, " + hits + " typed" : "not typed yet";
+        hm += '<div class="key" style="flex-grow:' + (k[2] || 1) + ";--hc:" + tint + '" title="' + esc(tip) + '">' + esc(k[3] !== undefined ? k[3] : k[0].toUpperCase()) + "</div>";
+      });
+      hm += "</div>";
+    });
+    $("heatmap").innerHTML = hm + "</div>";
+
+    // games
+    $("game-scores").innerHTML = "<table><thead><tr><th>Game</th><th>Best score</th><th>Highest level</th><th>Games played</th></tr></thead><tbody>" +
+      Object.keys(GAMES).map(function (g) {
+        var s = P.games[g] || {};
+        return "<tr><td>" + GAMES[g].title + '</td><td class="num">' + (s.best || 0) + '</td><td class="num">' + (s.level || 0) + '</td><td class="num">' + (s.plays || 0) + "</td></tr>";
+      }).join("") + "</tbody></table>";
+
+    // recent
+    var rec = H.slice(-12).reverse();
+    $("recent").innerHTML = rec.length
+      ? "<table><thead><tr><th>When</th><th>Exercise</th><th>WPM</th><th>Accuracy</th><th>Result</th></tr></thead><tbody>" +
+        rec.map(function (h) {
+          var d = new Date(h.t);
+          var res = h.pass === null || h.pass === undefined ? '<span class="chip">Test</span>' : h.pass ? '<span class="chip good">Passed</span>' : '<span class="chip bad">Not yet</span>';
+          return "<tr><td>" + d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) +
+            "</td><td>" + esc(h.name) + '</td><td class="num">' + h.wpm + '</td><td class="num">' + h.acc + "%</td><td>" + res + "</td></tr>";
+        }).join("") + "</tbody></table>"
+      : '<p class="empty">No attempts yet. Start with the Home row drill in the Course tab.</p>';
+
+    renderReset();
+  }
+  function renderReset() {
+    var row = $("reset-row");
+    if (!resetArmed) {
+      row.innerHTML = '<button class="btn danger" id="reset">Reset all progress</button>';
+      $("reset").addEventListener("click", function () { resetArmed = true; renderReset(); });
+    } else {
+      row.innerHTML = "<span>This locks Intermediate and Advanced again and deletes your history.</span>" +
+        '<button class="btn danger" id="reset-yes">Yes, reset</button><button class="btn" id="reset-no">Cancel</button>';
+      $("reset-yes").addEventListener("click", function () { P = fresh(); save(); resetArmed = false; renderProgress(); });
+      $("reset-no").addEventListener("click", function () { resetArmed = false; renderReset(); });
+    }
+  }
+
+  // ---------- guided lessons ----------
+  var GD = null, lastShift = null;
+  document.addEventListener("keydown", function (e) { if (e.code === "ShiftLeft" || e.code === "ShiftRight") lastShift = e.code; }, true);
+  function keyLabel(ch) {
+    if (ch === " ") return "Space";
+    if (ch === "\n") return "Enter";
+    if (ch === "\b") return "Backspace";
+    var k = keysFor(ch);
+    return k.shift ? "Shift + " + (k.base.length === 1 ? k.base.toUpperCase() : k.base) : ch.toUpperCase();
+  }
+  function startGuide(ex) {
+    GD = { ex: ex, step: 0, i: 0, done: false,
+      steps: ex.steps.map(function (st) { return st.gen ? Object.assign({}, st, { keys: st.gen() }) : st; }) };
+    view = "guide";
+    show("guide");
+    $("guide-kb-slot").appendChild($("kb-wrap"));
+    var list = BASICS.exercises;
+    var guides = list.filter(function (x) { return x.steps; });
+    $("gd-kind").textContent = BASICS.name + " · Guide " + (guides.indexOf(ex) + 1) + " of " + guides.length;
+    $("gd-title").textContent = ex.title;
+    renderStep();
+    guideFocus();
+  }
+  var FINGER_LEGEND = null;
+  function setLegend(halves) {
+    if (FINGER_LEGEND === null) FINGER_LEGEND = $("legend").innerHTML;
+    $("legend").innerHTML = halves ? '<span><i style="--fc:var(--half-l)"></i>left hand</span><span><i style="--fc:var(--half-r)"></i>right hand</span>' : FINGER_LEGEND;
+  }
+  function guideFocus() { $("gd-veil").hidden = view !== "guide" || !GD || GD.done || document.hasFocus(); }
+  window.addEventListener("blur", guideFocus);
+  window.addEventListener("focus", guideFocus);
+  $("guide-card").addEventListener("click", function () { window.focus(); setTimeout(guideFocus, 0); });
+  $("guide-back").addEventListener("click", function () { show("course"); });
+
+  function renderStep() {
+    var st = GD.steps[GD.step], n = GD.steps.length;
+    GD.i = 0;
+    $("gd-step").textContent = "Step " + (GD.step + 1) + " of " + n;
+    $("gd-meter").style.width = Math.round(GD.step / n * 100) + "%";
+    $("gd-h").textContent = st.title;
+    $("gd-body").innerHTML = st.body;
+    $("gd-msg").textContent = "";
+    $("gd-msg").className = "gd-msg";
+    $("kb").classList.toggle("halves", st.kb === "halves");
+    setLegend(st.kb === "halves");
+    $("kb").querySelectorAll(".mark").forEach(function (el) { el.classList.remove("mark"); });
+    (st.mark || []).forEach(function (k) { KEY_EL[k] && KEY_EL[k].classList.add("mark"); });
+    if (st.type === "read") {
+      $("gd-keys").innerHTML = "";
+      lightKeys(undefined);
+      $("gd-actions").innerHTML = '<button class="btn primary" id="gd-next">Continue</button><span class="gd-tip">or press Space</span>';
+      $("gd-next").addEventListener("click", nextStep);
+    } else {
+      $("gd-keys").innerHTML = st.keys.map(function (k, i) {
+        return '<span class="gk" data-i="' + i + '">' + esc(keyLabel(k)) + "</span>";
+      }).join("");
+      $("gd-actions").innerHTML = "";
+      paintKeys();
+    }
+  }
+  function paintKeys() {
+    var st = GD.steps[GD.step];
+    $("gd-keys").querySelectorAll(".gk").forEach(function (el, i) {
+      el.className = "gk" + (i < GD.i ? " ok" : i === GD.i ? " cur" : "");
+    });
+    lightKeys(GD.i < st.keys.length ? st.keys[GD.i] : undefined);
+  }
+  function nextStep() {
+    if (GD.step < GD.steps.length - 1) { GD.step++; renderStep(); }
+    else finishGuide();
+  }
+  function stepComplete() {
+    sound.step();
+    $("gd-msg").textContent = pick(["Well done.", "That's it.", "Nice work.", "Good."]) + " Press Space or Enter to continue.";
+    $("gd-msg").className = "gd-msg good";
+    $("gd-actions").innerHTML = '<button class="btn primary" id="gd-next">Continue</button>';
+    $("gd-next").addEventListener("click", nextStep);
+  }
+  function guideKey(e) {
+    if (e.ctrlKey || e.metaKey || (e.altKey && !(e.getModifierState && e.getModifierState("AltGraph")))) return;
+    if (GD.done) {
+      if (e.key === "Enter") { e.preventDefault(); var b = $("gd-actions").querySelector(".btn.primary"); if (b) b.click(); }
+      return;
+    }
+    var st = GD.steps[GD.step];
+    var stepDone = st.type === "read" || GD.i >= st.keys.length;
+    if (stepDone) {
+      if (e.key === " " || e.key === "Enter") { e.preventDefault(); nextStep(); }
+      return;
+    }
+    var pressed = e.key === "Enter" ? "\n" : e.key === "Backspace" ? "\b" : e.key.length === 1 ? e.key : null;
+    if (!pressed) return;
+    e.preventDefault();
+    var want = st.keys[GD.i];
+    pressFlash(pressed === "\n" ? "\n" : pressed);
+    var hk = want === " " ? "space" : want === "\n" ? "enter" : want === "\b" ? "bksp" : want.toLowerCase();
+    P.keyHit[hk] = (P.keyHit[hk] || 0) + 1;
+    var msg = $("gd-msg");
+    if (pressed === want) {
+      if (GD.i + 1 < st.keys.length) sound.ok();
+      GD.i++;
+      msg.className = "gd-msg";
+      msg.textContent = "";
+      var k = keysFor(want);
+      if (k.shift && lastShift) {
+        var right = KEY_FINGER[k.base].charAt(0) === "l";
+        if ((right && lastShift === "ShiftLeft") || (!right && lastShift === "ShiftRight")) {
+          msg.textContent = "Correct. Next time try the " + (right ? "right" : "left") + " Shift, on the other hand from the key.";
+          msg.className = "gd-msg warn";
+        }
+      }
+      paintKeys();
+      if (GD.i >= st.keys.length) stepComplete();
+    } else {
+      P.keyErr[hk] = (P.keyErr[hk] || 0) + 1;
+      sound.bad();
+      var capsOn = e.getModifierState && e.getModifierState("CapsLock");
+      msg.className = "gd-msg bad";
+      msg.textContent = capsOn && pressed.toLowerCase() === want ? "Caps Lock is on. Press Caps Lock once to turn it off, then try again."
+        : "You pressed " + keyLabel(pressed) + ". Look for the orange key on the keyboard below and use " + (keysFor(want).base === "space" ? "your thumb" : "your " + FINGER_NAME[KEY_FINGER[keysFor(want).base]]) + ".";
+      var cur = $("gd-keys").querySelector(".gk.cur");
+      if (cur) { cur.classList.remove("miss"); void cur.offsetWidth; cur.classList.add("miss"); }
+    }
+  }
+  function finishGuide() {
+    GD.done = true;
+    lightKeys(undefined);
+    $("gd-meter").style.width = "100%";
+    var ex = GD.ex, before = stagePassed(0);
+    var r = P.ex[ex.id] || { bestWpm: 0, bestAcc: 100, passed: false, attempts: 0 };
+    r.attempts++; r.passed = true;
+    P.ex[ex.id] = r;
+    P.history.push({ t: Date.now(), id: ex.id, kind: "guide", name: ex.title, wpm: 0, acc: 100, pass: true });
+    save();
+    var list = BASICS.exercises, idx = list.indexOf(ex);
+    var next = list.slice(idx + 1).concat(list.slice(0, idx)).filter(function (x) { return !exPassed(x.id); })[0];
+    var cleared = !before && stagePassed(0);
+    sound.cheer(cleared);
+    $("gd-h").textContent = "Guide complete";
+    $("gd-body").innerHTML = (cleared ? '<div class="banner">Keyboard Basics cleared. The ' + STAGES[1].name + ' stage is now open.</div>' : "") +
+      "<p>You finished <b>" + esc(ex.title) + "</b>." + (next ? " Next up: " + esc(next.title) + "." + (next.kind === "Practice" ? " Two short practice tasks will help you remember what you just learned." : "") : cleared ? " Start " + STAGES[1].name + " with the " + STAGES[1].exercises[0].title + " drill." : "") + "</p>";
+    $("gd-keys").innerHTML = "";
+    $("gd-msg").textContent = "";
+    var nextBtn = next ? '<button class="btn primary" id="gd-go">Next: ' + esc(next.title) + "</button>"
+      : '<button class="btn primary" id="gd-go">Start ' + STAGES[1].name + '</button>';
+    $("gd-actions").innerHTML = nextBtn + '<button class="btn" id="gd-again">Repeat lesson</button><button class="btn" id="gd-course">Back to course</button>';
+    $("gd-go").addEventListener("click", function () { if (next) startExercise(next); else if (stageOpen(1)) startExercise(STAGES[1].exercises[0]); else show("course"); });
+    $("gd-again").addEventListener("click", function () { startGuide(ex); });
+    $("gd-course").addEventListener("click", function () { show("course"); });
+    guideFocus();
+  }
+
+  // ---------- tools ----------
+  function renderTools() { renderReview(); renderTester(); calcSavings(); }
+  var TESTED = {}, testerBuilt = false;
+  var CODE_ID = { Tab: "tab", CapsLock: "caps", Enter: "enter", Backspace: "bksp", ShiftLeft: "lshift", ShiftRight: "rshift", Space: "space" };
+  function renderTester() {
+    if (!testerBuilt) {
+      var kb = $("tester");
+      ROWS.forEach(function (row, ri) {
+        var r = document.createElement("div");
+        r.className = "kb-row";
+        if (ri === 4) r.style.padding = "0 22%";
+        row.forEach(function (k) {
+          var el = document.createElement("div");
+          el.className = "key"; el.style.flexGrow = k[2] || 1; el.dataset.k = k[0];
+          el.textContent = k[3] !== undefined ? k[3] : k[0].toUpperCase();
+          if (k[0] === "space") el.textContent = "Space";
+          r.appendChild(el);
+        });
+        kb.appendChild(r);
+      });
+      testerBuilt = true;
+    }
+    $("tester").querySelectorAll(".key").forEach(function (el) { el.classList.toggle("hit", !!TESTED[el.dataset.k]); });
+    var total = $("tester").querySelectorAll(".key").length, n = Object.keys(TESTED).length;
+    $("tester-count").textContent = n ? n + " of " + total + " keys working." : "";
+  }
+  function testerKey(e) {
+    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var id = CODE_ID[e.code] || (e.key.length === 1 ? (SHIFTED[e.key] || e.key.toLowerCase()) : null);
+    if (!id) return;
+    var el = $("tester").querySelector('[data-k="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]');
+    if (!el) return;
+    e.preventDefault();
+    TESTED[id] = true;
+    el.classList.add("down"); setTimeout(function () { el.classList.remove("down"); }, 100);
+    renderTester();
+  }
+  $("tester-reset").addEventListener("click", function () { TESTED = {}; renderTester(); });
+  ["c-hours", "c-now", "c-goal", "c-days"].forEach(function (id) { $(id).addEventListener("input", calcSavings); });
+  function calcSavings() {
+    var h = +$("c-hours").value, now = +$("c-now").value, goal = +$("c-goal").value, days = +$("c-days").value;
+    if (!(h > 0 && now > 0 && goal > 0 && days > 0)) { $("c-out").textContent = "Enter a number in every box."; return; }
+    if (goal <= now) { $("c-out").textContent = "Set a goal speed higher than your current speed."; return; }
+    var saved = h * (1 - now / goal) * days;
+    $("c-out").innerHTML = "Typing at " + goal + " WPM instead of " + now + " WPM saves about <b>" + Math.round(saved) + " hours</b> a year, or " +
+      Math.round(saved * 60 / days) + " minutes on each typing day.";
+  }
+
+  // ---------- home ----------
+  var BENCH = [["Beginning", 0, 24], ["Developing", 25, 39], ["Average", 40, 54], ["Skilled", 55, 74], ["Fast", 75, 99], ["Expert", 100, 140]];
+  var demoTimer = null;
+  function renderHome() {
+    var best = P.history.length ? Math.max.apply(null, P.history.map(function (h) { return h.wpm; })) : null;
+    var cur = -1;
+    for (var i = 0; i < STAGES.length; i++) if (stageOpen(i) && !stagePassed(i)) { cur = i; break; }
+    $("hero-note").innerHTML = best === null ? "No account needed. Your progress is saved in this browser."
+      : "Welcome back. Your best speed is <b>" + best + " WPM</b>" + (cur > -1 ? ", and you're working on the <b>" + STAGES[cur].name + "</b> stage." : ", and you've cleared every stage.");
+    $("bench").innerHTML = BENCH.map(function (b) {
+      var you = best !== null && best >= b[1] && best <= (b[2] === 140 ? 999 : b[2]);
+      return '<div class="bench-row' + (you ? " you" : "") + '"><b>' + b[0] + '</b><div class="bar"><i style="width:' + Math.round(b[2] / 140 * 100) + '%"></i></div><span class="num">' + b[1] + (b[2] === 140 ? "+" : "–" + b[2]) + " WPM</span></div>";
+    }).join("");
+    $("home-games").innerHTML = gameCards();
+    startDemo();
+  }
+  function startDemo() {
+    stopDemo();
+    var phrase = "the sun is warm and the sky is clear";
+    var box = $("demo-text"), keysEl = $("demo-keys");
+    if (!keysEl.childElementCount) {
+      "asdf jkl;".split("").forEach(function (k) {
+        var el = document.createElement("div");
+        el.className = "key"; el.dataset.k = k; el.textContent = k === " " ? "" : k.toUpperCase();
+        if (k === " ") { el.style.flexGrow = 0.4; el.style.visibility = "hidden"; }
+        keysEl.appendChild(el);
+      });
+    }
+    box.innerHTML = phrase.split("").map(function (c) { return '<span>' + c + "</span>"; }).join("");
+    var spans = box.children, i = 0;
+    var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function paint() {
+      for (var j = 0; j < spans.length; j++) spans[j].className = j < i ? "ok" : j === i ? "cur" : "";
+      var nextCh = phrase[i];
+      keysEl.querySelectorAll(".key").forEach(function (k) { k.classList.toggle("next", k.dataset.k === nextCh && nextCh !== " "); });
+      $("demo-wpm").textContent = Math.min(48, Math.round(i / phrase.length * 48)) + " WPM";
+    }
+    if (reduce) { i = 18; paint(); return; }
+    demoTimer = setInterval(function () { i = i >= phrase.length + 6 ? 0 : i + 1; paint(); }, 170);
+    paint();
+  }
+  function stopDemo() { if (demoTimer) { clearInterval(demoTimer); demoTimer = null; } }
+
+  // ---------- games ----------
+  var GAMES = {
+    bubbles: { title: "Bubble Pop", lives: 6, livesLabel: "Escapes left", intro: "Press the letter on a bubble to pop it. It starts on the home row and adds keys as you level up.",
+      blurb: "Letters float up in bubbles. Press a letter to pop it before it escapes. Six escapes and the game ends.",
+      art: '<div class="game-art bubbles-art"><span>f</span><span>j</span><span>k</span><span>d</span></div>' },
+    rain: { title: "Word Rain", lives: 5, livesLabel: "Lives", intro: "Type a falling word and it disappears. Backspace fixes a typo.",
+      blurb: "Words fall toward the ground. Type a word to clear it. Five words on the ground and the game ends.",
+      art: '<div class="game-art rain-art"><span>river</span><span>stone</span><span>map</span></div>' },
+    breaker: { title: "Key Breaker", lives: 3, livesLabel: "Balls left", intro: "The ball drops toward the lit key. Press that key to send it back up and break a brick.",
+      blurb: "Press the lit key to bounce the ball into the bricks. Clear every brick to reach the next level.",
+      art: '<div class="game-art breaker-art"><div class="brick" style="left:8%;top:14%;width:18%"></div><div class="brick r1" style="left:30%;top:14%;width:18%"></div><div class="brick r2" style="left:52%;top:14%;width:18%"></div><div class="brick" style="left:74%;top:14%;width:18%"></div><div class="ball" style="left:58%;top:48%"></div><div class="paddle" style="left:8%;bottom:8px;width:18%;height:26px;font-size:13px">A</div><div class="paddle target" style="left:52%;bottom:8px;width:18%;height:26px;font-size:13px">K</div><div class="paddle" style="left:74%;bottom:8px;width:18%;height:26px;font-size:13px">L</div></div>' }
+  };
+  var G = null;
+  var BUBBLE_TINTS = ["--f-lp", "--f-lr", "--f-lm", "--f-li", "--f-ri", "--f-rm", "--f-rr", "--f-rp"];
+  function renderGames() {
+    $("games-menu").hidden = false;
+    $("game-play").hidden = true;
+    $("games-grid").innerHTML = gameCards();
+  }
+  function gameCards() {
+    return Object.keys(GAMES).map(function (g) {
+      var d = GAMES[g];
+      return '<article class="game-card">' + d.art.replace('class="game-art', 'aria-hidden="true" class="game-art') + "<h3>" + d.title + "</h3><p>" + d.blurb + "</p>" +
+        '<div class="game-foot"><span class="chip">Best: ' + ((P.games[g] && P.games[g].best) || 0) + '</span><button class="btn primary" data-game="' + g + '">Play</button></div></article>';
+    }).join("");
+  }
+  document.addEventListener("click", function (e) {
+    var gb = e.target.closest("[data-game]");
+    if (gb) { if (view !== "games") show("games"); startGame(gb.dataset.game); return; }
+    var go = e.target.closest("[data-go]");
+    if (go) { e.preventDefault(); show(go.dataset.go); }
+  });
+  $("game-back").addEventListener("click", function () { endGame(true); renderGames(); });
+
+  function startGame(kind) {
+    endGame(true);
+    var def = GAMES[kind];
+    $("games-menu").hidden = true;
+    $("game-play").hidden = false;
+    $("g-title").textContent = def.title;
+    $("g-lives-l").textContent = def.livesLabel;
+    var arena = $("arena");
+    arena.querySelectorAll(".bubble, .drop, .brick, .paddle, .ball").forEach(function (n) { n.remove(); });
+    G = { kind: kind, items: [], els: [], score: 0, level: 1, cleared: 0, lives: def.lives, spawnIn: 0, last: 0, buf: "", raf: 0, over: false, running: false };
+    if (kind === "breaker") breakerSetup();
+    $("buffer").hidden = kind !== "rain";
+    $("buffer").textContent = "";
+    gameHud();
+    $("arena-msg").innerHTML = '<div class="box"><b>' + def.title + "</b><p>" +
+      def.intro +
+      '</p><button class="btn primary" id="g-start">Start</button><p style="margin:10px 0 0;font-size:13px">or press Space</p></div>';
+    $("g-start").addEventListener("click", runGame);
+  }
+  function runGame() {
+    if (!G || G.running) return;
+    G.running = true;
+    $("arena-msg").innerHTML = "";
+    G.last = performance.now();
+    G.raf = requestAnimationFrame(gameLoop);
+  }
+  function gameHud() {
+    $("g-score").textContent = G.score;
+    $("g-level").textContent = G.level;
+    $("g-lives").textContent = G.lives;
+  }
+  function gameLoop(now) {
+    if (!G || G.over) return;
+    var dt = Math.min(0.05, (now - G.last) / 1000);
+    G.last = now;
+    var arena = $("arena"), W = arena.clientWidth, H = arena.clientHeight;
+    if (G.kind === "breaker") { breakerStep(dt, H); if (G && !G.over) G.raf = requestAnimationFrame(gameLoop); return; }
+    G.spawnIn -= dt;
+    if (G.spawnIn <= 0) {
+      spawnItem(W, H);
+      G.spawnIn = G.kind === "bubbles" ? Math.max(0.42, 1.25 - G.level * 0.09) : Math.max(1.1, 3.0 - G.level * 0.22);
+    }
+    for (var i = G.items.length - 1; i >= 0; i--) {
+      var it = G.items[i];
+      if (G.kind === "bubbles") {
+        it.y -= it.v * dt;
+        if (it.y < -50) { dropItem(i); loseLife(); continue; }
+      } else {
+        it.y += it.v * dt;
+        if (it.y > H - 30) { dropItem(i); G.buf = ""; showBuffer(); loseLife(); continue; }
+      }
+      it.el.style.transform = "translate(" + it.x + "px," + it.y + "px)";
+    }
+    if (G && !G.over) G.raf = requestAnimationFrame(gameLoop);
+  }
+  function spawnItem(W, H) {
+    var el = document.createElement("div"), it;
+    if (G.kind === "bubbles") {
+      var ch = pick("asdfjkl;ghrueiwoqptyzxcvbnm".split("").slice(0, Math.min(26, 8 + (G.level - 1) * 3)));
+      el.className = "bubble";
+      el.textContent = ch;
+      el.style.backgroundColor = "var(" + pick(BUBBLE_TINTS) + ")";
+      it = { el: el, text: ch, x: 10 + Math.random() * Math.max(10, W - 64), y: H + 10, v: 55 + G.level * 12 + Math.random() * 20 };
+    } else {
+      var list = G.level < 3 ? EASY : G.level < 6 ? COMMON : COMMON.concat(HARD);
+      var used = G.items.map(function (x) { return x.text.charAt(0); });
+      var w, tries = 0;
+      do { w = pick(list); tries++; } while (used.indexOf(w.charAt(0)) > -1 && tries < 20);
+      el.className = "drop";
+      el.innerHTML = '<span class="hit"></span><span class="rest">' + esc(w) + "</span>";
+      var estW = w.length * 10 + 24;
+      it = { el: el, text: w, x: 8 + Math.random() * Math.max(10, W - estW - 16), y: -30, v: 26 + G.level * 6 };
+    }
+    el.style.position = "absolute";
+    el.style.left = "0"; el.style.top = "0";
+    el.style.transform = "translate(" + it.x + "px," + it.y + "px)";
+    $("arena").appendChild(el);
+    G.items.push(it);
+  }
+  function dropItem(i) { G.items[i].el.remove(); G.items.splice(i, 1); }
+  function loseLife() {
+    G.lives--;
+    gameHud();
+    if (G.lives <= 0) gameOver();
+  }
+  function addScore(pts) {
+    G.score += pts; G.cleared++;
+    var per = G.kind === "bubbles" ? 15 : 8;
+    if (G.kind !== "breaker" && G.cleared % per === 0) G.level++;
+    gameHud();
+  }
+  function showBuffer(err) {
+    var b = $("buffer");
+    b.textContent = G.buf || " ";
+    b.classList.toggle("err", !!err);
+    G.items.forEach(function (it) {
+      var on = G.buf && it.text.indexOf(G.buf) === 0;
+      it.el.firstChild.textContent = on ? G.buf : "";
+      it.el.lastChild.textContent = on ? it.text.slice(G.buf.length) : it.text;
+      it.el.classList.toggle("target", !!on);
+    });
+  }
+  function gameKey(e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (!G.running) {
+      if (e.key === " " || e.key === "Enter") { e.preventDefault(); if (G.over) startGame(G.kind); else runGame(); }
+      return;
+    }
+    if (G.over) return;
+    if (e.key === "Escape") { e.preventDefault(); gameOver(); return; }
+    if (G.kind === "rain" && e.key === "Backspace") { e.preventDefault(); G.buf = G.buf.slice(0, -1); showBuffer(); return; }
+    if (e.key.length !== 1) return;
+    e.preventDefault();
+    var ch = e.key.toLowerCase();
+    if (G.kind === "breaker") { breakerKey(ch); return; }
+    if (G.kind === "bubbles") {
+      var best = -1;
+      G.items.forEach(function (it, i) { if (it.text === ch && (best < 0 || it.y < G.items[best].y)) best = i; });
+      var hk = best > -1 ? ch : null;
+      if (best > -1) {
+        var el = G.items[best].el;
+        G.items.splice(best, 1);
+        el.classList.add("pop");
+        sound.ok();
+        setTimeout(function () { el.remove(); }, 150);
+        addScore(10 + G.level);
+      } else { G.score = Math.max(0, G.score - 2); gameHud(); sound.bad(); }
+      if (hk) { P.keyHit[hk] = (P.keyHit[hk] || 0) + 1; }
+    } else {
+      var nb = G.buf + ch;
+      var match = G.items.filter(function (it) { return it.text.indexOf(nb) === 0; });
+      if (!match.length) { showBuffer(true); sound.bad(); return; }
+      G.buf = nb;
+      var done = match.filter(function (it) { return it.text === nb; }).sort(function (a, b) { return b.y - a.y; })[0];
+      if (done) {
+        G.items.splice(G.items.indexOf(done), 1);
+        done.el.remove();
+        addScore(done.text.length * 5 + G.level * 2);
+        sound.step();
+        G.buf = "";
+      }
+      showBuffer();
+    }
+  }
+  function gameOver() {
+    if (!G || G.over) return;
+    G.over = true; G.running = false;
+    cancelAnimationFrame(G.raf);
+    var rec = P.games[G.kind] || { best: 0, level: 0, plays: 0 };
+    var isBest = G.score > rec.best;
+    if (isBest && G.score > 0) sound.cheer(false); else sound.soft();
+    rec.plays++; rec.best = Math.max(rec.best, G.score); rec.level = Math.max(rec.level, G.level);
+    P.games[G.kind] = rec;
+    save();
+    $("arena-msg").innerHTML = '<div class="box"><b>Game over</b><p>Score ' + G.score + " · level " + G.level + (isBest ? " · new best!" : " · best " + rec.best) +
+      '</p><div class="actions" style="justify-content:center"><button class="btn primary" id="g-again">Play again</button><button class="btn" id="g-menu">All games</button></div></div>';
+    var gk = G.kind; $("g-again").addEventListener("click", function () { startGame(gk); });
+    $("g-menu").addEventListener("click", function () { endGame(true); renderGames(); });
+  }
+  function endGame(silent) {
+    if (!G) return;
+    cancelAnimationFrame(G.raf);
+    G.over = true;
+    G.items.forEach(function (it) { it.el.remove(); });
+    G.els.forEach(function (el) { el.remove(); });
+    G = null;
+  }
+
+  // Key Breaker: the ball drops toward a lit key; pressing it sends the ball up into that column's bricks.
+  var BREAKER_KEYS = ["asdfjkl;", "qwruiop;", "zxcvnm,.", "asdfghjk", "weruiokl"];
+  function breakerSetup() {
+    var arena = $("arena");
+    G.W = arena.clientWidth; G.H = arena.clientHeight; G.cols = 8; G.colW = G.W / 8;
+    G.ball = { el: mk("ball"), x: 0, y: 40, c: 0, state: "down" };
+    G.paddles = [];
+    for (var c = 0; c < G.cols; c++) {
+      var pd = mk("paddle");
+      pd.style.left = (c * G.colW + 5) + "px"; pd.style.bottom = "12px"; pd.style.width = (G.colW - 10) + "px";
+      G.paddles.push(pd);
+    }
+    breakerLevel();
+  }
+  function mk(cls) { var el = document.createElement("div"); el.className = cls; $("arena").appendChild(el); G.els.push(el); return el; }
+  function breakerLevel() {
+    (G.bricks || []).forEach(function (b) { b.el.remove(); });
+    G.bricks = [];
+    var rows = Math.min(3, 1 + Math.ceil(G.level / 2));
+    for (var r = 0; r < rows; r++) for (var c = 0; c < G.cols; c++) {
+      var el = mk("brick r" + r);
+      el.style.left = (c * G.colW + 4) + "px"; el.style.top = (14 + r * 26) + "px"; el.style.width = (G.colW - 8) + "px";
+      G.bricks.push({ el: el, c: c, r: r, bottom: 14 + r * 26 + 20 });
+    }
+    var keys = BREAKER_KEYS[(G.level - 1) % BREAKER_KEYS.length];
+    G.keys = keys.split("");
+    G.paddles.forEach(function (pd, i) { pd.textContent = G.keys[i].toUpperCase(); });
+    G.speed = 90 + G.level * 22;
+    breakerTarget();
+  }
+  function breakerTarget() {
+    var cols = [];
+    G.bricks.forEach(function (b) { if (cols.indexOf(b.c) === -1) cols.push(b.c); });
+    var b = G.ball;
+    b.c = cols.length ? pick(cols) : rand(G.cols);
+    b.x = b.c * G.colW + G.colW / 2 - 9;
+    b.state = "down";
+    G.paddles.forEach(function (pd, i) { pd.classList.toggle("target", i === b.c); });
+    placeBall();
+  }
+  function placeBall() { G.ball.el.style.transform = "translate(" + G.ball.x + "px," + G.ball.y + "px)"; }
+  function breakerStep(dt, H) {
+    var b = G.ball, padTop = H - 12 - 38 - 18;
+    if (b.state === "down") {
+      b.y += G.speed * dt;
+      if (b.y >= padTop) {
+        G.lives--; gameHud();
+        if (G.lives <= 0) { gameOver(); return; }
+        b.y = 70; breakerTarget(); return;
+      }
+    } else {
+      b.y -= 900 * dt;
+      if (b.y <= b.stopY) {
+        b.y = b.stopY;
+        if (b.hit) {
+          var hit = b.hit;
+          G.bricks.splice(G.bricks.indexOf(hit), 1);
+          hit.el.classList.add("gone");
+          setTimeout(function () { hit.el.remove(); }, 160);
+          addScore(10 * G.level);
+          if (!G.bricks.length) { G.level++; gameHud(); sound.cheer(false); breakerLevel(); return; }
+        }
+        breakerTarget();
+      }
+    }
+    placeBall();
+  }
+  function breakerKey(ch) {
+    var b = G.ball;
+    if (b.state !== "down") return;
+    var want = G.keys[b.c];
+    P.keyHit[want] = (P.keyHit[want] || 0) + 1;
+    if (ch === want) {
+      var inCol = G.bricks.filter(function (x) { return x.c === b.c; }).sort(function (x, y) { return y.r - x.r; });
+      b.hit = inCol[0] || null;
+      b.stopY = b.hit ? b.hit.bottom + 2 : 6;
+      b.state = "up";
+      sound.ok();
+    } else {
+      P.keyErr[want] = (P.keyErr[want] || 0) + 1;
+      G.score = Math.max(0, G.score - 5); gameHud(); sound.bad();
+      var pd = G.paddles[b.c];
+      pd.classList.add("flash"); setTimeout(function () { pd.classList.remove("flash"); }, 200);
+    }
+  }
+
+  // ---------- online save for Users aged 18+ (Google sign-in via Firebase) ----------
+  // Paste the firebaseConfig object from the Firebase console here to switch online save on.
+  var FIREBASE_CONFIG = null;
+  var FB_VER = "12.18.0";
+  var CLOUD = { ready: null, auth: null, db: null, timer: null };
+  function cloudEnabled() { return !!FIREBASE_CONFIG && /^https?:$/.test(location.protocol); }
+  function ageFrom(dob) {
+    var d = new Date(dob + "T00:00:00"), n = new Date(), a = n.getFullYear() - d.getFullYear();
+    if (n.getMonth() < d.getMonth() || (n.getMonth() === d.getMonth() && n.getDate() < d.getDate())) a--;
+    return a;
+  }
+  function isAdultUser(p) { return p && p.type === "user" && p.dob && ageFrom(p.dob) >= 18; }
+  function loadScript(src) {
+    return new Promise(function (res, rej) {
+      var s = document.createElement("script"); s.src = src; s.onload = res;
+      s.onerror = function () { rej(new Error("load")); };
+      document.head.appendChild(s);
+    });
+  }
+  function cloudInit() {
+    if (CLOUD.ready) return CLOUD.ready;
+    var base = "https://www.gstatic.com/firebasejs/" + FB_VER + "/";
+    CLOUD.ready = loadScript(base + "firebase-app-compat.js")
+      .then(function () { return Promise.all([loadScript(base + "firebase-auth-compat.js"), loadScript(base + "firebase-firestore-compat.js")]); })
+      .then(function () {
+        if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+        CLOUD.auth = firebase.auth(); CLOUD.db = firebase.firestore();
+        return new Promise(function (res) { var off = CLOUD.auth.onAuthStateChanged(function () { off(); res(CLOUD); }); });
+      });
+    CLOUD.ready.catch(function () { CLOUD.ready = null; });
+    return CLOUD.ready;
+  }
+  function cloudError(err) {
+    var c = err && err.code || "";
+    if (c === "auth/popup-closed-by-user" || c === "auth/cancelled-popup-request") return "Sign-in was closed before it finished. Try again when you're ready.";
+    if (c === "auth/popup-blocked") return "The browser blocked the Google window. Allow pop-ups for this site and try again.";
+    if (c === "auth/unauthorized-domain") return "Google sign-in isn't allowed on this web address yet. Add it under Authorized domains in Firebase.";
+    if (c === "auth/network-request-failed" || (err && err.message === "load")) return "Couldn't reach Google. Check the internet connection and try again.";
+    return "Online save didn't work this time. Your progress is still saved on this computer.";
+  }
+  function googleSignIn() {
+    return cloudInit().then(function () {
+      var prov = new firebase.auth.GoogleAuthProvider();
+      prov.setCustomParameters({ prompt: "select_account" });
+      return CLOUD.auth.signInWithPopup(prov);
+    }).then(function (r) { return r.user; });
+  }
+  function cloudRef(gid) { return CLOUD.db.collection("users").doc(gid); }
+  // Only the display name, DexiType ID and typing progress go online. Date of birth and gender stay on this computer.
+  function cloudPush() {
+    if (!ME || !ME.gid || !cloudEnabled()) return;
+    clearTimeout(CLOUD.timer);
+    var me = ME, data = P;
+    CLOUD.timer = setTimeout(function () {
+      cloudInit().then(function () {
+        var u = CLOUD.auth.currentUser;
+        if (!u || u.uid !== me.gid) return;
+        return cloudRef(u.uid).set({ name: me.name, uid: me.uid, progress: JSON.parse(JSON.stringify(data)), updated: data.updated || Date.now() });
+      }).catch(function () {});
+    }, 2500);
+  }
+  function cloudPull(me) {
+    if (!me || !me.gid || !cloudEnabled()) return;
+    cloudInit().then(function () {
+      var u = CLOUD.auth.currentUser;
+      if (!u || u.uid !== me.gid) return;
+      return cloudRef(u.uid).get().then(function (snap) {
+        if (!snap.exists) { cloudPush(); return; }
+        var d = snap.data();
+        if (d.progress && (d.updated || 0) > (P.updated || 0) && ME && ME.id === me.id) {
+          P = d.progress; P.keyHit = P.keyHit || {}; P.games = P.games || {};
+          lsSet(storeKey(), JSON.stringify(P));
+          show(view === "welcome" ? "home" : view === "practice" || view === "guide" ? "course" : view);
+        } else cloudPush();
+      });
+    }).catch(function () {});
+  }
+  // Link an existing adult User on this computer to a Google account.
+  function linkProfile(id, msgEl) {
+    var p = getProfiles().filter(function (x) { return x.id === id; })[0];
+    if (!isAdultUser(p)) return;
+    msgEl.textContent = "Opening Google sign-in...";
+    googleSignIn().then(function (u) {
+      return cloudRef(u.uid).get().then(function (snap) {
+        var list = getProfiles(), prof = list.filter(function (x) { return x.id === id; })[0];
+        var other = list.filter(function (x) { return x.gid === u.uid && x.id !== id; })[0];
+        if (other) { msgEl.textContent = "That Google account is already used by " + other.name + " on this computer."; return CLOUD.auth.signOut(); }
+        prof.gid = u.uid; prof.email = u.email || "";
+        if (snap.exists && snap.data().uid) prof.uid = snap.data().uid;
+        setProfiles(list);
+        msgEl.textContent = "";
+        useProfile(id);
+      });
+    }).catch(function (err) { msgEl.textContent = cloudError(err); });
+  }
+  // Sign in on a new computer: bring the account's progress here.
+  function signInExisting(msgEl) {
+    msgEl.textContent = "Opening Google sign-in...";
+    googleSignIn().then(function (u) {
+      return cloudRef(u.uid).get().then(function (snap) {
+        var list = getProfiles(), have = list.filter(function (x) { return x.gid === u.uid; })[0];
+        if (have) { msgEl.textContent = ""; useProfile(have.id); return; }
+        if (!snap.exists) {
+          msgEl.textContent = "No DexiType progress is saved for " + (u.email || "that account") + " yet. Choose User below to create your profile, then tick Save my progress online.";
+          return CLOUD.auth.signOut();
+        }
+        var d = snap.data();
+        var prof = { id: "g" + u.uid.slice(0, 12).toLowerCase(), type: "user", name: d.name || u.displayName || "User", uid: d.uid || newUid(), gid: u.uid, email: u.email || "", adultConfirmed: true, created: Date.now() };
+        list.push(prof); setProfiles(list);
+        lsSet(storeKey(prof.id), JSON.stringify(d.progress || fresh()));
+        msgEl.textContent = "";
+        useProfile(prof.id);
+      });
+    }).catch(function (err) { msgEl.textContent = cloudError(err); });
+  }
+  function cloudSignOut(id) {
+    var list = getProfiles(), p = list.filter(function (x) { return x.id === id; })[0];
+    // Signing out removes this person from the computer; their progress stays online.
+    setProfiles(list.filter(function (x) { return x.id !== id; }));
+    lsDel(storeKey(id));
+    if (ME && ME.id === id) { ME = null; lsDel(ACTIVE_KEY); P = fresh(); }
+    if (CLOUD.auth && p && CLOUD.auth.currentUser && CLOUD.auth.currentUser.uid === p.gid) CLOUD.auth.signOut();
+    show("welcome");
+  }
+  function cloudDelete(id, msgEl) {
+    var p = getProfiles().filter(function (x) { return x.id === id; })[0];
+    if (!p || !p.gid) return;
+    msgEl.textContent = "Deleting your online data...";
+    cloudInit().then(function () {
+      var u = CLOUD.auth.currentUser;
+      var ready = u && u.uid === p.gid ? Promise.resolve(u) : googleSignIn();
+      return ready.then(function (usr) {
+        if (usr.uid !== p.gid) throw { code: "wrong-account" };
+        return cloudRef(usr.uid).delete();
+      });
+    }).then(function () {
+      var list = getProfiles(), prof = list.filter(function (x) { return x.id === id; })[0];
+      delete prof.gid; delete prof.email;
+      setProfiles(list);
+      if (ME && ME.id === id) ME = prof;
+      if (CLOUD.auth) CLOUD.auth.signOut();
+      pendingDelete = null;
+      renderWelcome();
+      $("cloud-msg-" + id) && ($("cloud-msg-" + id).textContent = "Your online data is deleted. Your progress is still on this computer.");
+    }).catch(function (err) { msgEl.textContent = err && err.code === "wrong-account" ? "Sign in with the same Google account to delete its data." : cloudError(err); });
+  }
+
+  // ---------- welcome, profiles and backup ----------
+  var WHO = null, pendingDelete = null;
+  function initials(name) { return name.trim().split(/\s+/).slice(0, 2).map(function (w) { return w.charAt(0).toUpperCase(); }).join("") || "?"; }
+  function profileLine(p) {
+    return p.type === "student"
+      ? "Student · Class " + esc(p.cls) + " · Roll " + esc(p.roll)
+      : "User · ID " + esc(p.uid) + (p.gid ? " · Saved online" + (p.email ? " as " + esc(p.email) : "") : "");
+  }
+  function newUid() {
+    var taken = getProfiles().map(function (p) { return p.uid; }), id;
+    var A = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    do { id = "DT-"; for (var i = 0; i < 6; i++) id += A.charAt(rand(A.length)); } while (taken.indexOf(id) > -1);
+    return id;
+  }
+  function paintProfileChip() {
+    var c = $("profile-chip");
+    c.hidden = !ME;
+    if (ME) {
+      c.innerHTML = "<i>" + esc(initials(ME.name)) + "</i><span>" + esc(ME.name.split(" ")[0]) + "</span>";
+      c.title = ME.name + ". Switch or add a person";
+      c.setAttribute("aria-label", "Signed in as " + ME.name + ". Switch or add a person.");
+    }
+    var w = $("progress-who");
+    if (w && ME) w.innerHTML = "Progress for <b>" + esc(ME.name) + "</b> · " + profileLine(ME) + ". Saved on this computer only.";
+  }
+  $("profile-chip").addEventListener("click", function () { WHO = null; show("welcome"); });
+
+  function renderWelcome() {
+    var list = getProfiles();
+    $("who-form").hidden = !WHO;
+    $("who-start").hidden = !!WHO;
+    $("who-h").textContent = list.length ? "Add someone new" : "Welcome to DexiType";
+    var ex = $("who-existing");
+    if (list.length && !WHO) {
+      ex.innerHTML = "<h1>" + (ME ? "Switch person" : "Who is typing?") + '</h1><p class="lede">People who practise on this computer. Choose yours to continue.</p><div class="pf-list">' +
+        list.map(function (p) {
+          var confirm = pendingDelete === p.id;
+          return '<div class="pf' + (ME && ME.id === p.id ? " on" : "") + '"><span class="pf-av">' + esc(initials(p.name)) + '</span><div class="pf-main"><b>' + esc(p.name) + "</b><span>" + profileLine(p) + "</span></div>" +
+            '<div class="actions">' + (confirm
+              ? '<span class="form-note">Delete ' + esc(p.name) + ' and all their progress?</span><button class="btn danger" data-del-yes="' + p.id + '">Delete</button><button class="btn" data-del-no="1">Cancel</button>'
+              : (ME && ME.id === p.id ? '<button class="btn primary" data-use="' + p.id + '">Continue</button>' : '<button class="btn primary" data-use="' + p.id + '">This is me</button>') +
+                (p.gid ? '<button class="btn" data-signout="' + p.id + '">Sign out</button><button class="btn danger" data-cloud-del="' + p.id + '">Delete online data</button>'
+                  : (cloudEnabled() && isAdultUser(p) ? '<button class="btn" data-link="' + p.id + '">Save online with Google</button>' : "") +
+                    '<button class="btn" data-del="' + p.id + '">Delete</button>')) + '</div><p class="form-note pf-msg" id="cloud-msg-' + p.id + '"></p></div>';
+        }).join("") + "</div>";
+    } else ex.innerHTML = "";
+    ex.querySelectorAll("[data-use]").forEach(function (b) { b.addEventListener("click", function () { useProfile(b.dataset.use); }); });
+    ex.querySelectorAll("[data-del]").forEach(function (b) { b.addEventListener("click", function () { pendingDelete = b.dataset.del; renderWelcome(); }); });
+    ex.querySelectorAll("[data-del-no]").forEach(function (b) { b.addEventListener("click", function () { pendingDelete = null; renderWelcome(); }); });
+    ex.querySelectorAll("[data-del-yes]").forEach(function (b) { b.addEventListener("click", function () { deleteProfile(b.dataset.delYes); }); });
+    ex.querySelectorAll("[data-link]").forEach(function (b) { b.addEventListener("click", function () { linkProfile(b.dataset.link, $("cloud-msg-" + b.dataset.link)); }); });
+    ex.querySelectorAll("[data-signout]").forEach(function (b) { b.addEventListener("click", function () { cloudSignOut(b.dataset.signout); }); });
+    ex.querySelectorAll("[data-cloud-del]").forEach(function (b) { b.addEventListener("click", function () { cloudDelete(b.dataset.cloudDel, $("cloud-msg-" + b.dataset.cloudDel)); }); });
+    $("who-signin").hidden = !cloudEnabled() || !!WHO;
+    renderBackup(list);
+  }
+  document.querySelectorAll("[data-who]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      WHO = b.dataset.who;
+      var f = $("who-form");
+      f.reset();
+      f.classList.toggle("as-student", WHO === "student");
+      f.classList.toggle("as-user", WHO === "user");
+      $("wf-eyebrow").textContent = WHO === "student" ? "Student" : "User";
+      $("wf-title").textContent = WHO === "student" ? "Tell us about yourself" : "Create your profile";
+      $("f-uid").textContent = newUid();
+      $("f-cloud-box").hidden = !(WHO === "user" && cloudEnabled());
+      $("f-cloud").checked = false;
+      $("f-minor").hidden = true;
+      $("f-err").textContent = "";
+      f.querySelectorAll("[aria-invalid]").forEach(function (el) { el.removeAttribute("aria-invalid"); });
+      $("f-dob").max = new Date().toISOString().slice(0, 10);
+      $("f-dob").min = "1920-01-01";
+      renderWelcome();
+      $("f-name").focus();
+    });
+  });
+  $("wf-back").addEventListener("click", function () { WHO = null; renderWelcome(); });
+  $("f-dob").addEventListener("change", function () {
+    if (WHO !== "user" || !cloudEnabled()) return;
+    var v = $("f-dob").value, minor = v && ageFrom(v) < 18;
+    $("f-cloud-box").hidden = !!minor;
+    if (minor) $("f-cloud").checked = false;
+    $("f-minor").hidden = !minor;
+  });
+  $("who-google").addEventListener("click", function () { signInExisting($("who-google-msg")); });
+  ["input", "change"].forEach(function (ev) {
+    $("who-form").addEventListener(ev, function (e) {
+      if (e.target.hasAttribute && e.target.hasAttribute("aria-invalid")) e.target.removeAttribute("aria-invalid");
+      if (!$("who-form").querySelector("[aria-invalid]")) $("f-err").textContent = "";
+    });
+  });
+  $("who-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var f = $("who-form"), bad = [];
+    f.querySelectorAll("[aria-invalid]").forEach(function (el) { el.removeAttribute("aria-invalid"); });
+    function need(id, ok, msg) { if (!ok) { $(id).setAttribute("aria-invalid", "true"); bad.push(msg); } }
+    var name = $("f-name").value.trim().replace(/\s+/g, " ");
+    var dob = $("f-dob").value, today = new Date().toISOString().slice(0, 10);
+    need("f-name", name.length >= 2, "your full name");
+    if (WHO === "student") {
+      need("f-class", $("f-class").value.trim().length > 0, "your class");
+      need("f-roll", $("f-roll").value.trim().length > 0, "your roll number");
+    }
+    need("f-gender", !!$("f-gender").value, "your gender");
+    need("f-dob", !!dob && dob >= "1920-01-01" && dob <= today, "a valid date of birth");
+    if (bad.length) { $("f-err").textContent = "Please add " + bad.join(", ") + "."; return; }
+    var p = { id: "p" + Date.now().toString(36) + rand(1e6).toString(36), type: WHO, name: name, gender: $("f-gender").value, dob: dob, created: Date.now() };
+    if (WHO === "student") { p.cls = $("f-class").value.trim(); p.roll = $("f-roll").value.trim(); }
+    else p.uid = $("f-uid").textContent;
+    var list = getProfiles();
+    // Progress saved before profiles existed goes to the first person created on this computer.
+    var legacy = !list.length && lsGet(LEGACY_KEY);
+    list.push(p);
+    if (!setProfiles(list)) { $("f-err").textContent = "This browser is blocking saved data, so your progress can't be kept. Turn off private browsing and try again."; return; }
+    if (legacy) { lsSet(storeKey(p.id), legacy); lsDel(LEGACY_KEY); }
+    var wantCloud = WHO === "user" && cloudEnabled() && $("f-cloud").checked;
+    WHO = null;
+    if (wantCloud && ageFrom(dob) < 18) {
+      useProfile(p.id);
+      sound.step();
+      return;
+    }
+    if (wantCloud) {
+      p.adultConfirmed = true; setProfiles(getProfiles().map(function (x) { return x.id === p.id ? p : x; }));
+      show("welcome");
+      linkProfile(p.id, $("cloud-msg-" + p.id));
+      return;
+    }
+    useProfile(p.id);
+    sound.step();
+  });
+  function useProfile(id) {
+    var p = getProfiles().filter(function (x) { return x.id === id; })[0];
+    if (!p) return;
+    ME = p; lsSet(ACTIVE_KEY, id);
+    P = load();
+    pendingDelete = null;
+    if (ME.gid) cloudPull(ME);
+    show(P.history.length ? "course" : "home");
+  }
+  function deleteProfile(id) {
+    setProfiles(getProfiles().filter(function (x) { return x.id !== id; }));
+    lsDel(storeKey(id));
+    if (ME && ME.id === id) { ME = null; lsDel(ACTIVE_KEY); P = fresh(); }
+    pendingDelete = null;
+    show("welcome");
+  }
+
+  function renderBackup(list) {
+    var el = $("backup");
+    if (!list.length) { el.innerHTML = ""; return; }
+    el.innerHTML = "<h3>Backup</h3><p>Progress lives in this browser on this computer. Save a backup file now and then, so a cleaned-up computer doesn't lose it. You can restore it here, or on a new computer.</p>" +
+      '<div class="actions"><a class="btn" id="bk-save" download="dexitype-backup.json" href="#">Save backup file</a>' +
+      '<label class="btn" for="bk-file">Restore from file</label><input type="file" id="bk-file" accept=".json,application/json" hidden></div><p class="backup-msg" id="bk-msg"></p>';
+    $("bk-save").addEventListener("click", function () {
+      var data = {};
+      getProfiles().forEach(function (p) { try { data[p.id] = JSON.parse(lsGet(storeKey(p.id))) || fresh(); } catch (e) { data[p.id] = fresh(); } });
+      var blob = new Blob([JSON.stringify({ app: "dexitype", version: 1, saved: new Date().toISOString(), profiles: getProfiles(), data: data })], { type: "application/json" });
+      this.href = URL.createObjectURL(blob);
+      $("bk-msg").textContent = "Backup file prepared. If nothing downloaded, open DexiType from its own web address or file to save backups.";
+    });
+    $("bk-file").addEventListener("change", function (e) {
+      var file = e.target.files && e.target.files[0];
+      if (!file) return;
+      var r = new FileReader();
+      r.onload = function () {
+        try {
+          var b = JSON.parse(r.result);
+          if (!b || (b.app !== "dexitype" && b.app !== "keycraft") || !Array.isArray(b.profiles)) throw new Error("not a backup");
+          var list = getProfiles(), n = 0;
+          b.profiles.forEach(function (p) {
+            if (!p || !p.id || !p.name) return;
+            list = list.filter(function (x) { return x.id !== p.id; }).concat([p]);
+            if (b.data && b.data[p.id]) lsSet(storeKey(p.id), JSON.stringify(b.data[p.id]));
+            n++;
+          });
+          setProfiles(list);
+          if (ME) P = load();
+          renderWelcome();
+          $("bk-msg").textContent = "Restored " + n + " " + (n === 1 ? "person" : "people") + " from the backup.";
+        } catch (err) { $("bk-msg").textContent = "That file isn't a DexiType backup. Choose the file named dexitype-backup.json."; }
+      };
+      r.readAsText(file);
+    });
+  }
+
+  // ---------- boot ----------
+  var startView = !ME ? "welcome" : P.history.length ? "course" : "home";
+  try { var sv = localStorage.getItem("keystone.view"); if (["home", "test", "progress", "games", "tools"].indexOf(sv) > -1) startView = sv; } catch (e) {}
+  show(startView);
+})();
+</script>
+</body></html>
