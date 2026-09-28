@@ -2514,7 +2514,176 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     }
   };
 
+  // ----- Build a House -----
+  // First wrong key on a brick wobbles the top brick; a second wrong key knocks it off.
+  var HOUSE_ROWS = [4, 3, 4, 3];
+  var BuildHouse = {
+    setup: function () {
+      G.hi = topStage();
+      G.slots = [];
+      HOUSE_ROWS.forEach(function (n, r) { for (var i = 0; i < n; i++) G.slots.push({ row: r, i: i, n: n, filled: false }); });
+      for (var t = 0; t < 3; t++) G.slots.push({ row: 4, i: t, roof: true, filled: false });
+      G.fx = []; G.drop = null; G.wobble = 0; G.mist = 0; G.clean = true; G.level = 1; G.lives = 0;
+      BuildHouse.next();
+    },
+    nextSlot: function () { for (var i = 0; i < G.slots.length; i++) if (!G.slots[i].filled) return i; return -1; },
+    topSlot: function () { for (var i = G.slots.length - 1; i >= 0; i--) if (G.slots[i].filled) return i; return -1; },
+    next: function () {
+      var si = BuildHouse.nextSlot();
+      if (si < 0) return;
+      var roof = G.slots[si].roof, hi = G.hi;
+      if (roof) G.word = hi < 4 ? pick(HOME.filter(function (w) { return w.length <= 5; })) : poolWord(3, 5, hi);
+      else G.word = hi < 4 ? pick(poolLetters(hi).split("")) : poolWord(3, 4, hi);
+      G.pos = 0; G.mist = 0; G.clean = true; G.err = false;
+    },
+    geo: function (W, H) {
+      var bw = Math.max(40, Math.min(92, W * 0.085)), bh = Math.round(bw * 0.46), groundY = H - 34;
+      var left = Math.max(W * 0.34, W * 0.58 - bw * 2);
+      return { bw: bw, bh: bh, groundY: groundY, left: left };
+    },
+    slotRect: function (s, g) {
+      if (s.roof) return null;
+      var off = s.n === 3 ? g.bw / 2 : 0;
+      return { x: g.left + off + s.i * g.bw, y: g.groundY - (s.row + 1) * g.bh, w: g.bw, h: g.bh };
+    },
+    roofPoly: function (g) {
+      var baseY = g.groundY - 4 * g.bh, L = g.left - g.bw * 0.3, R = g.left + g.bw * 4.3, apexY = baseY - g.bh * 2.6;
+      return { L: L, R: R, baseY: baseY, apexY: apexY, mid: (L + R) / 2 };
+    },
+    hud: function () {
+      var si = BuildHouse.nextSlot();
+      G.level = si < 0 ? 5 : G.slots[si].row + 1;
+      G.lives = G.slots.filter(function (s) { return s.filled; }).length;
+    },
+    key: function (ch) {
+      if (G.drop || G.finished) return null;
+      if (keyMatches(ch, G.word[G.pos])) {
+        G.pos++; G.err = false;
+        if (G.pos >= G.word.length) {
+          var si = BuildHouse.nextSlot();
+          G.drop = { si: si, t: 0 };
+          G.score += 10 + (G.clean ? 5 : 0);
+        }
+        return true;
+      }
+      G.err = true; G.clean = false; G.mist++;
+      var top = BuildHouse.topSlot();
+      if (top >= 0) {
+        if (G.mist % 2 === 1) { G.wobble = 0.6; G.wobbleSlot = top; }
+        else {
+          var g = BuildHouse.geo(G.W, G.H), s = G.slots[top], r = BuildHouse.slotRect(s, g) || BuildHouse.roofTileRect(top, g);
+          s.filled = false; G.wobble = 0;
+          G.fx.push({ x: r.x, y: r.y, w: r.w, h: r.h, vx: (Math.random() < 0.5 ? -1 : 1) * 120, vy: -160, rot: 0, t: 0, roof: !!s.roof });
+          G.score = Math.max(0, G.score - 10);
+        }
+      }
+      return false;
+    },
+    roofTileRect: function (idx, g) {
+      var rp = BuildHouse.roofPoly(g), w3 = (rp.R - rp.L) / 3, i = G.slots[idx].i;
+      return { x: rp.L + i * w3, y: rp.apexY + (rp.baseY - rp.apexY) * 0.35, w: w3, h: g.bh };
+    },
+    step: function (dt) {
+      if (G.wobble > 0) G.wobble = Math.max(0, G.wobble - dt);
+      G.fx.forEach(function (f) { f.t += dt; f.vy += 700 * dt; f.x += f.vx * dt; f.y += f.vy * dt; f.rot += dt * 5; });
+      G.fx = G.fx.filter(function (f) { return f.t < 1.6; });
+      if (G.drop) {
+        G.drop.t += dt;
+        if (G.drop.t >= 0.35) {
+          G.slots[G.drop.si].filled = true; G.drop = null; sound.step();
+          BuildHouse.hud(); gameHud();
+          if (BuildHouse.nextSlot() < 0) { G.finished = true; BuildHouse.finish(); return; }
+          BuildHouse.next();
+        }
+      }
+    },
+    finish: function () {
+      var acc = modAcc();
+      G.score += Math.round(acc * 2); gameHud();
+      var stars = acc >= 95 ? 3 : acc >= 85 ? 2 : 1;
+      G.drawAfter = true;
+      gameFinish("House finished!", stars + (stars === 1 ? " star" : " stars") + " · " + acc + "% accuracy", true);
+    },
+    draw: function (cx, W, H) {
+      var g = BuildHouse.geo(W, H);
+      cx.fillStyle = "#bfe6fb"; cx.fillRect(0, 0, W, H);
+      cx.fillStyle = "#ffd23f"; cx.beginPath(); cx.arc(W * 0.8, 96, 26, 0, Math.PI * 2); cx.fill();
+      cx.fillStyle = "#6cbf57"; cx.fillRect(0, g.groundY, W, H - g.groundY);
+      // crane
+      var mastX = Math.max(26, g.left - g.bw * 2.4), beamY = 34;
+      cx.fillStyle = "#f2b705"; cx.fillRect(mastX - 7, beamY, 14, g.groundY - beamY);
+      cx.fillRect(mastX - 30, beamY - 8, g.left + g.bw * 4 - mastX + 50, 12);
+      cx.strokeStyle = "#b88a00"; cx.lineWidth = 2;
+      for (var yy = beamY + 16; yy < g.groundY - 10; yy += 26) { cx.beginPath(); cx.moveTo(mastX - 7, yy); cx.lineTo(mastX + 7, yy + 26); cx.stroke(); }
+      function brick(x, y, w, h, text, rot) {
+        cx.save(); cx.translate(x + w / 2, y + h / 2); if (rot) cx.rotate(rot);
+        cx.fillStyle = "#c2412d"; cx.strokeStyle = "#7a2518"; cx.lineWidth = 2;
+        cx.fillRect(-w / 2 + 1, -h / 2 + 1, w - 2, h - 2); cx.strokeRect(-w / 2 + 1, -h / 2 + 1, w - 2, h - 2);
+        if (text) { cx.fillStyle = "#fff"; cx.font = "700 " + Math.round(h * 0.55) + "px " + MONO; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(text, 0, 1); }
+        cx.restore();
+      }
+      var ns = BuildHouse.nextSlot();
+      G.slots.forEach(function (s, idx) {
+        var r = BuildHouse.slotRect(s, g);
+        if (!r) return;
+        if (s.filled) {
+          var rot = G.wobble > 0 && idx === G.wobbleSlot ? Math.sin(G.wobble * 40) * 0.12 : 0;
+          brick(r.x, r.y, r.w, r.h, "", rot);
+        } else if (idx === ns && !G.drop) {
+          cx.setLineDash([6, 5]); cx.strokeStyle = "#1d232b"; cx.lineWidth = 1.5; cx.strokeRect(r.x + 2, r.y + 2, r.w - 4, r.h - 4); cx.setLineDash([]);
+        }
+      });
+      // roof: a triangle cut into 3 tiles
+      var rp = BuildHouse.roofPoly(g), w3 = (rp.R - rp.L) / 3;
+      for (var t = 0; t < 3; t++) {
+        var idx = 14 + t, s = G.slots[idx];
+        cx.save(); cx.beginPath(); cx.rect(rp.L + t * w3, rp.apexY - 2, w3, rp.baseY - rp.apexY + 4); cx.clip();
+        cx.beginPath(); cx.moveTo(rp.L, rp.baseY); cx.lineTo(rp.mid, rp.apexY); cx.lineTo(rp.R, rp.baseY); cx.closePath();
+        if (s.filled) {
+          var wob = G.wobble > 0 && idx === G.wobbleSlot;
+          if (wob) { cx.translate(0, Math.sin(G.wobble * 40) * 3); }
+          cx.fillStyle = "#8e2b1f"; cx.fill(); cx.strokeStyle = "#5c1a12"; cx.lineWidth = 2; cx.stroke();
+        } else if (idx === ns && !G.drop) { cx.setLineDash([6, 5]); cx.strokeStyle = "#1d232b"; cx.lineWidth = 1.5; cx.stroke(); cx.setLineDash([]); }
+        cx.restore();
+        if (s.filled) { cx.strokeStyle = "#5c1a12"; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(rp.L + t * w3, rp.baseY); cx.lineTo(rp.L + t * w3, rp.baseY - 8); cx.stroke(); }
+      }
+      // hanging or dropping brick
+      if (!G.finished) {
+        var target = ns >= 0 ? (BuildHouse.slotRect(G.slots[ns], g) || BuildHouse.roofTileRect(ns, g)) : null;
+        var hookX = target ? target.x + target.w / 2 : g.left + g.bw * 2, hangY = beamY + 70;
+        var bwid = g.bw, bhei = g.bh;
+        if (G.drop) {
+          var tr = BuildHouse.slotRect(G.slots[G.drop.si], g) || BuildHouse.roofTileRect(G.drop.si, g), k = Math.min(1, G.drop.t / 0.35);
+          brick(tr.x, hangY + (tr.y - hangY) * k * k, tr.w, tr.h, "");
+        } else if (target) {
+          cx.strokeStyle = "#333"; cx.lineWidth = 2; cx.beginPath(); cx.moveTo(hookX, beamY + 4); cx.lineTo(hookX, hangY); cx.stroke();
+          var bw2 = Math.max(bwid, G.word.length * bhei * 0.42 + 16);
+          brick(hookX - bw2 / 2, hangY, bw2, bhei, G.word);
+        }
+      }
+      G.fx.forEach(function (f) {
+        cx.save(); cx.globalAlpha = Math.max(0, 1 - f.t / 1.6);
+        if (f.roof) { cx.translate(f.x + f.w / 2, f.y + f.h / 2); cx.rotate(f.rot); cx.fillStyle = "#8e2b1f"; cx.fillRect(-f.w / 2, -f.h / 2, f.w, f.h); cx.restore(); return; }
+        cx.restore(); cx.save(); cx.globalAlpha = Math.max(0, 1 - f.t / 1.6); brick(f.x, f.y, f.w, f.h, "", f.rot); cx.restore();
+      });
+      if (G.wobble > 0) { cx.font = "800 22px " + SANS; cx.fillStyle = "#c62828"; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText("wobble!", g.left + g.bw * 2, rp.apexY - 20); }
+      // word box, top right
+      var tag = null;
+      if (!G.finished && G.word) {
+        cx.font = "600 22px " + MONO; var tw = G.word.length * cx.measureText("M").width + 16;
+        tag = drawWordTag(cx, G.word, G.pos, W - 16 - tw, 34, { align: "left", err: G.err, size: 22 });
+      }
+      cx.font = "600 14px " + SANS; cx.fillStyle = "#1d232b"; cx.textAlign = "left"; cx.textBaseline = "top";
+      var fl = G.level;
+      cx.fillText("Floor " + fl + " of 5 · Bricks " + G.lives + " · Accuracy " + modAcc() + "%", 14, 12);
+    }
+  };
+
   function artSvg(inner) { return '<div class="game-art"><svg viewBox="0 0 260 110" preserveAspectRatio="xMidYMid slice">' + inner + "</svg></div>"; }
+  GAMES.house = { title: "Build a House", unlock: 1, lives: 0, livesLabel: "Bricks", levelLabel: "Floor", mod: BuildHouse,
+    intro: "Type the letter or word on the brick to lay it. One mistake wobbles the top brick; a second knocks it off.",
+    blurb: "Lay bricks by typing them, floor by floor, then finish the roof. Careful: two mistakes knock a brick off.",
+    art: artSvg('<rect width="260" height="110" fill="#bfe6fb"/><rect y="94" width="260" height="16" fill="#6cbf57"/><circle cx="210" cy="24" r="12" fill="#ffd23f"/><rect x="30" y="14" width="8" height="80" fill="#f2b705"/><rect x="24" y="12" width="150" height="6" fill="#f2b705"/><g fill="#c2412d" stroke="#7a2518" stroke-width="1.5"><rect x="100" y="80" width="28" height="13"/><rect x="128" y="80" width="28" height="13"/><rect x="156" y="80" width="28" height="13"/><rect x="184" y="80" width="28" height="13"/><rect x="114" y="67" width="28" height="13"/><rect x="142" y="67" width="28" height="13"/></g><rect x="170" y="67" width="28" height="13" fill="none" stroke="#1d232b" stroke-dasharray="4 3"/><rect x="136" y="36" width="30" height="13" fill="#c2412d"/><path d="M151 18V36" stroke="#333"/>') };
   GAMES.ghost = { title: "Ghost Race", unlock: 5, lives: 100, livesLabel: "Accuracy", levelLabel: "WPM", mod: GhostRace,
     intro: "Type the sentence to drive your car to the flag. The see-through car is your best run so far.",
     blurb: "Race your own best run. Your car moves with every correct letter; beat the ghost to the flag.",
