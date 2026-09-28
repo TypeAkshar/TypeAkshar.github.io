@@ -929,12 +929,13 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
 
   // ---------- keyboard basics (guided lessons) ----------
   function K(s) { return s.split(""); }
+  var TASK_KEYS = 40; // a Basics practice task ends after this many correct keys
   var BASICS = (function () {
     function upTo(fn, chars) { var s = ""; while (s.length < chars) s += (s ? " " : "") + fn(); return s; }
     function pickRun(list, n) { var out = []; for (var i = 0; i < n; i++) out.push(pick(list)); return out.join(" "); }
     function task(id, title, desc, gen, pass) {
-      return { id: id, kind: "Practice", title: title, desc: desc, seconds: 120, strict: true, calm: true,
-        pass: pass || { wpm: 0, acc: 90, minKeys: 60 }, gen: function () { return upTo(gen, 1200); } };
+      return { id: id, kind: "Practice", title: title, desc: desc, seconds: 0, goal: TASK_KEYS, strict: true, calm: true,
+        pass: pass || { wpm: 0, acc: 90, minKeys: TASK_KEYS }, gen: function () { return upTo(gen, 1200); } };
     }
     var HOME_BITS = ["asdf", "jkl;", "fdsa", ";lkj", "fj", "dk", "sl", "a;", "ff", "jj", "dd", "kk", "fjfj", "dkdk", "slsl", "asdf jkl;"];
     var LEFT = "qwertasdfgzxcvb", RIGHT = "yuiophjkl;nm,./";
@@ -957,7 +958,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
           { type: "keys", title: "All eight fingers", body: "<p>Keep every finger on its home key and press each one in turn.</p>", keys: K("asdf jkl; asdf jkl;") },
           { type: "keys", title: "Practice round", body: "<p>Mixed home row keys. Keep your fingers resting on the home row between keys.</p>", gen: function () { return pepper(20, "asdfjkl;"); } }
         ] },
-        task("g1a", "Home row drill", "Two minutes of home row keys. Only the right key moves you on.", function () { return pickRun(HOME_BITS, 6); }),
+        task("g1a", "Home row drill", "Home row keys. Only the right key moves you on.", function () { return pickRun(HOME_BITS, 6); }),
         task("g1b", "Home row with Space", "Home row groups with Space between them, using your thumb.", function () { return keyDrill("asdfjkl;", 6); }),
 
         { id: "g2", kind: "Guide", title: "Left half, right half", desc: "Which hand types which side of the keyboard.", steps: [
@@ -996,8 +997,8 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
           } }
         ] },
         task("g4a", "Words and spaces", "Home row words with one Space between each.", function () { return wordsFrom("asdfghjkl", 8); }),
-        { id: "g4b", kind: "Practice", title: "Fix it with Backspace", desc: "Wrong keys now move you on. Press Backspace to fix each mistake before you continue.", seconds: 120, strict: false, calm: true,
-          pass: { wpm: 0, acc: 85, minKeys: 60 }, gen: function () { var s = ""; while (s.length < 1200) s += (s ? " " : "") + wordsFrom("asdfghjkl", 8); return s; } },
+        { id: "g4b", kind: "Practice", title: "Fix it with Backspace", desc: "Wrong keys now move you on. Press Backspace to fix each mistake before you continue.", seconds: 0, goal: TASK_KEYS, strict: false, calm: true,
+          pass: { wpm: 0, acc: 85, minKeys: TASK_KEYS }, gen: function () { var s = ""; while (s.length < 1200) s += (s ? " " : "") + wordsFrom("asdfghjkl", 8); return s; } },
 
         { id: "g5", kind: "Guide", title: "Shift and capital letters", desc: "Capitals, symbols, and which Shift key to use.", steps: [
           { type: "read", title: "How Shift works", body: "<p>Hold <b>Shift</b> and press a letter to type a capital. Use the Shift key on the <b>opposite hand</b> from the letter: the right Shift for a left-hand letter, the left Shift for a right-hand letter.</p><p>Hold Shift down with your pinky, press the letter with the other hand, then let go of both. Shift also types the upper symbol on number and punctuation keys, such as ! and ?.</p><p><b>Caps Lock</b> turns every letter into a capital until you press it again. Keep it off while you practise.</p>" },
@@ -1303,7 +1304,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       : '<div class="best"><small>Best</small>&mdash;</div>';
     var label = r && r.passed ? "Again" : r ? "Retry" : "Start";
     return '<div class="ex' + (exam ? " exam" : "") + '">' +
-      '<div class="kind">' + e.kind + (e.seconds ? " · " + fmtSec(e.seconds) : "") + "</div>" +
+      '<div class="kind">' + e.kind + (e.seconds ? " · " + fmtSec(e.seconds) : e.goal ? " · " + e.goal + " keys" : "") + "</div>" +
       '<div class="main"><div class="title">' + esc(e.title) + (r && r.passed ? ' <span class="chip good">' + (e.steps ? "Done" : "Passed") + "</span>" : "") + '</div><div class="desc">' + esc(e.desc) + "</div></div>" +
       (e.steps ? '<div class="target"><small>Steps</small>' + e.steps.length + " steps</div>" : '<div class="target"><small>Target</small>' + (e.pass.wpm ? e.pass.wpm + " wpm · " : "") + e.pass.acc + "%" + (e.pass.wpm ? "" : " accuracy") + "</div>") + best +
       '<div class="go"><button class="btn' + (open && !(r && r.passed) ? " primary" : "") + '" data-start="' + e.id + '"' + (open ? "" : " disabled") + ">" + label + "</button></div></div>";
@@ -1383,7 +1384,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
   var S = null;
   function startExercise(ex) {
     if (ex.steps) { startGuide(ex); return; }
-    startSession({ kind: "course", ex: ex, title: ex.title, label: STAGES[ex.stage].name + " · " + ex.kind, desc: ex.desc, seconds: ex.seconds || 0, strict: !!ex.strict, calm: !!ex.calm, pass: ex.pass, gen: ex.gen });
+    startSession({ kind: "course", ex: ex, title: ex.title, label: STAGES[ex.stage].name + " · " + ex.kind, desc: ex.desc, seconds: ex.seconds || 0, goal: ex.goal || 0, strict: !!ex.strict, calm: !!ex.calm, pass: ex.pass, gen: ex.gen });
   }
   var SRC_NAME = { words: "Common words", stories: "Stories", facts: "Facts", numbers: "Numbers and symbols" };
   function testText(src, sec) {
@@ -1428,7 +1429,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     show("practice");
     $("p-title").textContent = ctx.title;
     $("p-kind").textContent = ctx.label;
-    $("p-desc").textContent = ctx.desc + (ctx.strict ? " Wrong keys don't advance." : "");
+    $("p-desc").textContent = ctx.desc + (ctx.strict ? " Wrong keys don't advance." : "") + (ctx.goal ? " Finish " + ctx.goal + " correct keys." : "");
     $("s-target-box").hidden = !ctx.pass;
     if (ctx.pass) $("s-target").textContent = ctx.pass.wpm + " · " + ctx.pass.acc + "%";
     $("s-time-l").textContent = ctx.seconds ? "Left" : "Time";
@@ -1475,7 +1476,8 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
   function fmtClock(s) { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2); }
   function updateStats() {
     var c = calc();
-    if (S.ctx.calm && S.ctx.seconds) $("calm-fill").style.width = Math.min(100, c.sec / S.ctx.seconds * 100) + "%";
+    if (S.ctx.calm && S.ctx.goal) $("calm-fill").style.width = Math.min(100, S.correct / S.ctx.goal * 100) + "%";
+    else if (S.ctx.calm && S.ctx.seconds) $("calm-fill").style.width = Math.min(100, c.sec / S.ctx.seconds * 100) + "%";
     $("s-wpm").textContent = c.wpm;
     $("s-acc").textContent = (S.keystrokes ? c.acc : 100) + "%";
     $("s-time").textContent = S.ctx.seconds ? fmtClock(S.ctx.seconds - c.sec) : fmtClock(c.sec);
@@ -1531,7 +1533,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     }
     updateCaret();
     updateStats();
-    if (S.pos >= S.text.length) finish();
+    if (S.pos >= S.text.length || (S.ctx.goal && S.correct >= S.ctx.goal)) finish();
   }
   function backspace() {
     if (!S || S.done || S.ctx.strict || S.pos === 0) return;
