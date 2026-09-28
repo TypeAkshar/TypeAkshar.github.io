@@ -2765,6 +2765,97 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     }
   };
 
+  // ----- Space Defender -----
+  // Typing a ship's first letter locks onto it; later letters go only to that ship. Esc drops the lock.
+  var SHIP_COLORS = ["#8e5cf7", "#e5484d", "#3b82f6", "#22c55e"];
+  var Space = {
+    setup: function () {
+      G.hi = topStage();
+      G.shield = 4; G.wave = 0; G.ships = []; G.lock = null; G.fx = []; G.msg = ""; G.msgT = 0;
+      G.stars = []; for (var i = 0; i < 70; i++) G.stars.push([Math.random(), Math.random(), Math.random() < 0.2 ? 2 : 1]);
+      G.level = 1; G.lives = 4;
+      Space.wave();
+    },
+    wave: function () {
+      G.wave++; G.level = G.wave; G.lostThis = false;
+      G.toSpawn = 5 + G.wave; G.spawnIn = 1.2; G.between = 0;
+      var cap = G.hi >= 10 ? 10 : G.hi >= 9 ? 9 : 8;
+      G.maxL = Math.min(cap, 4 + G.wave); G.minL = Math.min(G.maxL, 3 + Math.floor((G.wave - 1) / 2));
+      G.speed = 20 + G.wave * 5;
+      G.msg = "Wave " + G.wave; G.msgT = 0; G.msgColor = "#f5c518";
+      if (G.lives !== undefined) gameHud();
+    },
+    spawn: function () {
+      var used = G.ships.map(function (s) { return s.word.charAt(0); });
+      var w = poolWord(G.minL, G.maxL, G.hi, function (x) { return used.indexOf(x.charAt(0)) > -1; });
+      G.ships.push({ word: w, pos: 0, x: 60 + Math.random() * (G.W - 120), y: -24, ph: Math.random() * 6, color: pick(SHIP_COLORS) });
+    },
+    esc: function () { if (G.lock) { G.lock.pos = 0; G.lock = null; } },
+    key: function (ch) {
+      if (G.between > 0) return null;
+      if (!G.lock) {
+        var c = G.ships.filter(function (s) { return keyMatches(ch, s.word[0]); }).sort(function (a, b) { return b.y - a.y; })[0];
+        if (!c) return false;
+        G.lock = c; c.pos = 1;
+      } else {
+        if (!keyMatches(ch, G.lock.word[G.lock.pos])) return false;
+        G.lock.pos++;
+      }
+      var s = G.lock;
+      if (s.pos >= s.word.length) {
+        G.fx.push({ x: s.x, y: s.y, t: 0 });
+        G.score += 10 * s.word.length;
+        G.ships.splice(G.ships.indexOf(s), 1);
+        G.lock = null; sound.step(); gameHud();
+      }
+      return true;
+    },
+    step: function (dt) {
+      G.msgT += dt;
+      G.fx.forEach(function (f) { f.t += dt; }); G.fx = G.fx.filter(function (f) { return f.t < 0.35; });
+      if (G.between > 0) { G.between -= dt; if (G.between <= 0) Space.wave(); return; }
+      if (G.toSpawn > 0) { G.spawnIn -= dt; if (G.spawnIn <= 0) { Space.spawn(); G.toSpawn--; G.spawnIn = Math.max(0.9, 2.3 - G.wave * 0.12); } }
+      for (var i = G.ships.length - 1; i >= 0; i--) {
+        var s = G.ships[i];
+        s.y += G.speed * dt; s.ph += dt; s.x += Math.sin(s.ph) * 10 * dt;
+        if (s.y > G.H - 70) {
+          G.ships.splice(i, 1);
+          if (G.lock === s) G.lock = null;
+          G.shield--; G.lostThis = true; G.lives = G.shield; sound.bad(); gameHud();
+          if (G.shield <= 0) { gameFinish("Shield down", "You reached wave " + G.wave, false); return; }
+        }
+      }
+      if (G.toSpawn <= 0 && !G.ships.length) {
+        if (!G.lostThis) G.score += 50;
+        gameHud();
+        G.msg = G.lostThis ? "Wave " + G.wave + " clear" : "Wave " + G.wave + " clear +50"; G.msgT = 0; G.msgColor = "#22c55e";
+        G.between = 2;
+      }
+    },
+    draw: function (cx, W, H) {
+      cx.fillStyle = "#0b1026"; cx.fillRect(0, 0, W, H);
+      G.stars.forEach(function (st) { cx.fillStyle = "rgba(255,255,255," + (st[2] > 1 ? 0.9 : 0.5) + ")"; cx.fillRect(st[0] * W, st[1] * H, st[2], st[2]); });
+      var px = W / 2, py = H - 34;
+      G.fx.forEach(function (f) {
+        cx.strokeStyle = "rgba(255,221,0," + (1 - f.t / 0.35) + ")"; cx.lineWidth = 3;
+        cx.beginPath(); cx.moveTo(px, py - 14); cx.lineTo(f.x, f.y); cx.stroke();
+        cx.fillStyle = "rgba(255,160,0," + (1 - f.t / 0.35) + ")"; cx.beginPath(); cx.arc(f.x, f.y, 10 + f.t * 60, 0, Math.PI * 2); cx.fill();
+      });
+      G.ships.forEach(function (s) {
+        cx.fillStyle = s.color; cx.beginPath(); cx.moveTo(s.x, s.y - 14); cx.lineTo(s.x + 16, s.y); cx.lineTo(s.x, s.y + 14); cx.lineTo(s.x - 16, s.y); cx.closePath(); cx.fill();
+        cx.fillStyle = "rgba(255,255,255,0.6)"; cx.beginPath(); cx.arc(s.x, s.y, 4, 0, Math.PI * 2); cx.fill();
+        drawWordTag(cx, s.word, s.pos, s.x, s.y + 30, { size: 16, locked: G.lock === s });
+      });
+      if (G.lock) { cx.strokeStyle = "rgba(245,197,24,0.35)"; cx.setLineDash([4, 6]); cx.lineWidth = 1.5; cx.beginPath(); cx.moveTo(px, py - 14); cx.lineTo(G.lock.x, G.lock.y); cx.stroke(); cx.setLineDash([]); }
+      cx.fillStyle = "#f08a24"; cx.beginPath(); cx.moveTo(px, py - 18); cx.lineTo(px + 18, py + 12); cx.lineTo(px - 18, py + 12); cx.closePath(); cx.fill();
+      cx.fillStyle = "#fff"; cx.font = "600 13px " + SANS; cx.textAlign = "left"; cx.textBaseline = "middle";
+      cx.fillText("Shield", 14, H - 20);
+      for (var i = 0; i < 4; i++) { cx.fillStyle = i < G.shield ? "#38bdf8" : "rgba(255,255,255,0.15)"; cx.fillRect(64 + i * 26, H - 27, 22, 14); }
+      cx.textAlign = "right"; cx.fillStyle = "rgba(255,255,255,0.7)"; cx.fillText("Esc drops the lock", W - 14, H - 20);
+      if (G.msg && G.msgT < 1.8) banner(cx, W, G.msg, G.msgColor, G.msgT + 0.34);
+    }
+  };
+
   function artSvg(inner) { return '<div class="game-art"><svg viewBox="0 0 260 110" preserveAspectRatio="xMidYMid slice">' + inner + "</svg></div>"; }
   GAMES.house = { title: "Build a House", unlock: 1, lives: 0, livesLabel: "Bricks", levelLabel: "Floor", mod: BuildHouse,
     intro: "Type the letter or word on the brick to lay it. One mistake wobbles the top brick; a second knocks it off.",
@@ -2774,6 +2865,10 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     intro: "Type the word on the ball before it reaches the stumps. The faster you finish, the more runs. A wrong key is out.",
     blurb: "Three overs, three wickets. Type fast for a FOUR or a SIX; a wrong key or a slow finish and you're out.",
     art: artSvg('<rect width="260" height="110" fill="#3f9b3a"/><ellipse cx="130" cy="55" rx="110" ry="50" fill="#56b24f"/><rect x="112" y="6" width="36" height="98" fill="#e3c98f"/><path d="M104 88H156M104 20H156" stroke="#fff" stroke-width="2"/><g fill="#8b5a2b"><rect x="124" y="88" width="3" height="14"/><rect x="129" y="88" width="3" height="14"/><rect x="134" y="88" width="3" height="14"/></g><circle cx="114" cy="86" r="6" fill="#1e63c6"/><circle cx="132" cy="50" r="4" fill="#c62828"/><rect x="108" y="30" width="48" height="14" rx="4" fill="#fff"/><rect x="8" y="8" width="60" height="20" rx="4" fill="#1d232b"/>') };
+  GAMES.space = { title: "Space Defender", unlock: 8, lives: 4, livesLabel: "Shield", levelLabel: "Wave", mod: Space,
+    intro: "Type a ship's first letter to lock on, then finish its word to fire. Esc drops the lock. Four hits and your shield is gone.",
+    blurb: "Words fly down on enemy ships. Lock on with the first letter, finish the word, and blast them before they get through.",
+    art: artSvg('<rect width="260" height="110" fill="#0b1026"/><g fill="#fff" opacity=".7"><rect x="20" y="14" width="2" height="2"/><rect x="90" y="40" width="1" height="1"/><rect x="200" y="20" width="2" height="2"/><rect x="236" y="70" width="1" height="1"/><rect x="50" y="80" width="1" height="1"/></g><path d="M70 18l12 10-12 10-12-10z" fill="#8e5cf7"/><path d="M180 30l12 10-12 10-12-10z" fill="#e5484d"/><rect x="58" y="44" width="26" height="12" rx="3" fill="#fff" stroke="#f5c518" stroke-width="2"/><rect x="164" y="56" width="34" height="12" rx="3" fill="#fff"/><path d="M130 82L70 30" stroke="#f5c518" stroke-width="2"/><path d="M130 82l12 20h-24z" fill="#f08a24"/>') };
   GAMES.ghost = { title: "Ghost Race", unlock: 5, lives: 100, livesLabel: "Accuracy", levelLabel: "WPM", mod: GhostRace,
     intro: "Type the sentence to drive your car to the flag. The see-through car is your best run so far.",
     blurb: "Race your own best run. Your car moves with every correct letter; beat the ghost to the flag.",
