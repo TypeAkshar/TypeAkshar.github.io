@@ -439,6 +439,25 @@ button.brand { border: 0; background: none; padding: 0; cursor: pointer; }
 .calc-out b { font: 600 22px var(--mono); color: var(--accent); }
 
 .calm-bar { height: 6px; border-radius: 6px; background: var(--surface-2); overflow: hidden; margin-top: 12px; }
+.goal-pop { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px); text-align: center; z-index: 2; padding: 5px 14px; border-radius: 999px; background: var(--good); color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.18); pointer-events: none; }
+.goal-pop b { font-size: 14px; margin-right: 6px; }
+.goal-pop span { font-size: 12.5px; opacity: .92; }
+.goal-pop.show { animation: goalpop 3.2s ease forwards; }
+@keyframes goalpop { 0% { opacity: 0; transform: translate(-50%, -8px) scale(.9); } 8% { opacity: 1; transform: translateX(-50%); } 85% { opacity: 1; } 100% { opacity: 0; } }
+.stat.target.met b { color: var(--good); }
+.facts { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: -8px 0 20px; }
+.facts div { padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); }
+.facts b { display: block; font: 600 20px/1.2 var(--mono); font-variant-numeric: tabular-nums; }
+.facts span { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.sstats { margin: 16px 0 4px; padding: 16px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); }
+.sstats h3 { margin: 0 0 12px; font-size: 16px; }
+.sstats .facts { margin: 0 0 14px; }
+.sstats table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.sstats th, .sstats td { text-align: left; padding: 7px 8px; border-top: 1px solid var(--line); }
+.sstats th { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; border-top: 0; }
+.sstats td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+details.sstats summary { cursor: pointer; font-weight: 600; }
+details.sstats[open] summary { margin-bottom: 12px; }
 .calm-bar i { display: block; height: 100%; width: 0; background: var(--good); opacity: .7; transition: width .2s linear; }
 
 /* Profiles */
@@ -554,6 +573,8 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
   .ex .go { grid-column: 2; grid-row: 3; justify-self: end; }
   .ex .best { display: none; }
   .big, .tiles, .calc { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .sstats .hide-sm { display: none; }
   .hero, .features, .who, .row2 { grid-template-columns: minmax(0, 1fr); }
   .profile-chip span { display: none; }
   .profile-chip { padding: 4px; }
@@ -728,6 +749,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
         <div class="board" id="board">
           <div class="text" id="text" aria-live="off"></div>
           <div class="calm-bar" id="calm-bar" hidden><i id="calm-fill"></i></div>
+          <div class="goal-pop" id="goal-pop" role="status" hidden></div>
           <div class="focus-veil" id="veil" hidden>Click here, then start typing</div>
           <div class="board-foot">
             <span id="p-desc"></span>
@@ -1009,7 +1031,8 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
 
   // ---------- keyboard basics (guided lessons) ----------
   function K(s) { return s.split(""); }
-  var TASK_KEYS = 40; // a Basics practice task ends after this many correct keys
+  var EX_SECONDS = 90; // every stage exercise runs this long, even after its target is met
+  var TASK_KEYS = 40; // fewest correct keys a Basics practice task needs to pass
   var BASICS = (function () {
     function upTo(fn, chars) { var s = ""; while (s.length < chars) s += (s ? " " : "") + fn(); return s; }
     function pickRun(list, n) { var out = []; for (var i = 0; i < n; i++) out.push(pick(list)); return out.join(" "); }
@@ -1137,7 +1160,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       E("h2", "Key drill", "Reach to G and H", "Index fingers step in one key, then come back.", W(8, 90), function () { return keyDrill("fgfghjhjasdfjkl", 22); }, true),
       E("h3", "Words", "Home row words", "Real words made only from home row letters.", W(10, 90), function () { return wordsFrom("asdfghjkl", 22); }),
       E("h4", "Sentences", "Home row phrases", "Short phrases with spaces between words.", W(10, 90), function () { return sentences(HOME_PHR, 5); }),
-      T("h5", "Home row sprint", "30 seconds of home row words.", 30, W(12, 90), function () { return wordsFrom("asdfghjkl", 120); })
+      T("h5", "Home row sprint", "Home row words at your best pace.", 30, W(12, 90), function () { return wordsFrom("asdfghjkl", 120); })
     ], exam: X("hx", "Home Row test", "One minute of home row words.", W(12, 90), function () { return wordsFrom("asdfghjkl", 200); }) },
 
     { id: "top", name: "Top Row", blurb: "Reach up from home to the top row, one finger at a time, and always come back.", exercises: [
@@ -1145,7 +1168,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       E("t2", "Key drill", "R, T, U and Y", "Index fingers reach up and in.", W(10, 90), function () { return keyDrill("rtuyrtuyfj", 20); }, true),
       E("t3", "Key drill", "W, O, Q and P", "Ring fingers and pinkies reach up.", W(10, 90), function () { return keyDrill("woqpwoqpsl;a", 20); }, true),
       E("t4", "Words", "Top and home row words", "Words using the top two rows.", W(12, 90), function () { return wordsFrom(TOPL, 24); }),
-      T("t5", "Top row sprint", "45 seconds of top and home row words.", 45, W(14, 90), function () { return wordsFrom(TOPL, 160); })
+      T("t5", "Top row sprint", "Top and home row words at your best pace.", 45, W(14, 90), function () { return wordsFrom(TOPL, 160); })
     ], exam: X("tx", "Top Row test", "One minute of top and home row words.", W(14, 90), function () { return wordsFrom(TOPL, 200); }) },
 
     { id: "bottom", name: "Bottom Row", blurb: "Reach down to the bottom row. After this stage you know every letter.", exercises: [
@@ -1160,7 +1183,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       E("w1", "Words", "Short common words", "The words you will type most often.", W(16, 92), function () { return words(EASY, 26); }),
       E("w2", "Words", "Longer words", "Common words of five letters or more.", W(16, 92), function () { return words(COMMON, 22); }),
       E("w3", "Sentences", "Everyday sentences", "Short lowercase sentences.", W(18, 92), function () { return sentences(B_SENT, 5); }),
-      T("w4", "One-minute words", "A full minute of common words.", 60, W(18, 92), function () { return words(COMMON.concat(EASY), 240); }),
+      T("w4", "Common words run", "Common words at a steady pace.", 60, W(18, 92), function () { return words(COMMON.concat(EASY), 240); }),
       E("w5", "Precision", "Careful typing", "Go slowly. Almost no mistakes allowed.", W(12, 97), function () { return sentences(B_SENT, 3); })
     ], exam: X("wx", "First Words test", "One minute of common words.", W(20, 92), function () { return words(COMMON.concat(EASY), 240); }) },
 
@@ -1177,7 +1200,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       E("n2", "Words", "Numbers and words", "Counts like 12 books.", W(14, 92), function () { return numWords(14); }),
       E("n3", "Sentences", "Numbers in sentences", "Times, prices and counts.", W(18, 92), function () { return sentences(NUM_SENT, 4); }),
       E("n4", "Sentences", "Dates and times", "Days, months and the colon.", W(18, 92), function () { return sentences(DATE_SENT, 4); }),
-      T("n5", "Number sprint", "45 seconds of number sentences.", 45, W(20, 92), function () { return sentences(NUM_SENT.concat(DATE_SENT), 30); })
+      T("n5", "Number sprint", "Sentences with numbers at your best pace.", 45, W(20, 92), function () { return sentences(NUM_SENT.concat(DATE_SENT), 30); })
     ], exam: X("nx", "Numbers test", "One minute of sentences with numbers.", W(22, 93), function () { return sentences(NUM_SENT.concat(DATE_SENT), 30); }) },
 
     { id: "symbols", name: "Symbols", blurb: "Brackets, @, #, $, % and the other symbols you need for email, the web and code.", exercises: [
@@ -1189,10 +1212,10 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     ], exam: X("yx", "Symbols test", "One minute of symbols and code.", W(22, 93), function () { return sentences(SYM_SENT.concat(WEB_SENT, CODE), 30); }) },
 
     { id: "speed", name: "Speed Building", blurb: "You know every key. Now build speed while keeping accuracy high.", exercises: [
-      T("s1", "30-second sprint", "As fast as you can stay accurate.", 30, W(30, 93), function () { return words(COMMON, 200); }),
-      T("s2", "One-minute words", "Keep a steady pace for a full minute.", 60, W(30, 93), function () { return words(COMMON.concat(EASY), 300); }),
+      T("s1", "Speed sprint", "As fast as you can stay accurate.", 30, W(30, 93), function () { return words(COMMON, 200); }),
+      T("s2", "Steady words", "Keep a steady pace the whole time.", 60, W(30, 93), function () { return words(COMMON.concat(EASY), 300); }),
       E("s3", "Passage", "Story passage", "A paragraph from a short story.", W(28, 93), function () { return pick(STORIES); }),
-      T("s4", "One-minute facts", "Real sentences with longer words.", 60, W(28, 93), function () { return testText("facts", 60); }),
+      T("s4", "Facts run", "Real sentences with longer words.", 60, W(28, 93), function () { return testText("facts", 60); }),
       E("s5", "Precision", "Clean copy", "98% accuracy. Speed comes second.", W(22, 98), function () { return pick(PRECISION); })
     ], exam: X("sx", "Speed test", "One minute of common words.", W(35, 94), function () { return words(COMMON.concat(EASY), 300); }) },
 
@@ -1200,24 +1223,52 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       E("v1", "Passage", "Long passage", "Dense prose with commas and quotes.", W(35, 95), function () { return pick(A_PASSAGES); }),
       E("v2", "Code", "Code at speed", "Programming lines with symbols.", W(30, 95), function () { return sentences(CODE, 5); }),
       E("v3", "Words", "Long words", "Words of three or more syllables.", W(30, 95), function () { return words(HARD, 20); }),
-      T("v4", "Facts minute", "A minute of factual text.", 60, W(35, 95), function () { return testText("facts", 60); }),
-      T("v5", "Endurance", "Two minutes of long words.", 120, W(35, 95), function () { return words(HARD.concat(COMMON), 400); })
+      T("v4", "Facts at speed", "Factual text at a strong pace.", 60, W(35, 95), function () { return testText("facts", 60); }),
+      T("v5", "Endurance", "Long words with no let-up.", 120, W(35, 95), function () { return words(HARD.concat(COMMON), 400); })
     ], exam: X("vx", "Advanced test", "One minute of real prose.", W(40, 95), function () { return testText("stories", 60); }) },
 
     { id: "pro", name: "Pro", blurb: "Professional speed: fast, accurate and steady for minutes at a time.", exercises: [
-      T("p1", "Pro sprint", "30 seconds flat out.", 30, W(60, 96), function () { return words(COMMON, 250); }),
-      T("p2", "Pro minute", "A minute of stories at speed.", 60, W(50, 96), function () { return testText("stories", 60); }),
-      T("p3", "Two-minute facts", "Two minutes of factual text.", 120, W(45, 96), function () { return testText("facts", 120); }),
+      T("p1", "Pro sprint", "Flat out from start to finish.", 30, W(60, 96), function () { return words(COMMON, 250); }),
+      T("p2", "Pro stories", "Stories at professional speed.", 60, W(50, 96), function () { return testText("stories", 60); }),
+      T("p3", "Pro facts", "Factual text at professional speed.", 120, W(45, 96), function () { return testText("facts", 120); }),
       E("p4", "Precision", "Perfect copy", "99% accuracy on a full passage.", W(40, 99), function () { return pick(A_PASSAGES); }),
-      T("p5", "Three-minute endurance", "Hold your speed for three minutes.", 180, W(45, 96), function () { return testText("stories", 180); })
+      T("p5", "Pro endurance", "Hold your speed for the whole run.", 180, W(45, 96), function () { return testText("stories", 180); })
     ], exam: X("px", "Pro test", "One minute at professional speed.", W(60, 97), function () { return testText("facts", 60); }) }
   ];
   var EX_BY_ID = {};
   STAGES.forEach(function (s, si) {
     s.exercises.concat([s.exam]).forEach(function (e) { e.stage = si; EX_BY_ID[e.id] = e; });
+    s.exercises.forEach(function (e) {
+      if (e.steps) return;
+      var g0 = e.gen;
+      e.seconds = EX_SECONDS; e.goal = 0;
+      e.gen = function () { var t = g0(); while (t.length < 1600) t += " " + g0(); return t; };
+    });
   });
 
   function exPassed(id) { return !!(P.ex[id] && P.ex[id].passed); }
+  function allExPassed(si) { return STAGES[si].exercises.every(function (e) { return exPassed(e.id); }); }
+  // overall numbers for a stage whose exercises are all cleared (totals only count runs since they were tracked)
+  function stageStatsHtml(si, asResult) {
+    var st = STAGES[si], runs = st.exercises.filter(function (e) { return !e.steps; });
+    var sumW = 0, sumA = 0, sumG = 0, n = 0, time = 0, keys = 0, errs = 0, tries = 0;
+    var rows = st.exercises.map(function (e) {
+      var r = P.ex[e.id] || {};
+      if (e.steps) return "<tr><td>" + esc(e.title) + '</td><td class="n" colspan="3">Guide done</td><td class="n hide-sm">&ndash;</td></tr>';
+      n++; sumW += r.bestWpm || 0; sumA += r.bestAcc || 0; sumG += r.bestGross || r.bestWpm || 0;
+      time += r.time || 0; keys += r.keys || 0; errs += r.errs || 0; tries += r.attempts || 0;
+      return "<tr><td>" + esc(e.title) + '</td><td class="n">' + (r.bestWpm || 0) + '</td><td class="n">' + (r.bestGross || "&ndash;") + '</td><td class="n">' + (r.bestAcc || 0) + '%</td><td class="n hide-sm">' + (r.attempts || 0) + "</td></tr>";
+    }).join("");
+    function f(val, label) { return "<div><b>" + val + "</b><span>" + label + "</span></div>"; }
+    var avg = function (x) { return n ? Math.round(x / n * 10) / 10 : 0; };
+    var facts = '<div class="facts">' + f(avg(sumW), "Avg best net WPM") + f(avg(sumG), "Avg best gross WPM") + f(avg(sumA) + "%", "Avg best accuracy") +
+      f(keys ? Math.floor((keys - errs) / keys * 1000) / 10 + "%" : "&ndash;", "Overall accuracy") + f(time ? fmtClock(time) : "&ndash;", "Time practised") + "</div>" +
+      '<div class="facts">' + f(runs.length, "Exercises cleared") + f(tries, "Total tries") + f(keys || "&ndash;", "Keys typed") + f(keys ? errs : "&ndash;", "Wrong keys") + f(keys && time ? Math.round(keys / (time / 60)) : "&ndash;", "Keys per minute") + "</div>";
+    var table = '<table><thead><tr><th>Exercise</th><th>Net</th><th>Gross</th><th>Accuracy</th><th class="hide-sm">Tries</th></tr></thead><tbody>' + rows + "</tbody></table>";
+    var title = "Stage " + (si + 1) + ", " + esc(st.name) + ": overall stats";
+    return asResult ? '<section class="sstats"><h3>All exercises cleared. ' + title + "</h3>" + facts + table + "</section>"
+      : '<details class="sstats"><summary>' + title + "</summary>" + facts + table + "</details>";
+  }
   function stagePassed(si) {
     var s = STAGES[si];
     return exPassed(s.exam.id) || s.exercises.every(function (e) { return exPassed(e.id); });
@@ -1360,6 +1411,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
         (open ? "" : '<p class="lockline">Clear ' + STAGES[si - 1].name + " to open this stage.</p>") +
         '<div class="ex-list"' + (expanded ? "" : " hidden") + ">";
       s.exercises.forEach(function (e) { html += exRow(e, open); });
+      if (open && allExPassed(si)) html += stageStatsHtml(si, false);
       html += '<div class="or">or skip ahead</div>' + exRow(s.exam, open, true);
       html += "</div></article>";
     });
@@ -1389,7 +1441,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       (e.steps ? '<div class="target"><small>Steps</small>' + e.steps.length + " steps</div>" : '<div class="target"><small>Target</small>' + (e.pass.wpm ? e.pass.wpm + " wpm · " : "") + e.pass.acc + "%" + (e.pass.wpm ? "" : " accuracy") + "</div>") + best +
       '<div class="go"><button class="btn' + (open && !(r && r.passed) ? " primary" : "") + '" data-start="' + e.id + '"' + (open ? "" : " disabled") + ">" + label + "</button></div></div>";
   }
-  function fmtSec(s) { return s >= 60 ? (s / 60) + " min" : s + "s"; }
+  function fmtSec(s) { return s >= 60 && s % 60 === 0 ? (s / 60) + " min" : s + "s"; }
 
   // ---------- keyboard ----------
   var FINGER_NAME = { lp: "left pinky", lr: "left ring", lm: "left middle", li: "left index", ri: "right index", rm: "right middle", rr: "right ring", rp: "right pinky", th: "thumb" };
@@ -1509,11 +1561,13 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     show("practice");
     $("p-title").textContent = ctx.title;
     $("p-kind").textContent = ctx.label;
-    $("p-desc").textContent = ctx.desc + (ctx.strict ? " Wrong keys don't advance." : "") + (ctx.goal ? " Finish " + ctx.goal + " correct keys." : "");
+    $("p-desc").textContent = ctx.desc + (ctx.strict ? " Wrong keys don't advance." : "") + (ctx.goal ? " Finish " + ctx.goal + " correct keys." : "") + (ctx.kind === "course" && ctx.seconds ? " Keep typing until the time runs out." : "");
     $("s-target-box").hidden = !ctx.pass;
     if (ctx.pass) $("s-target").textContent = ctx.pass.wpm + " · " + ctx.pass.acc + "%";
     $("s-time-l").textContent = ctx.seconds ? "Left" : "Time";
-    $("s-time-box").hidden = !!ctx.calm;
+    $("s-time-box").hidden = !!ctx.calm && !ctx.seconds;
+    $("goal-pop").hidden = true;
+    $("s-target-box").classList.remove("met");
     $("calm-bar").hidden = !ctx.calm;
     $("calm-fill").style.width = "0%";
     $("typing").hidden = false;
@@ -1561,6 +1615,25 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     $("s-wpm").textContent = c.wpm;
     $("s-acc").textContent = (S.keystrokes ? c.acc : 100) + "%";
     $("s-time").textContent = S.ctx.seconds ? fmtClock(S.ctx.seconds - c.sec) : fmtClock(c.sec);
+    checkGoal(c);
+  }
+  // a course exercise keeps running after its target is met; say so once, and colour the target box while it holds
+  function goalMet(c) {
+    var p = S.ctx.pass;
+    return S.ctx.kind === "course" && p && S.keystrokes > 0 && c.sec >= 15 && S.correct >= Math.max(30, p.minKeys || 0) && c.wpm >= p.wpm && c.acc >= p.acc;
+  }
+  function checkGoal(c) {
+    if (!S || S.done || S.ctx.kind !== "course") return;
+    var met = goalMet(c);
+    $("s-target-box").classList.toggle("met", met);
+    if (met && !S.hit) {
+      S.hit = c.sec;
+      sound.step();
+      var pop = $("goal-pop");
+      pop.innerHTML = "<b>&#10003; Target reached!</b><span>Keep going till the time ends.</span>";
+      pop.hidden = false; pop.classList.remove("show"); void pop.offsetWidth; pop.classList.add("show");
+      setTimeout(function () { if (S && S.hit) pop.hidden = true; }, 3200);
+    }
   }
   function updateCaret() {
     if (S.curEl) S.curEl.classList.remove("cur");
@@ -1667,6 +1740,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     var enoughKeys = !ctx.pass || !ctx.pass.minKeys || S.correct >= ctx.pass.minKeys;
     var passed = ctx.pass ? (typedSomething && c.wpm >= ctx.pass.wpm && c.acc >= ctx.pass.acc && enoughKeys) : null;
     var stageBefore = ctx.kind === "course" ? stagePassed(ctx.ex.stage) : null;
+    var allExBefore = ctx.kind === "course" ? allExPassed(ctx.ex.stage) : true;
     var placedInto = -1;
 
     if (typedSomething) {
@@ -1676,6 +1750,10 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
         r.bestWpm = Math.max(r.bestWpm, c.wpm);
         r.bestAcc = Math.max(r.bestAcc, c.acc);
         r.passed = r.passed || passed;
+        r.bestGross = Math.max(r.bestGross || 0, gross);
+        r.time = (r.time || 0) + c.sec;
+        r.keys = (r.keys || 0) + S.keystrokes;
+        r.errs = (r.errs || 0) + S.errors;
         P.ex[ctx.ex.id] = r;
       }
       if (ctx.kind === "placement") {
@@ -1736,10 +1814,15 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     var h = (banner ? '<div class="banner">' + banner + "</div>" : "") +
       '<div class="result-top"><div><div class="eyebrow">' + esc(ctx.label) + "</div>" + verdict + "<p>" + note + "</p></div></div>" +
       '<div class="big">' +
-      m(c.wpm, "", isTest ? "Net WPM" : "WPM", P_ && P_.wpm ? P_.wpm : undefined, P_ && c.wpm >= P_.wpm) +
+      m(c.wpm, "", "Net WPM", P_ && P_.wpm ? P_.wpm : undefined, P_ && c.wpm >= P_.wpm) +
       m(c.acc, "%", "Accuracy", P_ ? P_.acc : undefined, P_ && c.acc >= P_.acc) +
       (isTest ? m(gross, "", "Gross WPM") + m(kpm, "", "Keystrokes/min")
-              : m(fmtClock(c.sec), "", "Time") + m(S.errors, "", "Mistakes")) + "</div>";
+              : m(gross, "", "Gross WPM") + m(fmtClock(c.sec), "", "Time taken")) + "</div>";
+    function f(val, label) { return "<div><b>" + val + "</b><span>" + label + "</span></div>"; }
+    if (typedSomething) h += '<div class="facts">' + f(S.correct, "Correct keys") + f(S.errors, "Wrong keys") + f(S.keystrokes, "Total keys") +
+      (isTest ? f(fmtClock(c.sec), "Time taken") : f(kpm, "Keys per minute")) +
+      (S.hit ? f(fmtClock(S.hit), "Target reached at") : f(S.errors ? Math.round(S.errors / (c.sec / 60 || 1) * 10) / 10 : 0, "Mistakes per minute")) + "</div>";
+    if (ctx.kind === "course" && typedSomething && !allExBefore && allExPassed(ctx.ex.stage)) h += stageStatsHtml(ctx.ex.stage, true);
 
     if (ctx.kind === "test" && typedSomething && ctx.seconds >= 60) {
       var d = new Date();
