@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="favicon.ico" sizes="48x48"><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>DexiType</title>
+<title>Typeअक्षर</title>
 <meta name="description" content="A typing course that runs in the browser: Beginner, Intermediate and Advanced stages, each unlocked by passing the one before.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,9 +32,9 @@
   --f-rr: rgba(130, 90, 200, 0.20);
   --f-rp: rgba(200, 80, 160, 0.20);
   --f-th: rgba(120, 130, 140, 0.16);
-  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --sans: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --display: "TA Deva", "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --sans: "TA Deva", "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "TA Deva", "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -98,6 +98,9 @@ button { font: inherit; color: inherit; }
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
   padding-block: 18px 14px; border-bottom: 1px solid var(--line); margin-bottom: 28px;
 }
+/* The Devanagari letters of the name, so it shows even on computers without a Hindi font. */
+@font-face { font-family: "TA Deva"; font-weight: 300 600; src: url(data:font/woff2;base64,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) format("woff2"); unicode-range: U+0900-097F; }
+@font-face { font-family: "TA Deva"; font-weight: 700 800; src: url(data:font/woff2;base64,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) format("woff2"); unicode-range: U+0900-097F; }
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand-cap {
   width: 34px; height: 34px; border-radius: 7px; display: grid; place-items: center;
@@ -570,7 +573,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
 
 <div class="wrap">
   <header class="top">
-    <button class="brand" data-go="home" aria-label="Home"><span class="brand-cap" aria-hidden="true">DT</span><span class="brand-name">DexiType</span></button>
+    <button class="brand" data-go="home" aria-label="Home"><span class="brand-cap" aria-hidden="true">Tअ</span><span class="brand-name" lang="hi-Latn">Typeअक्षर</span></button>
     <nav class="nav" aria-label="Sections">
       <button id="nav-course" data-view="course">Typing Tutor</button>
       <button id="nav-test" data-view="test">Typing Test</button>
@@ -587,21 +590,21 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     <section id="view-welcome" hidden>
       <div class="welcome">
         <div id="who-start">
-          <h1 id="who-h">Welcome to DexiType</h1>
+          <h1 id="who-h">Welcome to Typeअक्षर</h1>
           <p class="lede">Who is going to practise on this computer?</p>
           <div class="who-signin" id="who-signin" hidden><span>Already saved your progress online?</span> <button class="btn" type="button" id="who-google">Sign in with Google</button><p class="form-note" id="who-google-msg"></p></div>
           <div class="who">
             <div class="who-col">
               <button class="who-card" data-who="student" type="button"><span class="who-icon" aria-hidden="true">S</span><b>Student</b><span>For school students. We'll ask for your class and roll number.</span></button>
               <div class="who-back" id="back-student" hidden>
-                <button class="link-btn" type="button" data-back="student" aria-expanded="false" aria-controls="pickbox-student">Used DexiType before? Choose your name</button>
+                <button class="link-btn" type="button" data-back="student" aria-expanded="false" aria-controls="pickbox-student">Used Typeअक्षर before? Choose your name</button>
                 <div class="who-pick" id="pickbox-student" hidden><select id="pick-student" aria-label="Your name"></select><button class="btn primary" type="button" data-pick="student">Open</button></div>
               </div>
             </div>
             <div class="who-col">
-              <button class="who-card" data-who="user" type="button"><span class="who-icon" aria-hidden="true">U</span><b>User</b><span>For everyone else. You'll get your own DexiType ID.</span></button>
+              <button class="who-card" data-who="user" type="button"><span class="who-icon" aria-hidden="true">U</span><b>User</b><span>For everyone else. You'll get your own Typeअक्षर ID.</span></button>
               <div class="who-back" id="back-user" hidden>
-                <button class="link-btn" type="button" data-back="user" aria-expanded="false" aria-controls="pickbox-user">Used DexiType before? Choose your name</button>
+                <button class="link-btn" type="button" data-back="user" aria-expanded="false" aria-controls="pickbox-user">Used Typeअक्षर before? Choose your name</button>
                 <div class="who-pick" id="pickbox-user" hidden><select id="pick-user" aria-label="Your name"></select><button class="btn primary" type="button" data-pick="user">Open</button></div>
               </div>
             </div>
@@ -625,13 +628,13 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
             <label for="f-pin2">Type the PIN again<input id="f-pin2" class="pin-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"></label>
           </div>
           <p class="form-note">You'll type this PIN each time you open your progress. If you forget it, your date of birth resets it.</p>
-          <p class="form-note user-only">Your DexiType ID: <b id="f-uid"></b>. Write it down; you'll see it on your certificate.</p>
+          <p class="form-note user-only">Your Typeअक्षर ID: <b id="f-uid"></b>. Write it down; you'll see it on your certificate.</p>
           <p class="form-note user-only" id="f-minor" hidden>Online save with Google is for users aged 18 and over, so your progress will be saved on this computer.</p>
           <div class="consent user-only" id="f-cloud-box" hidden>
-            <label class="check" for="f-cloud"><input type="checkbox" id="f-cloud"> <span><b>Save my progress online with Google.</b> I am 18 or older, and I agree that DexiType stores my name, DexiType ID and typing progress in Google's Firebase cloud so I can use any computer. My date of birth and gender stay on this computer. I can delete my online data at any time from the switch-person screen.</span></label>
+            <label class="check" for="f-cloud"><input type="checkbox" id="f-cloud"> <span><b>Save my progress online with Google.</b> I am 18 or older, and I agree that Typeअक्षर stores my name, Typeअक्षर ID and typing progress in Google's Firebase cloud so I can use any computer. My date of birth and gender stay on this computer. I can delete my online data at any time from the switch-person screen.</span></label>
           </div>
           <p class="form-err" id="f-err" role="alert"></p>
-          <p class="form-note">These details are saved only on this computer, in this browser. DexiType does not send them anywhere.</p>
+          <p class="form-note">These details are saved only on this computer, in this browser. Typeअक्षर does not send them anywhere.</p>
           <div class="actions"><button class="btn primary" type="submit">Start typing</button><button class="btn" type="button" id="wf-back">Back</button></div>
         </form>
         <form id="pin-form" class="who-form" hidden novalidate>
@@ -857,7 +860,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     </section>
   </main>
   <footer class="foot">
-    <div><b>DexiType</b> is a free typing tutor for everyone.</div>
+    <div><b>Typeअक्षर</b> is a free typing tutor for everyone.</div>
     <div class="foot-links"><button data-go="course">Typing Tutor</button><button data-go="test">Typing Test</button><button data-go="games">Typing Games</button><button data-go="tools">Tools</button><button data-go="progress">Statistics</button></div>
     <div>Your progress stays in this browser. Nothing is sent anywhere.</div>
   </footer>
@@ -1120,7 +1123,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     "We can't wait; they're already here.", "\"Well done!\" the teacher said.", "I'd like tea, but there's none left.", "Don't forget your friend's book."];
   var DATE_SENT = ["The shop opens on 12 March at 9:30.", "My birthday is on 7 July 1998.", "The train leaves at 14:45 from platform 3.",
     "Class starts on 1 June and ends on 30 August.", "The meeting is at 10:15 on 21 October.", "The bill of 2,450 was paid on 5 May 2024."];
-  var WEB_SENT = ["Write to hello@dexitype.example for help.", "Visit https://example.org/learn to find more lessons.",
+  var WEB_SENT = ["Write to hello@typeakshar.example for help.", "Visit https://example.org/learn to find more lessons.",
     "My username is sam_2024 and my score is 87%.", "Send the file to team@school.example by 5 pm.", "The link is www.example.com/typing?level=3."];
   function T(id, title, desc, seconds, pass, gen) { return { id: id, kind: "Timed", title: title, desc: desc, seconds: seconds, pass: pass, gen: gen }; }
   function E(id, kind, title, desc, pass, gen, strict) { return { id: id, kind: kind, title: title, desc: desc, pass: pass, gen: gen, strict: !!strict }; }
@@ -3803,7 +3806,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     }).then(function (r) { return r.user; });
   }
   function cloudRef(gid) { return CLOUD.db.collection("users").doc(gid); }
-  // Only the display name, DexiType ID and typing progress go online. Date of birth and gender stay on this computer.
+  // Only the display name, TypeAkshar ID and typing progress go online. Date of birth and gender stay on this computer.
   function cloudPush() {
     if (!ME || !ME.gid || !cloudEnabled()) return;
     clearTimeout(CLOUD.timer);
@@ -3858,7 +3861,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
         var list = getProfiles(), have = list.filter(function (x) { return x.gid === u.uid; })[0];
         if (have) { msgEl.textContent = ""; useProfile(have.id); return; }
         if (!snap.exists) {
-          msgEl.textContent = "No DexiType progress is saved for " + (u.email || "that account") + " yet. Choose User below to create your profile, then tick Save my progress online.";
+          msgEl.textContent = "No Typeअक्षर progress is saved for " + (u.email || "that account") + " yet. Choose User below to create your profile, then tick Save my progress online.";
           return CLOUD.auth.signOut();
         }
         var d = snap.data();
@@ -3913,7 +3916,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
   function newUid() {
     var taken = getProfiles().map(function (p) { return p.uid; }), id;
     var A = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    do { id = "DT-"; for (var i = 0; i < 6; i++) id += A.charAt(rand(A.length)); } while (taken.indexOf(id) > -1);
+    do { id = "TA-"; for (var i = 0; i < 6; i++) id += A.charAt(rand(A.length)); } while (taken.indexOf(id) > -1);
     return id;
   }
   function paintProfileChip() {
@@ -3944,7 +3947,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     $("who-form").hidden = !WHO || pin;
     $("pin-form").hidden = !pin;
     $("who-start").hidden = !!WHO || pin;
-    $("who-h").textContent = ME ? "Switch person" : "Welcome to DexiType";
+    $("who-h").textContent = ME ? "Switch person" : "Welcome to Typeअक्षर";
     renderPickers(list);
     var ex = $("who-existing");
     var wasOpen = ex.querySelector("details") && ex.querySelector("details").open;
@@ -4195,14 +4198,14 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     var el = $("backup");
     if (!list.length) { el.innerHTML = ""; return; }
     el.innerHTML = "<h3>Backup</h3><p>Progress lives in this browser on this computer. Save a backup file now and then, so a cleaned-up computer doesn't lose it. You can restore it here, or on a new computer.</p>" +
-      '<div class="actions"><a class="btn" id="bk-save" download="dexitype-backup.json" href="#">Save backup file</a>' +
+      '<div class="actions"><a class="btn" id="bk-save" download="typeakshar-backup.json" href="#">Save backup file</a>' +
       '<label class="btn" for="bk-file">Restore from file</label><input type="file" id="bk-file" accept=".json,application/json" hidden></div><p class="backup-msg" id="bk-msg"></p>';
     $("bk-save").addEventListener("click", function () {
       var data = {};
       getProfiles().forEach(function (p) { try { data[p.id] = JSON.parse(lsGet(storeKey(p.id))) || fresh(); } catch (e) { data[p.id] = fresh(); } });
-      var blob = new Blob([JSON.stringify({ app: "dexitype", version: 1, saved: new Date().toISOString(), profiles: getProfiles(), data: data })], { type: "application/json" });
+      var blob = new Blob([JSON.stringify({ app: "typeakshar", version: 1, saved: new Date().toISOString(), profiles: getProfiles(), data: data })], { type: "application/json" });
       this.href = URL.createObjectURL(blob);
-      $("bk-msg").textContent = "Backup file prepared. If nothing downloaded, open DexiType from its own web address or file to save backups.";
+      $("bk-msg").textContent = "Backup file prepared. If nothing downloaded, open Typeअक्षर from its own web address or file to save backups.";
     });
     $("bk-file").addEventListener("change", function (e) {
       var file = e.target.files && e.target.files[0];
@@ -4211,7 +4214,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       r.onload = function () {
         try {
           var b = JSON.parse(r.result);
-          if (!b || (b.app !== "dexitype" && b.app !== "keycraft") || !Array.isArray(b.profiles)) throw new Error("not a backup");
+          if (!b || ["typeakshar", "dexitype", "keycraft"].indexOf(b.app) < 0 || !Array.isArray(b.profiles)) throw new Error("not a backup");
           var list = getProfiles(), n = 0;
           b.profiles.forEach(function (p) {
             if (!p || !p.id || !p.name) return;
@@ -4223,7 +4226,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
           if (ME) P = load();
           renderWelcome();
           $("bk-msg").textContent = "Restored " + n + " " + (n === 1 ? "person" : "people") + " from the backup.";
-        } catch (err) { $("bk-msg").textContent = "That file isn't a DexiType backup. Choose the file named dexitype-backup.json."; }
+        } catch (err) { $("bk-msg").textContent = "That file isn't a Typeअक्षर backup. Choose the file named typeakshar-backup.json (older dexitype-backup.json files work too)."; }
       };
       r.readAsText(file);
     });
