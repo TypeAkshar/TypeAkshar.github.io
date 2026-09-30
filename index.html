@@ -548,6 +548,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
 .gk.cur { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
 .gk.ok { color: var(--good); background: var(--good-soft); border-color: var(--good); box-shadow: none; }
 .gk.miss { animation: miss .25s; }
+#gd-body .facts { margin: 14px 0 6px; }
 .gd-msg { min-height: 1.5em; margin-top: 10px; font-size: 14.5px; color: var(--muted); }
 .gd-msg.good { color: var(--good); font-weight: 600; }
 .gd-msg.bad { color: var(--bad); }
@@ -1083,7 +1084,8 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
           { type: "keys", title: "Right index finger", body: "<p>Your right index finger covers <b>U, J, M</b> and <b>Y, H, N</b>, plus 6 and 7.</p>", keys: K("jujmjhyhnj") },
           { type: "keys", title: "Right middle finger", body: "<p>Your right middle finger covers <b>I, K</b>, the <b>comma</b> and <b>8</b>.</p>", keys: K("kik,kik,k") },
           { type: "keys", title: "Right ring finger", body: "<p>Your right ring finger covers <b>O, L</b>, the <b>full stop</b> and <b>9</b>.</p>", keys: K("lol.lol.l") },
-          { type: "keys", title: "Right pinky", body: "<p>Your right pinky covers <b>P, ;</b>, <b>/</b> and <b>0</b>, and also reaches Enter, Backspace and the right Shift.</p>", keys: K(";p;/;p;/;") }
+          { type: "keys", title: "Right pinky", body: "<p>Your right pinky covers <b>P, ;</b>, <b>/</b> and <b>0</b>, and also reaches Enter, Backspace and the right Shift.</p>", keys: K(";p;/;p;/;") },
+          { type: "keys", title: "Practice round", body: "<p>Keys from every column. Reach with the finger of that colour, then come back home.</p>", gen: function () { return pepper(20, "qazwsxedcrfvtgbyhnujmik,ol.p;/"); } }
         ] },
         task("g3a", "Left hand columns", "Up and down each left-hand column, always back to home.", function () { return pickRun(LEFT_COLS, 4); }),
         task("g3b", "Right hand columns", "Up and down each right-hand column, always back to home.", function () { return pickRun(RIGHT_COLS, 4); }),
@@ -1114,7 +1116,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
         task("g5a", "Capital letters", "Names and words that start with a capital.", function () { return pickRun(CAP_WORDS, 6); }),
         task("g5b", "Short sentences", "Capitals at the start, a full stop, ! or ? at the end.", function () { return pickRun(CAP_SENT, 3); })
       ],
-      exam: { id: "gx", kind: "Stage test", title: "Basics check", desc: "A short home-row drill. Wrong keys don't advance.", strict: true, pass: { wpm: 5, acc: 85 }, gen: function () { return keyDrill("asdfjkl;", 14); } }
+      exam: { id: "gx", kind: "Stage test", title: "Basics check", desc: "90 seconds of home row keys. Wrong keys don't advance.", strict: true, pass: { wpm: 5, acc: 85 }, gen: function () { return keyDrill("asdfjkl;", 14); } }
     };
   })();
 
@@ -1150,7 +1152,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     "My username is sam_2024 and my score is 87%.", "Send the file to team@school.example by 5 pm.", "The link is www.example.com/typing?level=3."];
   function T(id, title, desc, seconds, pass, gen) { return { id: id, kind: "Timed", title: title, desc: desc, seconds: seconds, pass: pass, gen: gen }; }
   function E(id, kind, title, desc, pass, gen, strict) { return { id: id, kind: kind, title: title, desc: desc, pass: pass, gen: gen, strict: !!strict }; }
-  function X(id, title, desc, pass, gen) { return { id: id, kind: "Stage test", title: title, desc: desc, seconds: 60, pass: pass, gen: gen }; }
+  function X(id, title, desc, pass, gen) { return { id: id, kind: "Stage test", title: title, desc: desc, seconds: 90, pass: pass, gen: gen }; }
   function W(wpm, acc) { return { wpm: wpm, acc: acc }; }
   var HOMEL = "asdfghjkl;", TOPL = HOMEL + "qwertyuiop", ALLL = "abcdefghijklmnopqrstuvwxyz";
 
@@ -1161,7 +1163,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       E("h3", "Words", "Home row words", "Real words made only from home row letters.", W(10, 90), function () { return wordsFrom("asdfghjkl", 22); }),
       E("h4", "Sentences", "Home row phrases", "Short phrases with spaces between words.", W(10, 90), function () { return sentences(HOME_PHR, 5); }),
       T("h5", "Home row sprint", "Home row words at your best pace.", 30, W(12, 90), function () { return wordsFrom("asdfghjkl", 120); })
-    ], exam: X("hx", "Home Row test", "One minute of home row words.", W(12, 90), function () { return wordsFrom("asdfghjkl", 200); }) },
+    ], exam: X("hx", "Home Row test", "90 seconds of home row words.", W(12, 90), function () { return wordsFrom("asdfghjkl", 200); }) },
 
     { id: "top", name: "Top Row", blurb: "Reach up from home to the top row, one finger at a time, and always come back.", exercises: [
       E("t1", "Key drill", "E and I", "Middle fingers reach up.", W(10, 90), function () { return keyDrill("eieidkdk", 20); }, true),
@@ -1169,7 +1171,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       E("t3", "Key drill", "W, O, Q and P", "Ring fingers and pinkies reach up.", W(10, 90), function () { return keyDrill("woqpwoqpsl;a", 20); }, true),
       E("t4", "Words", "Top and home row words", "Words using the top two rows.", W(12, 90), function () { return wordsFrom(TOPL, 24); }),
       T("t5", "Top row sprint", "Top and home row words at your best pace.", 45, W(14, 90), function () { return wordsFrom(TOPL, 160); })
-    ], exam: X("tx", "Top Row test", "One minute of top and home row words.", W(14, 90), function () { return wordsFrom(TOPL, 200); }) },
+    ], exam: X("tx", "Top Row test", "90 seconds of top and home row words.", W(14, 90), function () { return wordsFrom(TOPL, 200); }) },
 
     { id: "bottom", name: "Bottom Row", blurb: "Reach down to the bottom row. After this stage you know every letter.", exercises: [
       E("m1", "Key drill", "C and comma", "Middle fingers reach down.", W(10, 90), function () { return keyDrill("c,c,dkdk", 20); }, true),
@@ -1177,7 +1179,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       E("m3", "Key drill", "X, Z, full stop and slash", "Ring fingers and pinkies reach down.", W(10, 90), function () { return keyDrill("xz./xz./sa;l", 20); }, true),
       E("m4", "Words", "All letters", "Everyday words that use the whole keyboard.", W(14, 90), function () { return words(EASY, 24); }),
       E("m5", "Sentences", "Simple sentences", "Lowercase sentences with no punctuation.", W(15, 90), function () { return sentences(B_SENT, 4); })
-    ], exam: X("mx", "Bottom Row test", "One minute of everyday words.", W(16, 92), function () { return words(EASY, 240); }) },
+    ], exam: X("mx", "Bottom Row test", "90 seconds of everyday words.", W(16, 92), function () { return words(EASY, 240); }) },
 
     { id: "words", name: "First Words", blurb: "Stop thinking in letters and start typing whole words.", exercises: [
       E("w1", "Words", "Short common words", "The words you will type most often.", W(16, 92), function () { return words(EASY, 26); }),
@@ -1185,7 +1187,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       E("w3", "Sentences", "Everyday sentences", "Short lowercase sentences.", W(18, 92), function () { return sentences(B_SENT, 5); }),
       T("w4", "Common words run", "Common words at a steady pace.", 60, W(18, 92), function () { return words(COMMON.concat(EASY), 240); }),
       E("w5", "Precision", "Careful typing", "Go slowly. Almost no mistakes allowed.", W(12, 97), function () { return sentences(B_SENT, 3); })
-    ], exam: X("wx", "First Words test", "One minute of common words.", W(20, 92), function () { return words(COMMON.concat(EASY), 240); }) },
+    ], exam: X("wx", "First Words test", "90 seconds of common words.", W(20, 92), function () { return words(COMMON.concat(EASY), 240); }) },
 
     { id: "caps", name: "Capitals and Punctuation", blurb: "Use Shift for capitals, and add full stops, commas, question marks and quotes.", exercises: [
       E("c1", "Words", "Capital letters", "Every other word starts with a capital.", W(16, 92), function () { return capWords(20); }),
@@ -1193,7 +1195,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       E("c3", "Sentences", "Questions and exclamations", "? and ! use Shift too.", W(18, 92), function () { return sentences(Q_SENT, 4); }),
       E("c4", "Sentences", "Apostrophes and quotes", "It's, don't and \"speech\".", W(18, 92), function () { return sentences(APOS_SENT, 4); }),
       E("c5", "Passage", "Short passage", "A full paragraph of prose.", W(20, 93), function () { return pick(I_PASSAGES); })
-    ], exam: X("cx", "Punctuation test", "One minute of mixed sentences.", W(22, 93), function () { return sentences(I_SENT.concat(Q_SENT, APOS_SENT), 30); }) },
+    ], exam: X("cx", "Punctuation test", "90 seconds of mixed sentences.", W(22, 93), function () { return sentences(I_SENT.concat(Q_SENT, APOS_SENT), 30); }) },
 
     { id: "numbers", name: "Numbers", blurb: "Reach up to the number row for counts, times, dates and prices.", exercises: [
       E("n1", "Key drill", "Number row", "Each finger reaches two rows up.", W(10, 90), function () { return keyDrill("1234567890", 20); }, true),
@@ -1201,7 +1203,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       E("n3", "Sentences", "Numbers in sentences", "Times, prices and counts.", W(18, 92), function () { return sentences(NUM_SENT, 4); }),
       E("n4", "Sentences", "Dates and times", "Days, months and the colon.", W(18, 92), function () { return sentences(DATE_SENT, 4); }),
       T("n5", "Number sprint", "Sentences with numbers at your best pace.", 45, W(20, 92), function () { return sentences(NUM_SENT.concat(DATE_SENT), 30); })
-    ], exam: X("nx", "Numbers test", "One minute of sentences with numbers.", W(22, 93), function () { return sentences(NUM_SENT.concat(DATE_SENT), 30); }) },
+    ], exam: X("nx", "Numbers test", "90 seconds of sentences with numbers.", W(22, 93), function () { return sentences(NUM_SENT.concat(DATE_SENT), 30); }) },
 
     { id: "symbols", name: "Symbols", blurb: "Brackets, @, #, $, % and the other symbols you need for email, the web and code.", exercises: [
       E("y1", "Key drill", "Brackets and signs", "( ) [ ] - = + and friends.", W(8, 90), function () { return keyDrill("()[]-=+", 16); }, true),
@@ -1209,7 +1211,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       E("y3", "Sentences", "Symbols in context", "Prices, percentages and brackets.", W(18, 93), function () { return sentences(SYM_SENT, 3); }),
       E("y4", "Sentences", "Email and web addresses", "@, dots, slashes and underscores.", W(18, 93), function () { return sentences(WEB_SENT, 3); }),
       E("y5", "Code", "Code snippets", "Brackets, operators and quotes.", W(20, 93), function () { return sentences(CODE, 4); })
-    ], exam: X("yx", "Symbols test", "One minute of symbols and code.", W(22, 93), function () { return sentences(SYM_SENT.concat(WEB_SENT, CODE), 30); }) },
+    ], exam: X("yx", "Symbols test", "90 seconds of symbols and code.", W(22, 93), function () { return sentences(SYM_SENT.concat(WEB_SENT, CODE), 30); }) },
 
     { id: "speed", name: "Speed Building", blurb: "You know every key. Now build speed while keeping accuracy high.", exercises: [
       T("s1", "Speed sprint", "As fast as you can stay accurate.", 30, W(30, 93), function () { return words(COMMON, 200); }),
@@ -1217,7 +1219,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       E("s3", "Passage", "Story passage", "A paragraph from a short story.", W(28, 93), function () { return pick(STORIES); }),
       T("s4", "Facts run", "Real sentences with longer words.", 60, W(28, 93), function () { return testText("facts", 60); }),
       E("s5", "Precision", "Clean copy", "98% accuracy. Speed comes second.", W(22, 98), function () { return pick(PRECISION); })
-    ], exam: X("sx", "Speed test", "One minute of common words.", W(35, 94), function () { return words(COMMON.concat(EASY), 300); }) },
+    ], exam: X("sx", "Speed test", "90 seconds of common words.", W(35, 94), function () { return words(COMMON.concat(EASY), 300); }) },
 
     { id: "advanced", name: "Advanced", blurb: "Long words, dense prose, code and longer tests.", exercises: [
       E("v1", "Passage", "Long passage", "Dense prose with commas and quotes.", W(35, 95), function () { return pick(A_PASSAGES); }),
@@ -1225,7 +1227,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       E("v3", "Words", "Long words", "Words of three or more syllables.", W(30, 95), function () { return words(HARD, 20); }),
       T("v4", "Facts at speed", "Factual text at a strong pace.", 60, W(35, 95), function () { return testText("facts", 60); }),
       T("v5", "Endurance", "Long words with no let-up.", 120, W(35, 95), function () { return words(HARD.concat(COMMON), 400); })
-    ], exam: X("vx", "Advanced test", "One minute of real prose.", W(40, 95), function () { return testText("stories", 60); }) },
+    ], exam: X("vx", "Advanced test", "90 seconds of real prose.", W(40, 95), function () { return testText("stories", 60); }) },
 
     { id: "pro", name: "Pro", blurb: "Professional speed: fast, accurate and steady for minutes at a time.", exercises: [
       T("p1", "Pro sprint", "Flat out from start to finish.", 30, W(60, 96), function () { return words(COMMON, 250); }),
@@ -1233,12 +1235,12 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       T("p3", "Pro facts", "Factual text at professional speed.", 120, W(45, 96), function () { return testText("facts", 120); }),
       E("p4", "Precision", "Perfect copy", "99% accuracy on a full passage.", W(40, 99), function () { return pick(A_PASSAGES); }),
       T("p5", "Pro endurance", "Hold your speed for the whole run.", 180, W(45, 96), function () { return testText("stories", 180); })
-    ], exam: X("px", "Pro test", "One minute at professional speed.", W(60, 97), function () { return testText("facts", 60); }) }
+    ], exam: X("px", "Pro test", "90 seconds at professional speed.", W(60, 97), function () { return testText("facts", 60); }) }
   ];
   var EX_BY_ID = {};
   STAGES.forEach(function (s, si) {
     s.exercises.concat([s.exam]).forEach(function (e) { e.stage = si; EX_BY_ID[e.id] = e; });
-    s.exercises.forEach(function (e) {
+    s.exercises.concat([s.exam]).forEach(function (e) {
       if (e.steps) return;
       var g0 = e.gen;
       e.seconds = EX_SECONDS; e.goal = 0;
@@ -1254,7 +1256,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     var sumW = 0, sumA = 0, sumG = 0, n = 0, time = 0, keys = 0, errs = 0, tries = 0;
     var rows = st.exercises.map(function (e) {
       var r = P.ex[e.id] || {};
-      if (e.steps) return "<tr><td>" + esc(e.title) + '</td><td class="n" colspan="3">Guide done</td><td class="n hide-sm">&ndash;</td></tr>';
+      if (e.steps && !r.keys) return "<tr><td>" + esc(e.title) + '</td><td class="n" colspan="3">Guide done</td><td class="n hide-sm">' + (r.attempts || "&ndash;") + "</td></tr>";
       n++; sumW += r.bestWpm || 0; sumA += r.bestAcc || 0; sumG += r.bestGross || r.bestWpm || 0;
       time += r.time || 0; keys += r.keys || 0; errs += r.errs || 0; tries += r.attempts || 0;
       return "<tr><td>" + esc(e.title) + '</td><td class="n">' + (r.bestWpm || 0) + '</td><td class="n">' + (r.bestGross || "&ndash;") + '</td><td class="n">' + (r.bestAcc || 0) + '%</td><td class="n hide-sm">' + (r.attempts || 0) + "</td></tr>";
@@ -1353,6 +1355,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
   var view = "course";
   function show(v) {
     if (S && !S.done) stopSession();
+    if (typeof stopGuideRun === "function") stopGuideRun();
     if (G) endGame(true);
     view = v;
     if (!ME) v = "welcome";
@@ -2005,7 +2008,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
   }
   function startGuide(ex) {
     GD = { ex: ex, step: 0, i: 0, done: false,
-      steps: ex.steps.map(function (st) { return st.gen ? Object.assign({}, st, { keys: st.gen() }) : st; }) };
+      steps: ex.steps.map(function (st) { return st.gen ? Object.assign({}, st, { keys: st.gen(), src: st }) : st; }) };
     view = "guide";
     show("guide");
     $("guide-kb-slot").appendChild($("kb-wrap"));
@@ -2027,9 +2030,63 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
   $("guide-card").addEventListener("click", function () { window.focus(); setTimeout(guideFocus, 0); });
   $("guide-back").addEventListener("click", function () { show("course"); });
 
+  // a guide's practice round runs EX_SECONDS, like every other exercise; keys refill until time is up
+  var GUIDE_PASS = { acc: 90, minKeys: TASK_KEYS };
+  function stopGuideRun() { if (GD && GD.tick) { clearInterval(GD.tick); GD.tick = null; } }
+  function guideRunSec() { var R = GD.run; return R && R.start ? Math.min(EX_SECONDS, (performance.now() - R.start) / 1000) : 0; }
+  function guideRunLabel() {
+    var R = GD.run, left = EX_SECONDS - guideRunSec();
+    $("gd-step").textContent = "Step " + (GD.step + 1) + " of " + GD.steps.length + " · " + fmtClock(left) + " left" + (R.keys ? " · " + guideRunAcc() + "% accuracy" : "");
+  }
+  function guideRunAcc() { var R = GD.run; return R.keys ? Math.floor((R.keys - R.errs) / R.keys * 1000) / 10 : 100; }
+  function guideRunCheck() {
+    var R = GD.run;
+    if (R.hit || guideRunSec() < 15 || R.correct < Math.max(30, GUIDE_PASS.minKeys) || guideRunAcc() < GUIDE_PASS.acc) return;
+    R.hit = guideRunSec(); R.hitUntil = performance.now() + 3000; sound.step();
+    $("gd-msg").className = "gd-msg good"; $("gd-msg").textContent = "\u2713 Target reached! Keep going till the time ends.";
+  }
+  function guideRunEnd() {
+    stopGuideRun();
+    var R = GD.run; R.over = true; GD.done = true;
+    lightKeys(undefined);
+    var min = EX_SECONDS / 60, acc = guideRunAcc(), net = Math.round(R.correct / 5 / min), gross = Math.round(R.keys / 5 / min);
+    var ok = R.correct >= GUIDE_PASS.minKeys && acc >= GUIDE_PASS.acc;
+    var ex = GD.ex, r = P.ex[ex.id] || { bestWpm: 0, bestAcc: 0, passed: false, attempts: 0 };
+    if (R.keys) {
+      r.bestWpm = Math.max(r.bestWpm || 0, net); r.bestAcc = Math.max(r.bestAcc === 100 && !r.keys ? 0 : r.bestAcc || 0, acc);
+      if (!ok) r.attempts = (r.attempts || 0) + 1;
+      r.bestGross = Math.max(r.bestGross || 0, gross);
+      r.time = (r.time || 0) + EX_SECONDS; r.keys = (r.keys || 0) + R.keys; r.errs = (r.errs || 0) + R.errs;
+      P.ex[ex.id] = r;
+    }
+    function f(val, label) { return "<div><b>" + val + "</b><span>" + label + "</span></div>"; }
+    GD.summary = '<div class="facts">' + f(net, "Net WPM") + f(gross, "Gross WPM") + f(acc + "%", "Accuracy") + f(fmtClock(EX_SECONDS), "Time taken") + f(R.hit ? fmtClock(R.hit) : "&ndash;", "Target reached at") + "</div>" +
+      '<div class="facts">' + f(R.correct, "Correct keys") + f(R.errs, "Wrong keys") + f(R.keys, "Total keys") + f(Math.round(R.keys / min), "Keys per minute") + f(GUIDE_PASS.acc + "%", "Target accuracy") + "</div>";
+    if (ok) { finishGuide(); return; }
+    save(); sound.soft();
+    $("gd-meter").style.width = "100%";
+    $("gd-step").textContent = "Practice round · time is up";
+    $("gd-h").textContent = "Not yet";
+    var miss = [];
+    if (acc < GUIDE_PASS.acc) miss.push("accuracy is " + (Math.round((GUIDE_PASS.acc - acc) * 10) / 10) + " points short of " + GUIDE_PASS.acc + "%");
+    if (R.correct < GUIDE_PASS.minKeys) miss.push("you need " + GUIDE_PASS.minKeys + " correct keys and typed " + R.correct);
+    $("gd-body").innerHTML = "<p>Your " + miss.join(" and ") + ". Go slowly and watch the orange key.</p>" + GD.summary;
+    $("gd-keys").innerHTML = ""; $("gd-msg").textContent = "";
+    $("gd-actions").innerHTML = '<button class="btn primary" id="gd-retry">Try the practice round again</button><button class="btn" id="gd-again">Repeat lesson</button><button class="btn" id="gd-course">Back to course</button>';
+    $("gd-retry").addEventListener("click", function () { GD.done = false; renderStep(); guideFocus(); });
+    $("gd-again").addEventListener("click", function () { startGuide(ex); });
+    $("gd-course").addEventListener("click", function () { show("course"); });
+  }
+  function guideKeysFor(st) { var k = st.src.gen(); return Array.isArray(k) ? k : String(k).split(""); }
+
   function renderStep() {
     var st = GD.steps[GD.step], n = GD.steps.length;
     GD.i = 0;
+    stopGuideRun(); GD.run = null;
+    if (st.src && st.src.gen) {
+      st.keys = guideKeysFor(st);
+      GD.run = { start: 0, correct: 0, errs: 0, keys: 0, hit: 0 };
+    }
     $("gd-step").textContent = "Step " + (GD.step + 1) + " of " + n;
     $("gd-meter").style.width = Math.round(GD.step / n * 100) + "%";
     $("gd-h").textContent = st.title;
@@ -2049,9 +2106,16 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       $("gd-keys").innerHTML = st.keys.map(function (k, i) {
         return '<span class="gk" data-i="' + i + '">' + esc(keyLabel(k)) + "</span>";
       }).join("");
-      $("gd-actions").innerHTML = "";
+      $("gd-actions").innerHTML = GD.run ? '<span class="gd-tip">Practice round: keep typing for ' + EX_SECONDS + ' seconds. The timer starts with your first key.</span>' : "";
       paintKeys();
+      if (GD.run) guideRunLabel();
     }
+  }
+  function renderStepKeys(st) {
+    var keep = $("gd-msg").textContent, cls = $("gd-msg").className;
+    st.keys = guideKeysFor(st); GD.i = 0;
+    $("gd-keys").innerHTML = st.keys.map(function (k, i) { return '<span class="gk" data-i="' + i + '">' + esc(keyLabel(k)) + "</span>"; }).join("");
+    paintKeys(); $("gd-msg").textContent = keep; $("gd-msg").className = cls;
   }
   function paintKeys() {
     var st = GD.steps[GD.step];
@@ -2086,7 +2150,12 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     var pressed = e.key === "Enter" ? "\n" : e.key === "Backspace" ? "\b" : e.key.length === 1 ? e.key : null;
     if (!pressed) return;
     e.preventDefault();
-    var want = st.keys[GD.i];
+    var want = st.keys[GD.i], R = GD.run;
+    if (R && !R.start) {
+      R.start = performance.now();
+      GD.tick = setInterval(function () { if (!GD || !GD.run || GD.run.over) return; guideRunLabel(); if (guideRunSec() >= EX_SECONDS) guideRunEnd(); }, 200);
+    }
+    if (R) { R.keys++; if (pressed === want) R.correct++; else R.errs++; guideRunCheck(); }
     pressFlash(pressed === "\n" ? "\n" : pressed);
     var hk = want === " " ? "space" : want === "\n" ? "enter" : want === "\b" ? "bksp" : want.toLowerCase();
     P.keyHit[hk] = (P.keyHit[hk] || 0) + 1;
@@ -2094,8 +2163,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     if (pressed === want) {
       if (GD.i + 1 < st.keys.length) sound.ok();
       GD.i++;
-      msg.className = "gd-msg";
-      msg.textContent = "";
+      if (!(R && R.hitUntil > performance.now())) { msg.className = "gd-msg"; msg.textContent = ""; }
       var k = keysFor(want);
       if (k.shift && lastShift) {
         var right = KEY_FINGER[k.base].charAt(0) === "l";
@@ -2104,6 +2172,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
           msg.className = "gd-msg warn";
         }
       }
+      if (R && GD.i >= st.keys.length) { renderStepKeys(st); return; }
       paintKeys();
       if (GD.i >= st.keys.length) stepComplete();
     } else {
@@ -2121,19 +2190,23 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     GD.done = true;
     lightKeys(undefined);
     $("gd-meter").style.width = "100%";
-    var ex = GD.ex, before = stagePassed(0);
+    var ex = GD.ex, before = stagePassed(0), allBefore = allExPassed(0);
+    stopGuideRun();
     var r = P.ex[ex.id] || { bestWpm: 0, bestAcc: 100, passed: false, attempts: 0 };
     r.attempts++; r.passed = true;
     P.ex[ex.id] = r;
-    P.history.push({ t: Date.now(), id: ex.id, kind: "guide", name: ex.title, wpm: 0, acc: 100, pass: true });
+    var run = GD.run;
+    P.history.push({ t: Date.now(), id: ex.id, kind: "guide", name: ex.title, wpm: run ? Math.round(run.correct / 5 / (EX_SECONDS / 60)) : 0, acc: run && run.keys ? guideRunAcc() : 100, pass: true });
     save();
     var list = BASICS.exercises, idx = list.indexOf(ex);
     var next = list.slice(idx + 1).concat(list.slice(0, idx)).filter(function (x) { return !exPassed(x.id); })[0];
     var cleared = !before && stagePassed(0);
     sound.cheer(cleared);
     $("gd-h").textContent = "Guide complete";
+    $("gd-step").textContent = "All " + GD.steps.length + " steps done";
     $("gd-body").innerHTML = (cleared ? '<div class="banner">Keyboard Basics cleared. The ' + STAGES[1].name + ' stage is now open.</div>' : "") +
-      "<p>You finished <b>" + esc(ex.title) + "</b>." + (next ? " Next up: " + esc(next.title) + "." + (next.kind === "Practice" ? " Two short practice tasks will help you remember what you just learned." : "") : cleared ? " Start " + STAGES[1].name + " with the " + STAGES[1].exercises[0].title + " drill." : "") + "</p>";
+      "<p>You finished <b>" + esc(ex.title) + "</b>." + (next ? " Next up: " + esc(next.title) + "." + (next.kind === "Practice" ? " Two short practice tasks will help you remember what you just learned." : "") : cleared ? " Start " + STAGES[1].name + " with the " + STAGES[1].exercises[0].title + " drill." : "") + "</p>" + (GD.summary || "") +
+      (cleared || (allExPassed(0) && !allBefore) ? stageStatsHtml(0, true) : "");
     $("gd-keys").innerHTML = "";
     $("gd-msg").textContent = "";
     var nextBtn = next ? '<button class="btn primary" id="gd-go">Next: ' + esc(next.title) + "</button>"
