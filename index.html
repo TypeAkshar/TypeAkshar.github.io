@@ -23,6 +23,7 @@
   --key: #FBFCFD;
   --key-edge: #B9C2CC;
   --shadow: 0 1px 0 rgba(23, 32, 43, 0.06), 0 6px 20px -12px rgba(23, 32, 43, 0.25);
+  --skin: #F0C49E; --skin-edge: #B07650;
   --f-lp: rgba(214, 90, 90, 0.20);
   --f-lr: rgba(222, 150, 60, 0.22);
   --f-lm: rgba(190, 175, 40, 0.24);
@@ -39,6 +40,7 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
+    --skin: #D9A47C; --skin-edge: #6E4529;
     --bg: #11151A;
     --surface: #1A2027;
     --surface-2: #232B34;
@@ -60,6 +62,7 @@
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
+  --skin: #D9A47C; --skin-edge: #6E4529;
   --bg: #11151A;
   --surface: #1A2027;
   --surface-2: #232B34;
@@ -205,7 +208,28 @@ kbd { font: 500 12px var(--mono); padding: 1px 6px; border: 1px solid var(--line
   font-weight: 600; color: var(--ink);
 }
 
-.kb { margin: 22px auto 0; max-width: 780px; display: grid; gap: 6px; user-select: none; }
+.kb { margin: 22px auto 0; max-width: 780px; display: grid; gap: 6px; user-select: none; position: relative; }
+.hands { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; display: none; }
+body.hands-on .hands { display: block; }
+body.hands-on .kb { margin-bottom: 26px; }
+.hand-palm { fill: var(--skin); stroke: var(--skin-edge); stroke-width: 1.5; opacity: .45; }
+.hand-edge { stroke: var(--skin-edge); stroke-linecap: round; opacity: .5; }
+.hand-fill { stroke: var(--skin); stroke-linecap: round; opacity: .55; }
+.hand-fill.act { opacity: .8; }
+.hand-nail { fill: #fff; opacity: .45; }
+.kb-tools { display: flex; justify-content: center; margin-top: 8px; }
+.hands-tg { font: 500 12.5px var(--sans); color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.hands-tg:hover { color: var(--ink); border-color: var(--muted); }
+#game-play #kb-wrap .hint, #game-play #kb-wrap .legend { display: none; }
+#game-play .kb { margin-top: 10px; max-width: 620px; gap: 3px; }
+#game-play .kb-row { gap: 3px; }
+#game-play .key { height: 22px; font-size: 10px; border-radius: 4px; }
+#game-play #kb-wrap { position: relative; }
+#game-play .kb-tools { position: absolute; right: 0; top: 10px; margin: 0; }
+body.hands-on #game-play .kb { margin-bottom: 20px; }
+body:not(.hands-on) #game-play .kb { display: none; }
+body.hands-on #game-play .arena { height: clamp(260px, calc(100vh - 370px), 460px); }
+body.hands-on #game-play .p-head { margin-bottom: 10px; }
 .kb-row { display: flex; gap: 6px; }
 .key {
   flex: 1 1 0; min-width: 0; height: 42px; border-radius: 7px; background: var(--key);
@@ -770,6 +794,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
           <div class="kb" id="kb" aria-hidden="true"></div>
           <div class="hint" id="hint"></div>
           <div class="legend" id="legend" aria-hidden="true"></div>
+          <div class="kb-tools"><button class="hands-tg" id="hands-tg" type="button" aria-pressed="true">Hide hands</button></div>
         </div>
       </div>
 
@@ -1384,6 +1409,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       var navOf = S && (S.ctx.kind === "placement" ? "course" : S.ctx.kind === "review" ? "tools" : S.ctx.kind);
       if (n === v || (v === "practice" && navOf === n) || (v === "guide" && n === "course")) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
     });
+    HANDS.sync();
     if (v === "course") renderCourse();
     if (v === "progress") renderProgress();
     if (v === "test") renderTest();
@@ -1499,6 +1525,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       lg += '<span><i style="--fc:var(--f-' + f + ')"></i>' + FINGER_NAME[f] + "</span>";
     });
     $("legend").innerHTML = lg;
+    $("hands-tg").addEventListener("click", function (e) { P.hands = P.hands === false; save(); HANDS.sync(); e.currentTarget.blur(); });
   })();
   function keysFor(ch) {
     if (ch === " ") return { base: "space", shift: null };
@@ -1510,6 +1537,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
   }
   var lit = [];
   function lightKeys(ch) {
+    HANDS.target(ch);
     lit.forEach(function (el) { el.classList.remove("next"); });
     lit = [];
     if (ch === undefined) { $("hint").innerHTML = ""; return; }
@@ -1531,7 +1559,138 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     if (!el) return;
     el.classList.add("down");
     setTimeout(function () { el.classList.remove("down"); }, 90);
+    HANDS.tap(ch);
   }
+  // ---------- hands over the on-screen keyboard ----------
+  // Two drawn hands rest on the home row. The finger for the next key reaches to it (the hand shifts a little with it),
+  // the opposite pinky takes Shift, and a pressed key gives its finger a small dip.
+  var HANDS = (function () {
+    var NS = "http://www.w3.org/2000/svg";
+    var HOME = { lp: "a", lr: "s", lm: "d", li: "f", ri: "j", rm: "k", rr: "l", rp: ";" };
+    var LEFT = ["lt", "lp", "lr", "lm", "li"], RIGHT = ["rt", "rp", "rr", "rm", "ri"];
+    // knuckle offset from the home key, in key widths (x, outward for the left hand) and row pitches (y)
+    var KNUCKLE = { p: [0.32, 1.32], r: [0.13, 1.58], m: [0, 1.7], i: [-0.12, 1.6] };
+    var WIDTH = { p: 0.54, r: 0.62, m: 0.64, i: 0.66, t: 0.7 };
+    var svg = null, geo = null, cur = {}, tgt = {}, press = {}, raf = 0, last = 0, flickT = 0, want = undefined;
+    function z() { return { x: 0, y: 0 }; }
+    LEFT.concat(RIGHT, ["L", "R"]).forEach(function (f) { cur[f] = z(); tgt[f] = z(); press[f] = 0; });
+    function enabled() { return !(P && P.hands === false); }
+    function center(el, base) { var r = el.getBoundingClientRect(); return { x: r.left + r.width / 2 - base.left, y: r.top + r.height / 2 - base.top }; }
+    function measure() {
+      var kb = $("kb"), base = kb.getBoundingClientRect();
+      if (!base.width || !KEY_EL.a.offsetWidth) { geo = null; return; }
+      var c = {}; Object.keys(KEY_EL).forEach(function (k) { c[k] = center(KEY_EL[k], base); });
+      var kw = KEY_EL.a.getBoundingClientRect().width, rp = c.z.y - c.a.y;
+      var g = { kw: kw, rp: rp, c: c, home: {}, knuckle: {}, w: base.width, h: base.height };
+      Object.keys(HOME).forEach(function (f) {
+        var h = c[HOME[f]], side = f.charAt(0) === "l" ? 1 : -1, k = KNUCKLE[f.charAt(1)];
+        g.home[f] = h;
+        g.knuckle[f] = { x: h.x + side * k[0] * kw, y: h.y + k[1] * rp };
+      });
+      // thumbs rest on the Space bar, under C/V and N/M
+      g.knuckle.lt = { x: g.knuckle.li.x - kw * 0.05, y: g.knuckle.li.y + rp * 1.05 };
+      g.knuckle.rt = { x: g.knuckle.ri.x + kw * 0.05, y: g.knuckle.ri.y + rp * 1.05 };
+      g.home.lt = { x: g.knuckle.lt.x + kw * 0.75, y: c.space.y };
+      g.home.rt = { x: g.knuckle.rt.x - kw * 0.75, y: c.space.y };
+      geo = g;
+      svg.setAttribute("width", base.width); svg.setAttribute("height", base.height + rp);
+      svg.setAttribute("viewBox", "0 0 " + base.width + " " + (base.height + rp));
+    }
+    function palm(side) {
+      var g = geo, kw = g.kw, rp = g.rp, fs = side === "L" ? LEFT : RIGHT, o = cur[side];
+      var a = g.knuckle[fs[1]], b = g.knuckle[fs[4]];
+      var outer = side === "L" ? -1 : 1;
+      var x1 = a.x + outer * 0.42 * kw + o.x, x2 = b.x - outer * 0.48 * kw + o.x;
+      var top = Math.min(a.y, b.y) - 0.1 * rp + o.y, bot = g.knuckle.lm.y + 1.1 * rp + o.y;
+      var lo = Math.min(x1, x2), hi = Math.max(x1, x2), mid = (lo + hi) / 2;
+      return "M" + lo + " " + (top + 0.25 * rp) + " Q" + lo + " " + top + " " + (lo + 0.5 * kw) + " " + top +
+        " L" + (hi - 0.5 * kw) + " " + top + " Q" + hi + " " + top + " " + hi + " " + (top + 0.3 * rp) +
+        " L" + (hi - 0.15 * kw) + " " + (bot - 0.3 * rp) + " Q" + mid + " " + (bot + 0.25 * rp) + " " + (lo + 0.15 * kw) + " " + (bot - 0.3 * rp) + " Z";
+    }
+    function draw() {
+      if (!svg) return;
+      if (!geo) measure();
+      if (!geo || !enabled()) { svg.innerHTML = ""; return; }
+      var g = geo, out = "";
+      ["L", "R"].forEach(function (side) {
+        var fs = side === "L" ? LEFT : RIGHT, o = cur[side];
+        out += '<path class="hand-palm" d="' + palm(side) + '"/>';
+        fs.forEach(function (f) {
+          var kn = g.knuckle[f], hm = g.home[f], d = cur[f], pr = press[f];
+          var x1 = kn.x + o.x, y1 = kn.y + o.y, x2 = hm.x + d.x, y2 = hm.y + d.y + pr * 3;
+          var w = WIDTH[f.charAt(1)] * g.kw, act = Math.abs(d.x) + Math.abs(d.y) > 2 || pr > 0.05;
+          out += '<line class="hand-edge" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke-width="' + (w + 3) + '"/>' +
+            '<line class="hand-fill' + (act ? " act" : "") + '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke-width="' + w + '"/>';
+          var ang = Math.atan2(y2 - y1, x2 - x1), back = w * 0.18;
+          out += '<ellipse class="hand-nail" cx="' + (x2 - Math.cos(ang) * back) + '" cy="' + (y2 - Math.sin(ang) * back) + '" rx="' + w * 0.24 + '" ry="' + w * 0.3 +
+            '" transform="rotate(' + (ang * 180 / Math.PI + 90) + " " + (x2 - Math.cos(ang) * back) + " " + (y2 - Math.sin(ang) * back) + ')"/>';
+        });
+      });
+      svg.innerHTML = out;
+    }
+    function tick(now) {
+      raf = 0;
+      var dt = Math.min(0.05, Math.max(0, (now - (last || now)) / 1000)); last = now;
+      var k = 1 - Math.exp(-dt * 20), moving = false;
+      Object.keys(cur).forEach(function (f) {
+        cur[f].x += (tgt[f].x - cur[f].x) * k; cur[f].y += (tgt[f].y - cur[f].y) * k;
+        if (Math.abs(tgt[f].x - cur[f].x) > 0.3 || Math.abs(tgt[f].y - cur[f].y) > 0.3) moving = true; else { cur[f].x = tgt[f].x; cur[f].y = tgt[f].y; }
+        if (press[f] > 0) { press[f] = Math.max(0, press[f] - dt * 7); moving = true; }
+      });
+      draw();
+      if (moving) raf = requestAnimationFrame(tick); else last = 0;
+    }
+    function kick() { if (!raf) raf = requestAnimationFrame(tick); }
+    function reach(f, key) {
+      var g = geo, p = g.c[key];
+      if (!p) return;
+      var side = f.charAt(0) === "l" ? "L" : "R";
+      var hm = g.home[f], dx = p.x - hm.x, dy = p.y - hm.y;
+      var hx = dx * 0.22, hy = dy * 0.2;
+      tgt[side].x += hx; tgt[side].y += hy;
+      (side === "L" ? LEFT : RIGHT).forEach(function (o) { if (o !== f) { tgt[o].x += hx; tgt[o].y += hy; } });
+      tgt[f].x = dx; tgt[f].y = dy;
+    }
+    function aim(ch) {
+      want = ch;
+      Object.keys(tgt).forEach(function (f) { tgt[f] = z(); });
+      if (!geo) measure();
+      if (geo && ch !== undefined && ch !== null) {
+        var k = keysFor(ch), f = KEY_FINGER[k.base];
+        if (f === "th") f = "rt";
+        if (f && geo.c[k.base]) {
+          if (k.base !== "space") reach(f, k.base);
+          if (k.shift) { var ls = f.charAt(0) === "l"; reach(ls ? "rp" : "lp", ls ? "rshift" : "lshift"); }
+        }
+      }
+      kick();
+    }
+    function fingerOf(ch) { var k = keysFor(ch), f = KEY_FINGER[k.base]; return f === "th" ? "rt" : f; }
+    return {
+      init: function () {
+        svg = document.createElementNS(NS, "svg");
+        svg.setAttribute("class", "hands"); svg.setAttribute("aria-hidden", "true");
+        $("kb").appendChild(svg);
+        if (window.ResizeObserver) new ResizeObserver(function () { geo = null; draw(); }).observe($("kb"));
+        window.addEventListener("resize", function () { geo = null; draw(); });
+      },
+      target: aim,
+      tap: function (ch) { var f = fingerOf(ch); if (f && press[f] !== undefined) { press[f] = 1; kick(); } },
+      // games have no single next key: the finger reaches to the key just pressed, then goes home
+      flick: function (ch) {
+        aim(ch); var f = fingerOf(ch); if (f && press[f] !== undefined) press[f] = 1;
+        clearTimeout(flickT); flickT = setTimeout(function () { aim(undefined); }, 200);
+      },
+      sync: function () {
+        document.body.classList.toggle("hands-on", enabled());
+        var b = $("hands-tg"); if (b) { b.setAttribute("aria-pressed", enabled() ? "true" : "false"); b.textContent = enabled() ? "Hide hands" : "Show hands"; }
+        geo = null; draw();
+      },
+      refresh: function () { geo = null; aim(want); }
+    };
+  })();
+  HANDS.init();
+
 
   // ---------- typing session ----------
   var S = null;
@@ -1594,6 +1753,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     $("typing").hidden = false;
     $("result").hidden = true;
     $("typing").appendChild($("kb-wrap"));
+    HANDS.refresh();
     $("kb").classList.remove("halves");
     if (typeof setLegend === "function") setLegend(false);
     var t = $("text");
@@ -2056,6 +2216,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     view = "guide";
     show("guide");
     $("guide-kb-slot").appendChild($("kb-wrap"));
+    HANDS.refresh();
     var list = BASICS.exercises;
     var guides = list.filter(function (x) { return x.steps; });
     $("gd-kind").textContent = BASICS.name + " · Guide " + (guides.indexOf(ex) + 1) + " of " + guides.length;
@@ -2553,6 +2714,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     LP = kind;
     $("games-menu").hidden = true;
     $("game-play").hidden = false;
+    gameKb();
     $("g-title").textContent = def.title;
     $("g-stats").hidden = true;
     clearArena();
@@ -2574,6 +2736,12 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     if (/^[0-9]$/.test(e.key)) { var n = e.key === "0" ? 10 : +e.key; if (lvOpen(LP, n)) { e.preventDefault(); startGame(LP, n); } }
   }
 
+  function gameKb() {
+    var w = $("kb-wrap");
+    if (w.parentNode !== $("game-play")) $("game-play").appendChild(w);
+    $("kb").classList.remove("halves"); if (typeof setLegend === "function") setLegend(false);
+    lightKeys(undefined); HANDS.refresh();
+  }
   function startGame(kind, n) {
     endGame(true);
     var def = GAMES[kind];
@@ -2583,6 +2751,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     LP = null;
     $("games-menu").hidden = true;
     $("game-play").hidden = false;
+    gameKb();
     $("g-stats").hidden = false;
     $("g-title").textContent = def.title + " · Level " + n;
     $("g-lives-l").textContent = def.livesLabel;
@@ -2826,6 +2995,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     if (G.kind === "rain" && e.key === "Backspace") { e.preventDefault(); G.buf = G.buf.slice(0, -1); showBuffer(); return; }
     if (e.key.length !== 1) return;
     e.preventDefault();
+    pressFlash(e.key); HANDS.flick(e.key);
     if (G.mod) { modKey(e.key); return; }
     if (G.kind === "breaker") { breakerKey(e.key.toLowerCase()); return; }
     if (G.kind === "bubbles") bubblesKey(e.key);
