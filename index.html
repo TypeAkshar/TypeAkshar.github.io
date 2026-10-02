@@ -222,6 +222,11 @@ kbd { font: 500 12px var(--mono); padding: 1px 6px; border: 1px solid var(--line
 .hint b { color: var(--ink); font-weight: 600; }
 .legend { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font-size: 12px; color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: 5px; }
+#kb-wrap { position: relative; }
+canvas.hands3d { position: absolute; pointer-events: none; -webkit-mask-image: linear-gradient(#000 58%, transparent 97%); mask-image: linear-gradient(#000 58%, transparent 97%); }
+#kb-wrap .hint, #kb-wrap .legend, .hands-tg { position: relative; z-index: 1; }
+.hands-tg { display: block; margin: 8px auto 0; font: inherit; font-size: 12px; color: var(--muted); background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 3px 12px; cursor: pointer; }
+.hands-tg:hover { color: var(--ink); }
 .legend i { width: 11px; height: 11px; border-radius: 3px; border: 1px solid var(--line); background: var(--key); background-image: linear-gradient(var(--fc), var(--fc)); }
 
 /* Results */
@@ -770,6 +775,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
           <div class="kb" id="kb" aria-hidden="true"></div>
           <div class="hint" id="hint"></div>
           <div class="legend" id="legend" aria-hidden="true"></div>
+          <button type="button" class="hands-tg" id="hands-tg" hidden>Hide hands</button>
         </div>
       </div>
 
@@ -1377,6 +1383,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     if (G) endGame(true);
     view = v;
     if (!ME) v = "welcome";
+    if (H3 && H3.state > 0) handsSync();
     document.body.classList.toggle("gate", !ME);
     ["welcome", "home", "course", "practice", "guide", "test", "games", "tools", "progress"].forEach(function (n) { $("view-" + n).hidden = n !== v; });
     ["course", "test", "games", "tools", "progress"].forEach(function (n) {
@@ -1512,9 +1519,10 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
   function lightKeys(ch) {
     lit.forEach(function (el) { el.classList.remove("next"); });
     lit = [];
-    if (ch === undefined) { $("hint").innerHTML = ""; return; }
+    if (H3.state === 0) handsSync();
+    if (ch === undefined) { $("hint").innerHTML = ""; handsNext([]); return; }
     var k = keysFor(ch), el = KEY_EL[k.base];
-    if (!el) { $("hint").textContent = "Next: " + ch; return; }
+    if (!el) { $("hint").textContent = "Next: " + ch; handsNext([]); return; }
     el.classList.add("next"); lit.push(el);
     var finger = KEY_FINGER[k.base];
     var name = { space: "Space", enter: "Enter", bksp: "Backspace" }[k.base] || k.base.toUpperCase();
@@ -1525,13 +1533,44 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     } else {
       $("hint").innerHTML = "Next: <b>" + esc(name) + "</b> &middot; " + (finger === "th" ? "either thumb" : FINGER_NAME[finger]);
     }
+    handsNext([{ k: k.base, f: finger }].concat(k.shift ? [{ k: shiftSide, f: shiftSide === "lshift" ? "lp" : "rp" }] : []));
   }
   function pressFlash(ch) {
     var k = keysFor(ch), el = KEY_EL[k.base];
     if (!el) return;
     el.classList.add("down");
     setTimeout(function () { el.classList.remove("down"); }, 90);
+    if (H3.api && !P.handsOff && H3.list[0] && H3.list[0].k === k.base) H3.api.press();
   }
+
+  // ---------- typing hands over the keyboard (3D, loaded on first use; hidden if the PC can't draw them) ----------
+  var H3 = { api: null, state: 0, list: [] };   // state: 0 not loaded, 1 loading, 2 ready, 3 not available
+  function handsSync() {
+    var tg = $("hands-tg");
+    if (H3.state === 3) { tg.hidden = true; return; }
+    tg.hidden = false;
+    tg.textContent = P.handsOff ? "Show hands" : "Hide hands";
+    if (P.handsOff) { if (H3.api) H3.api.hide(true); return; }
+    if (H3.state === 0) {
+      // a module script, so browsers without modules or WebGL simply go without hands
+      var fail = function () { H3.state = 3; $("hands-tg").hidden = true; };
+      if (!("noModule" in HTMLScriptElement.prototype)) { fail(); return; }
+      H3.state = 1;
+      var sc = document.createElement("script");
+      sc.type = "module"; sc.src = "hands/hands3d.js?v=1";
+      sc.onerror = fail;
+      sc.onload = function () {
+        if (!window.TAHands) { fail(); return; }
+        window.TAHands.mountHands({ wrap: $("kb-wrap"), kb: $("kb"), keyEl: function (k) { return KEY_EL[k]; } })
+          .then(function (api) { H3.api = api; H3.state = 2; handsSync(); }, fail);
+      };
+      document.head.appendChild(sc);
+      return;
+    }
+    if (H3.api) { H3.api.hide(false); H3.api.next(H3.list); }
+  }
+  function handsNext(list) { H3.list = list; if (H3.api && !P.handsOff) { H3.api.refresh(); H3.api.next(list); } }
+  $("hands-tg").addEventListener("click", function () { P.handsOff = !P.handsOff; save(); handsSync(); });
 
   // ---------- typing session ----------
   var S = null;
