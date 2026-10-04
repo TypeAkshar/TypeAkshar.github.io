@@ -217,6 +217,9 @@ kbd { font: 500 12px var(--mono); padding: 1px 6px; border: 1px solid var(--line
 .key.bump::after { content: ""; position: absolute; bottom: 7px; width: 10px; height: 2px; border-radius: 2px; background: var(--muted); }
 .key.next { background: var(--accent); background-image: none; color: var(--accent-ink); border-color: var(--accent); box-shadow: 0 2px 0 color-mix(in srgb, var(--accent) 60%, #000); }
 .key.down { transform: translateY(2px); box-shadow: 0 0 0 var(--key-edge); }
+.key.mem { color: transparent; }
+.key.mem.next { color: var(--accent-ink); }
+.mem-note { text-align: center; margin-top: 6px; color: var(--muted); font-size: 12px; }
 .key small { font-size: 10px; }
 .hint { text-align: center; margin-top: 12px; color: var(--muted); font-size: 14px; min-height: 1.5em; }
 .hint b { color: var(--ink); font-weight: 600; }
@@ -770,6 +773,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
           <div class="kb" id="kb" aria-hidden="true"></div>
           <div class="hint" id="hint"></div>
           <div class="legend" id="legend" aria-hidden="true"></div>
+          <div class="mem-note" id="mem-note" hidden>Keys you know well lose their letters. Keep your eyes on the screen; if you get stuck, wait and the key lights up.</div>
         </div>
       </div>
 
@@ -1078,7 +1082,8 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
           { type: "keys", title: "Right hand on home", body: "<p>Rest your right fingers on <b>J K L ;</b>: index finger on J, middle on K, ring on L, pinky on the semicolon.</p>", keys: K("jkl;jkl;;lkj") },
           { type: "keys", title: "Thumbs on Space", body: "<p>Your thumbs rest on the long <b>Space</b> bar. Either thumb can press it.</p>", keys: K("    ") },
           { type: "keys", title: "All eight fingers", body: "<p>Keep every finger on its home key and press each one in turn.</p>", keys: K("asdf jkl; asdf jkl;") },
-          { type: "keys", title: "Practice round", body: "<p>Mixed home row keys. Keep your fingers resting on the home row between keys.</p>", gen: function () { return pepper(20, "asdfjkl;"); } }
+          { type: "read", title: "Type without looking", body: "<p>Good typists never look down at their hands. Your fingers learn where the keys are, just like your feet learn the stairs at home.</p><ul><li>Lay a dupatta, a small towel or a sheet of paper loosely over your hands and the keyboard.</li><li>Feel the bumps on <b>F</b> and <b>J</b> to find home.</li><li>Look only at the screen. If you forget a key, look at the keyboard on the screen, not at your hands.</li></ul><p>Keep your hands covered for the practice round, and for every lesson after this one.</p>" },
+          { type: "keys", title: "Practice round", body: "<p>Mixed home row keys, with your hands covered. Keep your fingers resting on the home row between keys.</p>", gen: function () { return pepper(20, "asdfjkl;"); } }
         ] },
         task("g1a", "Home row drill", "Home row keys. Only the right key moves you on.", function () { return pickRun(HOME_BITS, 6); }),
         task("g1b", "Home row with Space", "Home row groups with Space between them, using your thumb.", function () { return keyDrill("asdfjkl;", 6); }),
@@ -1533,6 +1538,43 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     setTimeout(function () { el.classList.remove("down"); }, 90);
   }
 
+  // ---------- typing from memory ----------
+  // P.mem[k] says how well this person knows key k: +1 for each right press, -6 for a mistake.
+  // New keys get the orange hint at once; practised keys only after a pause or a mistake; known keys also lose their letter.
+  var MEM_NEW = 8, MEM_KNOWN = 20, MEM_MAX = 40, HINT_WAIT = 1500, hintTimer = 0;
+  function memKey(k) { return k.length === 1 && !!KEY_EL[k]; }
+  function memSeed() {
+    if (P.mem) return;
+    P.mem = {};
+    // people who practised before this existed start with credit from their key history
+    Object.keys(P.keyHit).forEach(function (k) {
+      if (!memKey(k)) return;
+      var v = (P.keyHit[k] || 0) - 7 * (P.keyErr[k] || 0);
+      if (v > 0) P.mem[k] = Math.min(MEM_MAX, v);
+    });
+  }
+  function memLevel(k) { memSeed(); return P.mem[k] || 0; }
+  function memNote(k, ok) {
+    if (!memKey(k)) return;
+    var m = memLevel(k);
+    P.mem[k] = ok ? Math.min(MEM_MAX, m + 1) : Math.max(0, m - 6);
+  }
+  function memLabels(on) {
+    Object.keys(KEY_EL).forEach(function (k) { KEY_EL[k].classList.toggle("mem", on && memKey(k) && memLevel(k) >= MEM_KNOWN); });
+    $("mem-note").hidden = !on;
+  }
+  // light the next key now, or after a short wait if the learner should be able to find it from memory
+  function sessionHint(ch, now) {
+    clearTimeout(hintTimer); hintTimer = 0;
+    if (ch === undefined) { lightKeys(undefined); return; }
+    var kk = keysFor(ch), k = kk.base;
+    if (now || !memKey(k) || memLevel(k) < MEM_NEW) { lightKeys(ch); return; }
+    lightKeys(undefined);
+    $("hint").innerHTML = "Next: <b>" + (kk.shift ? "Shift + " : "") + esc(k.toUpperCase()) + "</b> &middot; which finger? Wait a moment for a hint.";
+    var s0 = S, pos = S.pos;
+    hintTimer = setTimeout(function () { hintTimer = 0; if (S === s0 && !S.done && S.pos === pos) lightKeys(ch); }, HINT_WAIT);
+  }
+
   // ---------- typing session ----------
   var S = null;
   function startExercise(ex) {
@@ -1685,7 +1727,8 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     var el = S.spans[S.pos];
     S.curEl = el || null;
     if (el) el.classList.add("cur");
-    lightKeys(S.text[S.pos]);
+    memLabels(true);
+    sessionHint(S.text[S.pos]);
     var ref = el || S.spans[S.spans.length - 1];
     if (ref) {
       var t = $("text"), lh = parseFloat(getComputedStyle(t).lineHeight) || 40;
@@ -1709,6 +1752,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     pressFlash(ch);
     var hk = expected === " " ? "space" : expected.toLowerCase();
     P.keyHit[hk] = (P.keyHit[hk] || 0) + 1;
+    memNote(keysFor(expected).base, ch === expected);
     if (ch === expected) {
       sound.ok();
       S.marks[S.pos] = "ok"; S.correct++;
@@ -1722,6 +1766,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
       if (S.ctx.strict) {
         var sp = S.spans[S.pos];
         sp.classList.remove("miss"); void sp.offsetWidth; sp.classList.add("miss");
+        sessionHint(expected, true);
         updateStats();
         return;
       }
@@ -2056,6 +2101,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     view = "guide";
     show("guide");
     $("guide-kb-slot").appendChild($("kb-wrap"));
+    clearTimeout(hintTimer); memLabels(false);
     var list = BASICS.exercises;
     var guides = list.filter(function (x) { return x.steps; });
     $("gd-kind").textContent = BASICS.name + " · Guide " + (guides.indexOf(ex) + 1) + " of " + guides.length;
@@ -2216,6 +2262,7 @@ button.stage-head { width: 100%; border: 0; background: none; padding: 0; text-a
     pressFlash(pressed === "\n" ? "\n" : pressed);
     var hk = want === " " ? "space" : want === "\n" ? "enter" : want === "\b" ? "bksp" : want.toLowerCase();
     P.keyHit[hk] = (P.keyHit[hk] || 0) + 1;
+    memNote(keysFor(want).base, pressed === want);
     var msg = $("gd-msg");
     if (pressed === want) {
       if (GD.i + 1 < st.keys.length) sound.ok();
